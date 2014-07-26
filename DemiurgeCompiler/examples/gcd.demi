@@ -1,0 +1,12 @@
+func gcd(x : int, y : int) : int {
+    if(x == y) {
+        return x;
+    } else if(x < y) {
+        return gcd(x, y - x);
+    } 
+    return gcd(x - y, y);
+}
+
+func main() : int {
+    return gcd(54, 10);
+}

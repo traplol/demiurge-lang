@@ -8,5 +8,5 @@ func fib(x : int) : int {
 }
 
 func main() : int {
-    return fib(10);
+    return fib(40);
 }

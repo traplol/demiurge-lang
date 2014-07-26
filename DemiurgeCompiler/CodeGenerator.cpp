@@ -24,6 +24,8 @@
 
 using namespace llvm;
 
+#define COMPILER_RETURN_VALUE_STRING "__return_value__"
+
 namespace Helpers {
     static nullptr_t Error(const char *fmt, ...);
 }
@@ -94,9 +96,9 @@ void CodeGenerator::DumpLastModule() {
     }
     void *mainFnPtr = TheExecutionEngine->getPointerToFunction(mainFunc);
     
-    double(*FP)() = (double(*)())mainFnPtr;
+    int(*FP)() = (int(*)())mainFnPtr;
     
-    double val = FP();
+    int val = FP();
 
     printf("%f\n",(double)val);
 }
@@ -128,13 +130,18 @@ namespace Helpers {
     }
     // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
-    std::vector<Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IExpressionAST*> &block) {
+    std::vector<Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IExpressionAST*> &block, bool stopAtFirstReturn = false, bool *stopped = nullptr) {
         std::vector<Value*> vals;
         for (unsigned i = 0, size = block.size(); i < size; ++i) {
             IExpressionAST *expr = block[i];
             Value *val = expr->Codegen(codegen);
             vals.push_back(val);
+            if (stopAtFirstReturn && expr->NodeType == AstNodeType::node_return) {
+                if (stopped != nullptr) { *stopped = true; }
+                return vals;
+            }
         }
+        if (stopped != nullptr) { *stopped = false; }
         return vals;
     }
     // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
@@ -191,12 +198,13 @@ namespace Helpers {
         if (CastInst::isCastable(valType, castToType)) {
             if (castSuccessful != nullptr)
                 *castSuccessful = true;
+            
             return codegen->Builder.CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
         }
         return nullptr;
     }
 
-    namespace LLVMBinOperations{
+    namespace BinOperations{
         typedef Value*(*BinOpCodeGenFuncPtr)(CodeGenerator*, Value*, Value*);
         typedef BinOpCodeGenFuncPtr(*GetFuncPtr)(TokenType);
         typedef std::map<Type::TypeID, std::map<Type::TypeID, GetFuncPtr > > LookupTableMapMap;
@@ -424,8 +432,8 @@ namespace Helpers {
     }
 
     // Returns a pointer to a function which will generate the proper LLVM code to handle the operator and types passed.
-    LLVMBinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType) {
-        auto func = LLVMBinOperations::getBinOpLookupTable()[lType->getTypeID()][rType->getTypeID()];
+    BinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType) {
+        auto func = BinOperations::getBinOpLookupTable()[lType->getTypeID()][rType->getTypeID()];
         if (func == nullptr) return nullptr;
         return func(Operator);
     }
@@ -463,10 +471,14 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     Type *lType = l->getType();
     Type *rType = r->getType();
     auto funcPtr = Helpers::GetBinopCodeGenFuncPointer(this->Operator, lType, rType);
-    if (funcPtr != nullptr)
-        funcPtr(codegen, l, r);
+    if (funcPtr == nullptr) {
+        return Helpers::Error("(%d:%d) - Operator '%s' does not exist for '%s' and '%s'", this->LineNumber, this->ColumnNumber,
+            this->OperatorString.c_str(), Helpers::GetLLVMTypeName(lType).c_str(), Helpers::GetLLVMTypeName(rType).c_str());
+    }
+    return funcPtr(codegen, l, r);
 }
-Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
+Value *AstReturnNode::Codegen(CodeGenerator *codegen) { 
+    // TODO: returning void.
     Value *val = this->Expr->Codegen(codegen);
     if (val == nullptr)
         return Helpers::Error("(%d:%d) - Could not evaluate return statement.", this->LineNumber, this->ColumnNumber);
@@ -476,26 +488,62 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
         bool castSuccess;
         val = Helpers::CreateCastTo(codegen, val, retType, &castSuccess);
         if (val == nullptr) 
-            return Helpers::Error("(%d:%d) - Could not cast return statement to function return type.", this->LineNumber, this->ColumnNumber);
+            return Helpers::Error("(%d:%d) - Could not cast return statement to function return type.", this->Expr->LineNumber, this->Expr->ColumnNumber);
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
-            Helpers::Warning("(%d:%d) - Casting from %s to %s, possible loss of data.", this->LineNumber, this->ColumnNumber, 
+            Helpers::Warning("(%d:%d) - Casting from %s to %s, possible loss of data.", this->Expr->LineNumber, this->Expr->ColumnNumber,
                 Helpers::GetLLVMTypeName(valType).c_str(), Helpers::GetLLVMTypeName(retType).c_str());
     }
-    return codegen->Builder.CreateRet(val);
+    AllocaInst *retVal = codegen->NamedValues[COMPILER_RETURN_VALUE_STRING];
+    Value *derefRetVal = codegen->Builder.CreateStore(val, retVal);
+    codegen->Builder.CreateBr(codegen->ReturnBlock);
+    return derefRetVal;
 }
 Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     Value *cond = this->Condition->Codegen(codegen);
-    auto type = cond->getType()->getTypeID();
     if (cond == nullptr)
         return Helpers::Error("(%d:%d) - Could not evaluate 'if' condition.", this->Condition->LineNumber, this->Condition->ColumnNumber);
-    if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out
+    if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
         return Helpers::Error("(%d:%d) - 'if' condition not boolean type.", this->Condition->LineNumber, this->Condition->ColumnNumber);
-
+    
     Value *booltrue = Helpers::GetBoolean(codegen, true);
-    codegen->Builder.CreateICmpUGE(cond, booltrue, "ifcondition");
+    Value *ifCondition = codegen->Builder.CreateICmpUGE(cond, booltrue, "cond");
+
+    Function *func = codegen->Builder.GetInsertBlock()->getParent();
+    
+    // Create blocks for the 'if' cases.
+    BasicBlock *ifthenBB = BasicBlock::Create(codegen->Context, "cond_true", func);
+    BasicBlock *ifelseBB = BasicBlock::Create(codegen->Context, "cond_false");
+    BasicBlock *ifendBB = BasicBlock::Create(codegen->Context, "cond_merge"); // both blocks merge back here.
+
+    // Create the conditional branch.
+    codegen->Builder.CreateCondBr(ifCondition, ifthenBB, ifelseBB);
+
+    // emit 'if.then' block.
+    codegen->Builder.SetInsertPoint(ifthenBB);
+    bool ifthenStopped;
+    std::vector<Value*> ifThenVals = Helpers::EmitBlock(codegen, this->IfBody, true, &ifthenStopped);
+    if (!ifthenStopped) { // if there was no return statement within the else block
+        codegen->Builder.CreateBr(ifendBB); // go to merge since there was no return in the then block
+    }
+    ifthenBB = codegen->Builder.GetInsertBlock();
+
+    // emit 'if.else' block
+    func->getBasicBlockList().push_back(ifelseBB);
+    codegen->Builder.SetInsertPoint(ifelseBB);
+
+    bool ifelseStopped;
+    std::vector<Value*> ifElseVals = Helpers::EmitBlock(codegen, this->ElseBody, true, &ifelseStopped);
+    if (!ifelseStopped) { // if there was no return statement within the else block
+        codegen->Builder.CreateBr(ifendBB); // go to merge since there was no return in the else block
+    }
+    ifelseBB = codegen->Builder.GetInsertBlock();
 
 
-
+    // emit 'if.end' block
+    if (!ifelseStopped) {
+        func->getBasicBlockList().push_back(ifendBB);
+        codegen->Builder.SetInsertPoint(ifendBB);
+    }
     return nullptr;
 }
 Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
@@ -517,9 +565,9 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
         bool castSuccess;
         val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
         if (val == nullptr)
-            return Helpers::Error("(%d:%d) - Argument not valid type, failed to cast to destination.", this->LineNumber, this->ColumnNumber);
+            return Helpers::Error("(%d:%d) - Argument not valid type, failed to cast to destination.", this->Args[i]->LineNumber, this->Args[i]->ColumnNumber);
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
-            Helpers::Warning("(%d:%d) - Casting from %s to %s, possible loss of data.", this->LineNumber, this->ColumnNumber,
+            Helpers::Warning("(%d:%d) - Casting from %s to %s, possible loss of data.", this->Args[i]->LineNumber, this->Args[i]->ColumnNumber,
                 Helpers::GetLLVMTypeName(val->getType()).c_str(), Helpers::GetLLVMTypeName(calleeArg->getType()).c_str());
         argsvals.push_back(val);
         if (argsvals.back() == nullptr) return nullptr;
@@ -590,16 +638,29 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     if (func == nullptr) return nullptr;
 
     // Create our entry block
-    BasicBlock *entry = BasicBlock::Create(codegen->Context, "entry", func);
-    codegen->Builder.SetInsertPoint(entry);
+    BasicBlock *entryBB = BasicBlock::Create(codegen->Context, "entry", func);
+    BasicBlock *retBB = BasicBlock::Create(codegen->Context, "return");
+    codegen->ReturnBlock = retBB; // save our return block to jump to.
+    codegen->Builder.SetInsertPoint(entryBB);
     this->Prototype->CreateArgumentAllocas(codegen, func);
+    // TODO: Check if return type is void and do not create return value, but return void.
+    AllocaInst *retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, this->Prototype->ReturnType->GetLLVMType(codegen));
+    codegen->NamedValues[COMPILER_RETURN_VALUE_STRING] = retVal;
 
     auto block = Helpers::EmitBlock(codegen, this->FunctionBody);
+    Value *lastVal = nullptr;
     for (auto itr = block.begin(); itr != block.end(); ++itr) {
-        Value *val = *itr;
+         lastVal = *itr;
     }
 
+    func->getBasicBlockList().push_back(retBB); // create the return block
+    codegen->Builder.SetInsertPoint(retBB); 
+    Value *derefRetVal = codegen->Builder.CreateLoad(retVal, COMPILER_RETURN_VALUE_STRING);
+    codegen->Builder.CreateRet(derefRetVal);
+    retBB = codegen->Builder.GetInsertBlock();
+
     if (verifyFunction(*func, &errs())) {
+        func->dump();
         func->eraseFromParent();
         return Helpers::Error("(%d:%d) - Error creating function body.", this->Prototype->LineNumber, this->Prototype->ColumnNumber);
     }

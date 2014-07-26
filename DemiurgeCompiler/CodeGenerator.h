@@ -29,6 +29,7 @@ public:
     llvm::Module *TheModule;
     llvm::FunctionPassManager *TheFPM;
     llvm::ExecutionEngine *TheExecutionEngine;
+    llvm::BasicBlock *ReturnBlock;
     std::map<std::string, llvm::AllocaInst*> NamedValues;
 };
 

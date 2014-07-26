@@ -1,9 +1,7 @@
-// simple addition demonstrating implicit casting
-
-func add(a : int, b : double) : double {
+func add(a : int, b : int) : int {
     return a + b;
 }
 
-func main() : double {
-    return add(10.5,23.25);
+func main() : int {
+    return add(6,5);
 }

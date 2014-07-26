@@ -37,7 +37,9 @@ void DemiurgeCompiler::Run() {
         for (; iter != end; ++iter) {
             std::vector<Token*> tokens = _lexer->Tokenize(iter->first, iter->second);
             TreeContainer *trees = _parser->ParseTrees(tokens);
-            /*std::vector<llvm::Module*> modules = */ _codeGenerator->GenerateCode(trees);
+            if (trees == nullptr) return;
+
+            _codeGenerator->GenerateCode(trees);
             _codeGenerator->DumpLastModule();
             _codeGenerator->CacheLastModule();
         }
@@ -70,6 +72,9 @@ bool DemiurgeCompiler::setStateVars() {
         else if (str == "--info") {
             printCompilerInformationMessage();
             return false;
+        }
+        else if (str == "--llvm-asm") {
+            _outputLlvmAsm = true;
         }
         else if (str == "--help" || str == "-h") {
             printHelpMessage();
@@ -107,6 +112,7 @@ void DemiurgeCompiler::printHelpMessage() {
     fprintf(stderr, "    -c --compile [file]: uses [file] as the input file to compile.\n");
     fprintf(stderr, "    -I --interactive   : runs the compiler in interactive mode.\n");
     fprintf(stderr, "    -h --help          : prints this message.\n");
+    fprintf(stderr, "    --llvm-asm         : emits llvm assembly instead of bytecode.\n");
     fprintf(stderr, "    --info             : prints compiler information.\n");
     fprintf(stderr, "\n");
 }

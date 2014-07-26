@@ -49,6 +49,7 @@ public:
     /* compiler state variables */
     bool _canRun;
     bool _isInInteractiveMode;
+    bool _outputLlvmAsm;
     std::map<std::string, std::vector<char>> _sourceFiles;
 };
 

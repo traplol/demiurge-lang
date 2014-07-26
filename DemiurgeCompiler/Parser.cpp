@@ -41,16 +41,28 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
     _tokens = tokens;
     next(); // setup first token.
 
-    TreeContainer *retVal = new TreeContainer();;
+    TreeContainer *trees = new TreeContainer();;
     
     while (_curTokenType != EOF) {
-        switch (_curTokenType) {
-        default: retVal->TopLevelExpressions.push_back(parseTopLevelExpression());
-        case ';': next();
-        case tok_func: retVal->FunctionDefinitions.push_back(parseFunctionDefinition());
+        if (_curTokenType == ';') {
+            next();
+        }
+        else if (_curTokenType == tok_func) {
+            FunctionAst *func = parseFunctionDefinition();
+            if (func == nullptr) {
+                return nullptr;
+            }
+            trees->FunctionDefinitions.push_back(func);
+        }
+        else {
+            IExpressionAST *toplevel = parseTopLevelExpression();
+            if (toplevel == nullptr) {
+                return nullptr;
+            }
+            trees->TopLevelExpressions.push_back(toplevel);
         }
     }
-    return retVal;
+    return trees;
 }
 
 Token *Parser::next() {
@@ -336,14 +348,13 @@ IExpressionAST *Parser::parseForExpression() {
 // <type>               ::= 'double' | 'int' | 'bool' | 'string'
 AstTypeNode *Parser::parseTypeNode() {
     int curTokType = _curTokenType;
-    next(); // eat current token
     switch (curTokType) {
     default: return nullptr;
-    case tok_typevoid: return new AstTypeNode(node_void, _curToken->Line(), _curToken->Column());
-    case tok_typebool: return new AstTypeNode(node_boolean, _curToken->Line(), _curToken->Column());
-    case tok_typedouble: return new AstTypeNode(node_double, _curToken->Line(), _curToken->Column());
-    case tok_typeint: return new AstTypeNode(node_integer, _curToken->Line(), _curToken->Column());
-    case tok_typestring: return new AstTypeNode(node_string, _curToken->Line(), _curToken->Column());
+    case tok_typevoid: next(); return new AstTypeNode(node_void, _curToken->Line(), _curToken->Column());
+    case tok_typebool: next(); return new AstTypeNode(node_boolean, _curToken->Line(), _curToken->Column());
+    case tok_typedouble: next(); return new AstTypeNode(node_double, _curToken->Line(), _curToken->Column());
+    case tok_typeint: next(); return new AstTypeNode(node_integer, _curToken->Line(), _curToken->Column());
+    case tok_typestring: next(); return new AstTypeNode(node_string, _curToken->Line(), _curToken->Column());
     }
 }
 // Attempts to generate an AstTypeNode from the expression's type.
@@ -423,6 +434,8 @@ PrototypeAst *Parser::parsePrototype() {
     next(); // eat ':'
 
     AstTypeNode *returnType = parseTypeNode();
+    if (returnType == nullptr)
+        return Error("Expected function return type.");
 
     return new PrototypeAst(functionIdentifier, returnType, args, _curToken->Line(), _curToken->Column());
 }
