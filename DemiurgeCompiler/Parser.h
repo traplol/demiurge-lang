@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 
-class TreeContainer;
+struct TreeContainer;
 class Token;
 class IExpressionAST;
 class AstTypeNode;

@@ -9,6 +9,7 @@
 Parser::Parser() {
     
     // 1 is the lowest operator precedence.
+    _operatorPrecedence['='] = 30;              // '='
     _operatorPrecedence[tok_plusequals] = 30;   // '+='
     _operatorPrecedence[tok_minusequals] = 30;  // '-='
     _operatorPrecedence[tok_multequals] = 30;   // '*='
@@ -66,7 +67,7 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
 }
 
 Token *Parser::next() {
-    static int i = 0;
+    static unsigned i = 0;
     if (i >= _tokens.size()) {
         _curToken = nullptr;
         _curTokenType = EOF;

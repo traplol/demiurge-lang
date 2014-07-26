@@ -10,7 +10,7 @@
 // TODO: Module and module component container.
 // TODO: vector of the a module component containers.
 
-class TreeContainer;
+struct TreeContainer;
 namespace llvm {
     class ExecutionEngine;
     class FunctionPassManager;
