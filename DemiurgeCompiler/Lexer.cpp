@@ -30,10 +30,10 @@ Token *Lexer::getNextToken() {
         return buildWord();
     if (isdigit(_lastChar)) // Build a number
         return buildNumber();
-    if (_lastChar == '#') // Comment
-        if (peekChar() == '-') // Paragraph comment
+    if (_lastChar == '/') // Comment 
+        if (peekChar() == '*') // Paragraph comment - '/*'
             return trimCommentBlock();
-        else // Line comment
+        else if (peekChar() == '/') // Line comment - '//'
             return trimCommentLine();
     int thisChar = _lastChar;
     _builderWord = thisChar;

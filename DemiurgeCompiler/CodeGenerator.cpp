@@ -98,7 +98,7 @@ void CodeGenerator::DumpLastModule() {
     
     double val = FP();
 
-    printf("%d\n",val);
+    printf("%f\n",(double)val);
 }
 namespace Helpers {
     static nullptr_t Error(const char *fmt, ...) {
@@ -109,6 +109,15 @@ namespace Helpers {
         va_end(args);
         fprintf(stderr, "Error: %s\n", buf);
         return nullptr;
+    }
+
+    static void Warning(const char *fmt, ...) {
+        char buf[4096];
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf_s(buf, 4096, fmt, args);
+        va_end(args);
+        fprintf(stderr, "Warning: %s\n", buf);
     }
     
     // PhiNodeAddIncoming - calls PHINode::addIncoming with all of the llvm::Value* in the 'vals' std::vector
@@ -130,22 +139,61 @@ namespace Helpers {
     }
     // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
     // the function.  This is used for mutable variables etc.
-    llvm::AllocaInst* CreateEntryBlockAlloca(Function *function, const std::string &varName, Type *type) {
+    AllocaInst* CreateEntryBlockAlloca(Function *function, const std::string &varName, Type *type) {
         IRBuilder<> tmpBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
         return tmpBuilder.CreateAlloca(type, 0, varName.c_str());
     }
 
+    // Creates a LLVM::Value* with double type from the value passed.
     Value *GetDouble(CodeGenerator *codegen, double val) {
         return ConstantFP::get(codegen->Context, APFloat(val));
     }
+    // Creates a LLVM::Value* with integer64 type from the value passed.
     Value *GetInt(CodeGenerator *codegen, unsigned long long int val, int bitwidth) {
         return ConstantInt::get(codegen->Context, APInt(bitwidth, val));
     }
+    // Creates a LLVM::Value* with integer1 type from the value passed.
     Value *GetBoolean(CodeGenerator *codegen, bool val) {
         return GetInt(codegen, val, 1);
     }
+    // Creates a LLVM::Value* with integer8* type from the value passed.
     Value *GetString(CodeGenerator *codegen, std::string val) {
         return ConstantDataArray::getString(codegen->Context, val.c_str());
+    }
+
+    // Returns a string representation of the passed llvm type.
+    std::string GetLLVMTypeName(Type *Ty) {
+        switch (Ty->getTypeID()) {
+        default: return "not supported";
+        case Type::TypeID::DoubleTyID: return "double";
+        case Type::TypeID::FloatTyID: return "float";
+        case Type::TypeID::ArrayTyID: return "array";
+        case Type::TypeID::FunctionTyID: return "function";
+        case Type::TypeID::IntegerTyID: return "int";
+        case Type::TypeID::PointerTyID: return "pointer";
+        case Type::TypeID::StructTyID: return "struct";
+        case Type::TypeID::VoidTyID: return "void";
+        }
+    }
+
+    // Will attempt to cast one value to another type and sets 'castSuccessful' to true if a cast happened, otherwise false.
+    Value *CreateCastTo(CodeGenerator *codegen, Value *val, Type *castToType, bool *castSuccessful = nullptr) {
+        if (castSuccessful != nullptr)
+            *castSuccessful = false;
+        Type *valType = val->getType();
+        if (valType->getTypeID() == castToType->getTypeID())
+            return val;
+        if (valType->canLosslesslyBitCastTo(castToType)) {
+            if (castSuccessful != nullptr)
+                *castSuccessful = true;
+            return codegen->Builder.CreateBitCast(val, castToType, "bitcasted");
+        }
+        if (CastInst::isCastable(valType, castToType)) {
+            if (castSuccessful != nullptr)
+                *castSuccessful = true;
+            return codegen->Builder.CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
+        }
+        return nullptr;
     }
 
     namespace LLVMBinOperations{
@@ -365,7 +413,7 @@ namespace Helpers {
             }
         }
 
-        LookupTableMapMap getLookupTable() {
+        LookupTableMapMap getBinOpLookupTable() {
             LookupTableMapMap lookupTable;
             lookupTable[Type::IntegerTyID][Type::IntegerTyID] = getIntIntFuncPtr;
             lookupTable[Type::IntegerTyID][Type::DoubleTyID] = getIntDoubleFuncPtr;
@@ -375,8 +423,9 @@ namespace Helpers {
         }
     }
 
+    // Returns a pointer to a function which will generate the proper LLVM code to handle the operator and types passed.
     LLVMBinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType) {
-        auto func = LLVMBinOperations::getLookupTable()[lType->getTypeID()][rType->getTypeID()];
+        auto func = LLVMBinOperations::getBinOpLookupTable()[lType->getTypeID()][rType->getTypeID()];
         if (func == nullptr) return nullptr;
         return func(Operator);
     }
@@ -423,16 +472,20 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
         return Helpers::Error("(%d:%d) - Could not evaluate return statement.", this->LineNumber, this->ColumnNumber);
     Type *valType = val->getType();
     Type *retType = codegen->Builder.getCurrentFunctionReturnType();
-    auto typeId = valType->getTypeID();
-    auto typeId2 = retType->getTypeID();
-    if (valType->getTypeID() != retType->getTypeID() && retType->getTypeID() == Type::TypeID::IntegerTyID)
-    {
-        val = codegen->Builder.CreateCast(Instruction::CastOps::FPToUI, val, Type::getInt64Ty(codegen->Context), "doubletointcast");
+    if (valType->getTypeID() != retType->getTypeID()) {
+        bool castSuccess;
+        val = Helpers::CreateCastTo(codegen, val, retType, &castSuccess);
+        if (val == nullptr) 
+            return Helpers::Error("(%d:%d) - Could not cast return statement to function return type.", this->LineNumber, this->ColumnNumber);
+        if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
+            Helpers::Warning("(%d:%d) - Casting from %s to %s, possible loss of data.", this->LineNumber, this->ColumnNumber, 
+                Helpers::GetLLVMTypeName(valType).c_str(), Helpers::GetLLVMTypeName(retType).c_str());
     }
     return codegen->Builder.CreateRet(val);
 }
 Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     Value *cond = this->Condition->Codegen(codegen);
+    auto type = cond->getType()->getTypeID();
     if (cond == nullptr)
         return Helpers::Error("(%d:%d) - Could not evaluate 'if' condition.", this->Condition->LineNumber, this->Condition->ColumnNumber);
     if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out
@@ -440,6 +493,8 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
 
     Value *booltrue = Helpers::GetBoolean(codegen, true);
     codegen->Builder.CreateICmpUGE(cond, booltrue, "ifcondition");
+
+
 
     return nullptr;
 }
@@ -454,10 +509,18 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
 
     // If argument count is mismatched
     if (CalleeF->arg_size() != Args.size())
-        return Helpers::Error("(%d:%d) - Incorrect number of arguments passed to function: '%s'", this->LineNumber, this->ColumnNumber, this->Name.c_str());
+        return Helpers::Error("(%d:%d) - Incorrect number of arguments passed to function '%s'", this->LineNumber, this->ColumnNumber, this->Name.c_str());
     std::vector<Value*> argsvals;
-    for (unsigned i = 0, len = this->Args.size(); i < len; ++i){
+    auto calleeArg = CalleeF->arg_begin();
+    for (unsigned i = 0, len = this->Args.size(); i < len; ++i, ++calleeArg){
         Value *val = this->Args[i]->Codegen(codegen);
+        bool castSuccess;
+        val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
+        if (val == nullptr)
+            return Helpers::Error("(%d:%d) - Argument not valid type, failed to cast to destination.", this->LineNumber, this->ColumnNumber);
+        if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
+            Helpers::Warning("(%d:%d) - Casting from %s to %s, possible loss of data.", this->LineNumber, this->ColumnNumber,
+                Helpers::GetLLVMTypeName(val->getType()).c_str(), Helpers::GetLLVMTypeName(calleeArg->getType()).c_str());
         argsvals.push_back(val);
         if (argsvals.back() == nullptr) return nullptr;
     }
