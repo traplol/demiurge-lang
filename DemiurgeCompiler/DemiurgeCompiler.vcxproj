@@ -78,6 +78,7 @@
     <ClInclude Include="AstNodeTypes.h" />
     <ClInclude Include="CodeGenerator.h" />
     <ClInclude Include="CodeGeneratorHelpers.h" />
+    <ClInclude Include="DEFINES.h" />
     <ClInclude Include="DemiurgeCompiler.h" />
     <ClInclude Include="AstNodes.h" />
     <ClInclude Include="Lexer.h" />

@@ -71,5 +71,8 @@
     <ClInclude Include="PossiblePosition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DEFINES.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,34 +1,24 @@
 #include "llvm/Analysis/Passes.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/IR/DataLayout.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
+//#include "llvm/ExecutionEngine/JIT.h"
+//#include "llvm/IR/DataLayout.h"
+//#include "llvm/IR/DerivedTypes.h"
+//#include "llvm/IR/IRBuilder.h"
+//#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/PassManager.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TargetSelect.h"
-#include "llvm/Transforms/Scalar.h"
-#include <cctype>
-#include <cstdio>
-#include <stdarg.h>
-#include <map>
+#include "llvm/Transforms/Scalar.h"c
 
 #include "CodeGenerator.h"
 #include "CodeGeneratorHelpers.h"
-#include "ASTNodes.h"
 #include "TreeContainer.h"
 
+#include "DEFINES.h"
+
 using namespace llvm;
-
-#define COMPILER_RETURN_VALUE_STRING "__return_value__"
-
-namespace Helpers {
-    //static nullptr_t Error(const char *fmt, ...);
-}
-
 CodeGenerator::CodeGenerator() 
     : Context(getGlobalContext())
     , Builder(getGlobalContext()) {
