@@ -17,12 +17,16 @@ namespace llvm {
 }
 
 class IExpressionAST {
-public:
     PossiblePosition Pos;
-    tag_AstNodeType NodeType;
+    AstNodeType NodeType;
+public:
     IExpressionAST() : NodeType(node_default){}
     virtual ~IExpressionAST(){}
     virtual llvm::Value *Codegen(CodeGenerator *codegen) = 0;
+    void setNodeType(AstNodeType type) { NodeType = type; }
+    void setPos(PossiblePosition pos) { Pos = pos; }
+    AstNodeType getNodeType() const { return NodeType; }
+    PossiblePosition getPos() const { return Pos; }
 };
 
 class AstDoubleNode : public IExpressionAST {
@@ -30,9 +34,8 @@ class AstDoubleNode : public IExpressionAST {
 public:
     AstDoubleNode(double value, int line, int column)
         : Value(value) {
-        NodeType = node_double;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_double);
+        setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
 };
@@ -44,11 +47,11 @@ class AstIntegerNode : public IExpressionAST {
 public:
     AstIntegerNode(unsigned long long int value, int line, int column)
         : Value(value) {
-        NodeType = node_integer;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_integer);
+        setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    unsigned long long int getValue() const { return Value; }
 };
 
 class AstBooleanNode : public IExpressionAST {
@@ -56,11 +59,11 @@ class AstBooleanNode : public IExpressionAST {
 public:
     AstBooleanNode(bool value, int line, int column)
         : Value(value) {
-        NodeType = node_boolean;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_boolean);
+        setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    bool getValue() const { return Value; }
 };
 
 class AstStringNode : public IExpressionAST {
@@ -68,11 +71,11 @@ class AstStringNode : public IExpressionAST {
 public:
     AstStringNode(const std::string &value, int line, int column)
         : Value(value) {
-        NodeType = node_string;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_string);
+        setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    const std::string &getValue() const { return Value; }
 };
 
 class AstBinaryOperatorExpr : public IExpressionAST {
@@ -86,14 +89,14 @@ public:
         , Operator(oper)
         , LHS(lhs)
         , RHS(rhs) {
-        NodeType = node_binary_operation;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_binary_operation);
+        setPos(PossiblePosition{ line, column });
     }
     ~AstBinaryOperatorExpr() {
         delete LHS, RHS;
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    virtual llvm::Value *VariableAssignment(CodeGenerator *codegen);
 };
 
 class AstReturnNode : public IExpressionAST {
@@ -101,9 +104,8 @@ class AstReturnNode : public IExpressionAST {
 public:
     AstReturnNode(IExpressionAST *expr, int line, int column)
         : Expr(expr) {
-        NodeType = node_return;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_return);
+        setPos(PossiblePosition{ line, column });
     }
     ~AstReturnNode() {
         delete Expr;
@@ -120,9 +122,8 @@ public:
         : Condition(condition)
         , IfBody(ifBody)
         , ElseBody(elseBody) {
-        NodeType = node_ifelse;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_ifelse);
+        setPos(PossiblePosition{ line, column });
     }
     ~AstIfElseExpression() {
         delete Condition;
@@ -140,9 +141,8 @@ public:
         int line, int column)
         : Condition(condition)
         , WhileBody(whileBody) {
-        NodeType = node_while;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_while);
+        setPos(PossiblePosition{ line, column });
     }
     ~AstWhileExpression() {
         delete Condition;
@@ -158,26 +158,28 @@ public:
     AstCallExpression(const std::string &name, const std::vector<IExpressionAST*> &args, int line, int column)
         : Name(name)
         , Args(args) {
-        NodeType = node_call;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_call);
+        setPos(PossiblePosition{ line, column });
     }
     ~AstCallExpression() {
         while (!Args.empty()) delete Args.back(), Args.pop_back();
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    const std::string &getName() const { return Name; }
 };
 
 class AstTypeNode {
-public:
     PossiblePosition Pos;
     AstNodeType TypeType;
+public:
     AstTypeNode(AstNodeType type, int line, int column)
         : TypeType(type) {
         Pos.LineNumber = line;
         Pos.ColumnNumber = column;
     }
     llvm::Type *GetLLVMType(CodeGenerator *codegen);
+    PossiblePosition getPos() const { return Pos; }
+    AstNodeType getTypeType() const { return TypeType; }
 };
 
 class AstVariableNode : public IExpressionAST {
@@ -185,11 +187,11 @@ class AstVariableNode : public IExpressionAST {
 public:
     AstVariableNode(const std::string &name, int line, int column)
         : Name(name) {
-        NodeType = node_variable;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_variable);
+        setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    const std::string &getName() const { return Name; }
 };
 
 class AstVarNode : public IExpressionAST {
@@ -202,14 +204,15 @@ public:
         : Name(name)
         , AssignmentExpression(assignmentExpression)
         , InferredType(inferredType) {
-        NodeType = node_var;
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
+        setNodeType(node_var);
+        setPos(PossiblePosition{ line, column });
     }
     ~AstVarNode() {
         delete InferredType, AssignmentExpression;
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    const std::string &getName() const { return Name; }
+    AstTypeNode *getInferredType() const { return InferredType; }
 };
 
 class AstTopLevelExpression : public IExpressionAST {
@@ -217,11 +220,11 @@ class AstTopLevelExpression : public IExpressionAST {
 };
 
 class PrototypeAst {
-public:
     PossiblePosition Pos;
     std::string Name;
     std::map<std::string, AstTypeNode*> Args;
     AstTypeNode *ReturnType;
+public:
     PrototypeAst(const std::string &name, AstTypeNode *returnType, const std::map<std::string, AstTypeNode*> &args,
         int line, int column)
         : Name(name)
@@ -238,13 +241,17 @@ public:
     }
     virtual llvm::Function *Codegen(CodeGenerator *codegen);
     void CreateArgumentAllocas(CodeGenerator *codegen, llvm::Function *func);
+
+    PossiblePosition getPos() const { return Pos; }
+    const std::string &getName() const { return Name; }
+    AstTypeNode *getReturnType() const { return ReturnType; }
 };
 
 class FunctionAst {
-public:
     PossiblePosition Pos;
     PrototypeAst *Prototype;
     std::vector<IExpressionAST*> FunctionBody;
+public:
     FunctionAst(PrototypeAst *prototype, const std::vector<IExpressionAST*> &functionBody, int line, int column)
         : Prototype(prototype)
         , FunctionBody(functionBody) {
@@ -256,6 +263,8 @@ public:
         while (!FunctionBody.empty()) delete FunctionBody.back(), FunctionBody.pop_back();
     }
     virtual llvm::Function *Codegen(CodeGenerator *codegen);
+    PossiblePosition getPos() const { return Pos; }
+    PrototypeAst *getReturnType() const { return Prototype; }
 };
 
 

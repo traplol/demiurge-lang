@@ -118,7 +118,23 @@ Value *AstBooleanNode::Codegen(CodeGenerator *codegen) {
 Value *AstStringNode::Codegen(CodeGenerator *codegen) {
     return ConstantDataArray::getString(codegen->Context, this->Value.c_str());
 }
+Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
+    AstVariableNode *lhse = dynamic_cast<AstVariableNode*>(this->LHS);
+    if (lhse == nullptr) // left side of assign operator isn't a variable.
+        return Helpers::Error(this->LHS->getPos(), "Destination of assignment operator must be variable.");
+
+    // Codegen to evaluate the expression to store within the variable.
+    Value *val = this->RHS->Codegen(codegen);
+    if (val == nullptr) return nullptr;
+
+    // Lookup the name of the variable
+    Value *variable = codegen->NamedValues[lhse->getName()];
+
+}
 Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
+    if (this->Operator == '=') {
+        return this->VariableAssignment(codegen);
+    }
     Value *l = this->LHS->Codegen(codegen);
     Value *r = this->RHS->Codegen(codegen);
     if (l == nullptr || r == nullptr) return nullptr;
@@ -126,7 +142,7 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     Type *rType = r->getType();
     auto funcPtr = Helpers::GetBinopCodeGenFuncPointer(this->Operator, lType, rType);
     if (funcPtr == nullptr) {
-        return Helpers::Error(this->Pos, "Operator '%s' does not exist for '%s' and '%s'",
+        return Helpers::Error(this->getPos(), "Operator '%s' does not exist for '%s' and '%s'",
             this->OperatorString.c_str(), Helpers::GetLLVMTypeName(lType).c_str(), Helpers::GetLLVMTypeName(rType).c_str());
     }
     return funcPtr(codegen, l, r);
@@ -135,16 +151,16 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
     // TODO: returning void.
     Value *val = this->Expr->Codegen(codegen);
     if (val == nullptr)
-        return Helpers::Error(this->Pos, "Could not evaluate return statement.");
+        return Helpers::Error(this->getPos(), "Could not evaluate return statement.");
     Type *valType = val->getType();
     Type *retType = codegen->Builder.getCurrentFunctionReturnType();
     if (valType->getTypeID() != retType->getTypeID()) {
         bool castSuccess;
         val = Helpers::CreateCastTo(codegen, val, retType, &castSuccess);
         if (val == nullptr) 
-            return Helpers::Error(this->Expr->Pos, "Could not cast return statement to function return type.");
+            return Helpers::Error(this->Expr->getPos(), "Could not cast return statement to function return type.");
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
-            Helpers::Warning(this->Expr->Pos, "Casting from %s to %s, possible loss of data.",
+            Helpers::Warning(this->Expr->getPos(), "Casting from %s to %s, possible loss of data.",
                 Helpers::GetLLVMTypeName(valType).c_str(), Helpers::GetLLVMTypeName(retType).c_str());
     }
     AllocaInst *retVal = codegen->NamedValues[COMPILER_RETURN_VALUE_STRING];
@@ -155,9 +171,9 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
 Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     Value *cond = this->Condition->Codegen(codegen);
     if (cond == nullptr)
-        return Helpers::Error(this->Condition->Pos, "Could not evaluate 'if' condition.");
+        return Helpers::Error(this->Condition->getPos(), "Could not evaluate 'if' condition.");
     if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
-        return Helpers::Error(this->Condition->Pos, "'if' condition not boolean type.");
+        return Helpers::Error(this->Condition->getPos(), "'if' condition not boolean type.");
     
     Value *booltrue = Helpers::GetBoolean(codegen, true);
     Value *ifCondition = codegen->Builder.CreateICmpUGE(cond, booltrue, "cond");
@@ -207,11 +223,11 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     // Lookup the name in the global module table.
     Function *CalleeF = codegen->TheModule->getFunction(this->Name);
     if (CalleeF == nullptr)
-        return Helpers::Error(this->Pos, "Unknown function, '%s', referenced.", this->Name.c_str());
+        return Helpers::Error(this->getPos(), "Unknown function, '%s', referenced.", this->Name.c_str());
 
     // If argument count is mismatched
     if (CalleeF->arg_size() != Args.size())
-        return Helpers::Error(this->Pos, "Incorrect number of arguments passed to function '%s'", this->Name.c_str());
+        return Helpers::Error(this->getPos(), "Incorrect number of arguments passed to function '%s'", this->Name.c_str());
     std::vector<Value*> argsvals;
     auto calleeArg = CalleeF->arg_begin();
     for (unsigned i = 0, len = this->Args.size(); i < len; ++i, ++calleeArg){
@@ -219,9 +235,9 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
         bool castSuccess;
         val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
         if (val == nullptr)
-            return Helpers::Error(this->Args[i]->Pos, "Argument not valid type, failed to cast to destination.");
+            return Helpers::Error(this->Args[i]->getPos(), "Argument not valid type, failed to cast to destination.");
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
-            Helpers::Warning(this->Args[i]->Pos, "Casting from %s to %s, possible loss of data.",
+            Helpers::Warning(this->Args[i]->getPos(), "Casting from %s to %s, possible loss of data.",
                 Helpers::GetLLVMTypeName(val->getType()).c_str(), Helpers::GetLLVMTypeName(calleeArg->getType()).c_str());
         argsvals.push_back(val);
         if (argsvals.back() == nullptr) return nullptr;
@@ -230,7 +246,7 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
 }
 Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
     Value *v = codegen->NamedValues[this->Name];
-    if (v == nullptr) return Helpers::Error(this->Pos, "Unknown variable name.");
+    if (v == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name.");
     return codegen->Builder.CreateLoad(v, this->Name.c_str());
 }
 Value *AstVarNode::Codegen(CodeGenerator *codegen) {
@@ -299,7 +315,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     codegen->Builder.SetInsertPoint(entryBB);
     this->Prototype->CreateArgumentAllocas(codegen, func);
     // TODO: Check if return type is void and do not create return value, but return void.
-    AllocaInst *retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, this->Prototype->ReturnType->GetLLVMType(codegen));
+    AllocaInst *retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, this->Prototype->getReturnType()->GetLLVMType(codegen));
     codegen->NamedValues[COMPILER_RETURN_VALUE_STRING] = retVal;
 
     auto block = Helpers::EmitBlock(codegen, this->FunctionBody);

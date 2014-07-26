@@ -360,7 +360,7 @@ AstTypeNode *Parser::parseTypeNode() {
 }
 // Attempts to generate an AstTypeNode from the expression's type.
 AstTypeNode *Parser::tryInferType(IExpressionAST *expr) {
-    switch (expr->NodeType) {
+    switch (expr->getNodeType()) {
     default: return nullptr;
     case node_void: return new AstTypeNode(node_void, _curToken->Line(), _curToken->Column());
     case node_boolean: return new AstTypeNode(node_boolean, _curToken->Line(), _curToken->Column());
