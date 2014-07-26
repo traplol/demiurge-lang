@@ -1,4 +1,14 @@
 demiurge-lang
 =============
 
-The Demiurge programming language compiler.
+
+The Demiurge Programming Language Compiler
+  
+``` 
+demiurge  (ˈdɛmɪˌɜːdʒ, ˈdiː-) 
+
+— n
+1.	a. (in the philosophy of Plato) the creator of the universe
+ 	b. (in Gnostic and some other philosophies) the creator of the universe, 
+ 	    supernatural but subordinate to the Supreme Being
+```
