@@ -20,7 +20,7 @@ public:
 private:
     Token *_curToken;
     int _curTokenType;
-    
+
     std::map<int, int> _operatorPrecedence;
     std::vector<Token*> _tokens;
 

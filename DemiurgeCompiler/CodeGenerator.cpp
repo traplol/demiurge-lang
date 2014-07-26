@@ -24,6 +24,10 @@
 
 using namespace llvm;
 
+namespace Helpers {
+    static nullptr_t Error(const char *fmt, ...);
+}
+
 CodeGenerator::CodeGenerator() 
     : Context(getGlobalContext())
     , Builder(getGlobalContext()) {
@@ -78,8 +82,16 @@ void CodeGenerator::CacheLastModule() {
 }
 
 void CodeGenerator::DumpLastModule() {
+    auto moduleName = TheModule->getModuleIdentifier().c_str();
+    fprintf(stderr, "\n\n============ BEGIN DUMPING MODULE '%s' ============\n\n", moduleName);
     TheModule->dump();
+    fprintf(stderr, "\n\n============ END DUMPING MODULE '%s' ============\n\n", moduleName);
+    
     Function *mainFunc = TheModule->getFunction("main");
+    if (mainFunc == nullptr) {
+        Helpers::Error("No main function found!");
+        return;
+    }
     void *mainFnPtr = TheExecutionEngine->getPointerToFunction(mainFunc);
     
     double(*FP)() = (double(*)())mainFnPtr;
@@ -123,233 +135,248 @@ namespace Helpers {
         return tmpBuilder.CreateAlloca(type, 0, varName.c_str());
     }
 
-    typedef Value*(*BinOpCodeGenFuncPtr)(CodeGenerator*, Value*, Value*);
-    typedef BinOpCodeGenFuncPtr(*GetFuncPtr)(TokenType);
-    typedef std::map<Type::TypeID, std::map<Type::TypeID, GetFuncPtr > > LookupTableMapMap;
-
-    Value *FailedLookupFunc(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return Error("Failed to lookup binary operator function.");
+    Value *GetDouble(CodeGenerator *codegen, double val) {
+        return ConstantFP::get(codegen->Context, APFloat(val));
+    }
+    Value *GetInt(CodeGenerator *codegen, unsigned long long int val, int bitwidth) {
+        return ConstantInt::get(codegen->Context, APInt(bitwidth, val));
+    }
+    Value *GetBoolean(CodeGenerator *codegen, bool val) {
+        return GetInt(codegen, val, 1);
+    }
+    Value *GetString(CodeGenerator *codegen, std::string val) {
+        return ConstantDataArray::getString(codegen->Context, val.c_str());
     }
 
-    // int:int
+    namespace LLVMBinOperations{
+        typedef Value*(*BinOpCodeGenFuncPtr)(CodeGenerator*, Value*, Value*);
+        typedef BinOpCodeGenFuncPtr(*GetFuncPtr)(TokenType);
+        typedef std::map<Type::TypeID, std::map<Type::TypeID, GetFuncPtr > > LookupTableMapMap;
 
-    Value *intintAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateAdd(lhs, rhs, "intintAdd");
-    }
-    Value *intintSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateSub(lhs, rhs, "intintSub");
-    }
-    Value *intintMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateMul(lhs, rhs, "intintMul");
-    }
-    Value *intintDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateSDiv(lhs, rhs, "intintDiv");
-    }
-    Value *intintMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateSRem(lhs, rhs, "intintMod");
-    }
-    Value *intintLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateICmpSLT(lhs, rhs, "intintLT");
-    }
-    Value *intintGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateICmpSGT(lhs, rhs, "intintGT");
-    }
-    Value *intintLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateICmpSLE(lhs, rhs, "intintLE");
-    }
-    Value *intintGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateICmpSGE(lhs, rhs, "intintGE");
-    }
-    Value *intintEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateICmpEQ(lhs, rhs, "intintEQ");
-    }
-    Value *intintNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateICmpNE(lhs, rhs, "intintNE");
-    }
+        Value *FailedLookupFunc(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return Error("Failed to lookup binary operator function.");
+        }
 
-    BinOpCodeGenFuncPtr getIntIntFuncPtr(TokenType type) {
-        switch (type) {
-        default: return FailedLookupFunc;
-        case '+': return intintAdd;
-        case '-': return intintSub;
-        case '*': return intintMul;
-        case '/': return intintDiv;
-        case '%': return intintMod;
-        case '<': return intintLT;
-        case '>': return intintGT;
-        case tok_lessequal: return intintLE;
-        case tok_greatequal: return intintGE;
-        case tok_equalequal: return intintEQ;
-        case tok_notequal: return intintNE;
+        // int:int
+
+        Value *intintAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateAdd(lhs, rhs, "intintAdd");
+        }
+        Value *intintSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateSub(lhs, rhs, "intintSub");
+        }
+        Value *intintMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateMul(lhs, rhs, "intintMul");
+        }
+        Value *intintDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateSDiv(lhs, rhs, "intintDiv");
+        }
+        Value *intintMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateSRem(lhs, rhs, "intintMod");
+        }
+        Value *intintLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateICmpSLT(lhs, rhs, "intintLT");
+        }
+        Value *intintGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateICmpSGT(lhs, rhs, "intintGT");
+        }
+        Value *intintLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateICmpSLE(lhs, rhs, "intintLE");
+        }
+        Value *intintGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateICmpSGE(lhs, rhs, "intintGE");
+        }
+        Value *intintEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateICmpEQ(lhs, rhs, "intintEQ");
+        }
+        Value *intintNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateICmpNE(lhs, rhs, "intintNE");
+        }
+
+        BinOpCodeGenFuncPtr getIntIntFuncPtr(TokenType type) {
+            switch (type) {
+            default: return FailedLookupFunc;
+            case '+': return intintAdd;
+            case '-': return intintSub;
+            case '*': return intintMul;
+            case '/': return intintDiv;
+            case '%': return intintMod;
+            case '<': return intintLT;
+            case '>': return intintGT;
+            case tok_lessequal: return intintLE;
+            case tok_greatequal: return intintGE;
+            case tok_equalequal: return intintEQ;
+            case tok_notequal: return intintNE;
+            }
+        }
+
+        // int:double | double:int
+        Value *intToDouble(CodeGenerator *codegen, Value *intValue) {
+            return codegen->Builder.CreateSIToFP(intValue, Type::getDoubleTy(codegen->Context), "uintToFp");
+        }
+        Value *doubleToInt(CodeGenerator *codegen, Value *doubleValue) {
+            return codegen->Builder.CreateSIToFP(doubleValue, Type::getInt64Ty(codegen->Context), "fpToUint");
+        }
+
+        Value *intdoubleAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFAdd(lhs, rhs, "intdoubleAdd");
+        }
+        Value *intdoubleSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFSub(lhs, rhs, "intdoubleSub");
+        }
+        Value *intdoubleMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFMul(lhs, rhs, "intdoubleMul");
+        }
+        Value *intdoubleDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFDiv(lhs, rhs, "intdoubleDiv");
+        }
+        Value *intdoubleMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFRem(lhs, rhs, "intdoubleMod");
+        }
+        Value *intdoubleLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFCmpULT(lhs, rhs, "intdoubleLT");
+        }
+        Value *intdoubleGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFCmpUGT(lhs, rhs, "intdoubleGT");
+        }
+        Value *intdoubleLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFCmpULE(lhs, rhs, "intdoubleLE");
+        }
+        Value *intdoubleGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFCmpUGE(lhs, rhs, "intdoubleGE");
+        }
+        Value *intdoubleEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->isIntegerTy())
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFCmpOEQ(lhs, rhs, "intdoubleEQ");
+        }
+        Value *intdoubleNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
+                lhs = intToDouble(codegen, lhs);
+            else rhs = intToDouble(codegen, rhs);
+
+            return codegen->Builder.CreateFCmpONE(lhs, rhs, "intdoubleNE");
+        }
+
+        BinOpCodeGenFuncPtr getIntDoubleFuncPtr(TokenType type) {
+            switch (type) {
+            default: return FailedLookupFunc;
+            case '+': return intdoubleAdd;
+            case '-': return intdoubleSub;
+            case '*': return intdoubleMul;
+            case '/': return intdoubleDiv;
+            case '%': return intdoubleMod;
+            case '<': return intdoubleLT;
+            case '>': return intdoubleGT;
+            case tok_lessequal: return intdoubleLE;
+            case tok_greatequal: return intdoubleGE;
+            case tok_equalequal: return intdoubleEQ;
+            case tok_notequal: return intdoubleNE;
+            }
+        }
+
+        // double:double
+        Value *doubledoubleAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFAdd(lhs, rhs, "doubledoubleAdd");
+        }
+        Value *doubledoubleSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFSub(lhs, rhs, "doubledoubleSub");
+        }
+        Value *doubledoubleMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFMul(lhs, rhs, "doubledoubleMul");
+        }
+        Value *doubledoubleDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFDiv(lhs, rhs, "doubledoubleDiv");
+        }
+        Value *doubledoubleMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFRem(lhs, rhs, "doubledoubleMod");
+        }
+        Value *doubledoubleLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFCmpULT(lhs, rhs, "doubledoubleLT");
+        }
+        Value *doubledoubleGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFCmpUGT(lhs, rhs, "doubledoubleGT");
+        }
+        Value *doubledoubleLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFCmpULE(lhs, rhs, "doubledoubleLE");
+        }
+        Value *doubledoubleGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFCmpUGE(lhs, rhs, "doubledoubleGE");
+        }
+        Value *doubledoubleEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFCmpOEQ(lhs, rhs, "doubledoubleEQ");
+        }
+        Value *doubledoubleNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->Builder.CreateFCmpONE(lhs, rhs, "doubledoubleNE");
+        }
+
+        BinOpCodeGenFuncPtr getDoubleDoubleFuncPtr(TokenType type) {
+            switch (type) {
+            default: return FailedLookupFunc;
+            case '+': return doubledoubleAdd;
+            case '-': return doubledoubleSub;
+            case '*': return doubledoubleMul;
+            case '/': return doubledoubleDiv;
+            case '%': return doubledoubleMod;
+            case '<': return doubledoubleLT;
+            case '>': return doubledoubleGT;
+            case tok_lessequal: return doubledoubleLE;
+            case tok_greatequal: return doubledoubleGE;
+            case tok_equalequal: return doubledoubleEQ;
+            case tok_notequal: return doubledoubleNE;
+            }
+        }
+
+        LookupTableMapMap getLookupTable() {
+            LookupTableMapMap lookupTable;
+            lookupTable[Type::IntegerTyID][Type::IntegerTyID] = getIntIntFuncPtr;
+            lookupTable[Type::IntegerTyID][Type::DoubleTyID] = getIntDoubleFuncPtr;
+            lookupTable[Type::DoubleTyID][Type::IntegerTyID] = getIntDoubleFuncPtr;
+            lookupTable[Type::DoubleTyID][Type::DoubleTyID] = getDoubleDoubleFuncPtr;
+            return lookupTable;
         }
     }
 
-    // int:double | double:int
-    Value *intToDouble(CodeGenerator *codegen, Value *intValue) {
-        return codegen->Builder.CreateSIToFP(intValue, Type::getDoubleTy(codegen->Context), "uintToFp");
-    }
-    Value *doubleToInt(CodeGenerator *codegen, Value *doubleValue) {
-        return codegen->Builder.CreateSIToFP(doubleValue, Type::getInt64Ty(codegen->Context), "fpToUint");
-    }
-
-    Value *intdoubleAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFAdd(lhs, rhs, "intdoubleAdd");
-    }
-    Value *intdoubleSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFSub(lhs, rhs, "intdoubleSub");
-    }
-    Value *intdoubleMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFMul(lhs, rhs, "intdoubleMul");
-    }
-    Value *intdoubleDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFDiv(lhs, rhs, "intdoubleDiv");
-    }
-    Value *intdoubleMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFRem(lhs, rhs, "intdoubleMod");
-    }
-    Value *intdoubleLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFCmpULT(lhs, rhs, "intdoubleLT");
-    }
-    Value *intdoubleGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFCmpUGT(lhs, rhs, "intdoubleGT");
-    }
-    Value *intdoubleLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFCmpULE(lhs, rhs, "intdoubleLE");
-    }
-    Value *intdoubleGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFCmpUGE(lhs, rhs, "intdoubleGE");
-    }
-    Value *intdoubleEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFCmpOEQ(lhs, rhs, "intdoubleEQ");
-    }
-    Value *intdoubleNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
-            lhs = intToDouble(codegen, lhs);
-        else rhs = intToDouble(codegen, rhs);
-
-        return codegen->Builder.CreateFCmpONE(lhs, rhs, "intdoubleNE");
-    }
-
-    BinOpCodeGenFuncPtr getIntDoubleFuncPtr(TokenType type) {
-        switch (type) {
-        default: return FailedLookupFunc;
-        case '+': return intdoubleAdd;
-        case '-': return intdoubleSub;
-        case '*': return intdoubleMul;
-        case '/': return intdoubleDiv;
-        case '%': return intdoubleMod;
-        case '<': return intdoubleLT;
-        case '>': return intdoubleGT;
-        case tok_lessequal: return intdoubleLE;
-        case tok_greatequal: return intdoubleGE;
-        case tok_equalequal: return intdoubleEQ;
-        case tok_notequal: return intdoubleNE;
-        }
-    }
-
-    // double:double
-    Value *doubledoubleAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFAdd(lhs, rhs, "doubledoubleAdd");
-    }
-    Value *doubledoubleSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFSub(lhs, rhs, "doubledoubleSub");
-    }
-    Value *doubledoubleMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFMul(lhs, rhs, "doubledoubleMul");
-    }
-    Value *doubledoubleDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFDiv(lhs, rhs, "doubledoubleDiv");
-    }
-    Value *doubledoubleMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFRem(lhs, rhs, "doubledoubleMod");
-    }
-    Value *doubledoubleLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFCmpULT(lhs, rhs, "doubledoubleLT");
-    }
-    Value *doubledoubleGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFCmpUGT(lhs, rhs, "doubledoubleGT");
-    }
-    Value *doubledoubleLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFCmpULE(lhs, rhs, "doubledoubleLE");
-    }
-    Value *doubledoubleGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFCmpUGE(lhs, rhs, "doubledoubleGE");
-    }
-    Value *doubledoubleEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFCmpOEQ(lhs, rhs, "doubledoubleEQ");
-    }
-    Value *doubledoubleNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-        return codegen->Builder.CreateFCmpONE(lhs, rhs, "doubledoubleNE");
-    }
-
-    BinOpCodeGenFuncPtr getDoubleDoubleFuncPtr(TokenType type) {
-        switch (type) {
-        default: return FailedLookupFunc;
-        case '+': return doubledoubleAdd;
-        case '-': return doubledoubleSub;
-        case '*': return doubledoubleMul;
-        case '/': return doubledoubleDiv;
-        case '%': return doubledoubleMod;
-        case '<': return doubledoubleLT;
-        case '>': return doubledoubleGT;
-        case tok_lessequal: return doubledoubleLE;
-        case tok_greatequal: return doubledoubleGE;
-        case tok_equalequal: return doubledoubleEQ;
-        case tok_notequal: return doubledoubleNE;
-        }
-    }
-
-    LookupTableMapMap getLookupTable() {
-        LookupTableMapMap lookupTable;
-        lookupTable[Type::IntegerTyID][Type::IntegerTyID] = getIntIntFuncPtr;
-        lookupTable[Type::IntegerTyID][Type::DoubleTyID] = getIntDoubleFuncPtr;
-        lookupTable[Type::DoubleTyID][Type::IntegerTyID] = getIntDoubleFuncPtr;
-        lookupTable[Type::DoubleTyID][Type::DoubleTyID] = getDoubleDoubleFuncPtr;
-        return lookupTable;
-    }
-
-    BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType) {
-        auto func = getLookupTable()[lType->getTypeID()][rType->getTypeID()];
+    LLVMBinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType) {
+        auto func = LLVMBinOperations::getLookupTable()[lType->getTypeID()][rType->getTypeID()];
         if (func == nullptr) return nullptr;
         return func(Operator);
     }
@@ -392,6 +419,8 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
 }
 Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
     Value *val = this->Expr->Codegen(codegen);
+    if (val == nullptr)
+        return Helpers::Error("(%d:%d) - Could not evaluate return statement.", this->LineNumber, this->ColumnNumber);
     Type *valType = val->getType();
     Type *retType = codegen->Builder.getCurrentFunctionReturnType();
     auto typeId = valType->getTypeID();
@@ -403,6 +432,14 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
     return codegen->Builder.CreateRet(val);
 }
 Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
+    Value *cond = this->Condition->Codegen(codegen);
+    if (cond == nullptr)
+        return Helpers::Error("(%d:%d) - Could not evaluate 'if' condition.", this->Condition->LineNumber, this->Condition->ColumnNumber);
+    if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out
+        return Helpers::Error("(%d:%d) - 'if' condition not boolean type.", this->Condition->LineNumber, this->Condition->ColumnNumber);
+
+    Value *booltrue = Helpers::GetBoolean(codegen, true);
+    codegen->Builder.CreateICmpUGE(cond, booltrue, "ifcondition");
 
     return nullptr;
 }
@@ -413,11 +450,11 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     // Lookup the name in the global module table.
     Function *CalleeF = codegen->TheModule->getFunction(this->Name);
     if (CalleeF == nullptr)
-        return Helpers::Error("Unknown function, '%s', referenced.", this->Name.c_str());
+        return Helpers::Error("(%d:%d) - Unknown function, '%s', referenced.",this->LineNumber, this->ColumnNumber, this->Name.c_str());
 
     // If argument count is mismatched
     if (CalleeF->arg_size() != Args.size())
-        return Helpers::Error("Incorrect number of arguments passed to function: '%s'", this->Name.c_str());
+        return Helpers::Error("(%d:%d) - Incorrect number of arguments passed to function: '%s'", this->LineNumber, this->ColumnNumber, this->Name.c_str());
     std::vector<Value*> argsvals;
     for (unsigned i = 0, len = this->Args.size(); i < len; ++i){
         Value *val = this->Args[i]->Codegen(codegen);
@@ -428,7 +465,7 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
 }
 Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
     Value *v = codegen->NamedValues[this->Name];
-    if (v == nullptr) return Helpers::Error("Unknown variable name.");
+    if (v == nullptr) return Helpers::Error("(%d:%d) - Unknown variable name.", this->LineNumber, this->ColumnNumber);
     return codegen->Builder.CreateLoad(v, this->Name.c_str());
 }
 Value *AstVarNode::Codegen(CodeGenerator *codegen) {
@@ -453,12 +490,12 @@ Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
 
         // if func already has a body, reject this.
         if (!func->empty()) {
-            return Helpers::Error("Redefinition of function '%s'", this->Name.c_str());
+            return Helpers::Error("(%d:%d) - Redefinition of function '%s'", this->LineNumber, this->ColumnNumber, this->Name.c_str());
         }
 
         // if func took a different number of args, reject
         if (func->arg_size() != this->Args.size()) {
-            return Helpers::Error("Redefinitionof function '%s' with a different number of arguments.", this->Name.c_str());
+            return Helpers::Error("(%d:%d) - Redefinitionof function '%s' with a different number of arguments.", this->LineNumber, this->ColumnNumber, this->Name.c_str());
         }
     }
     return func;
@@ -501,7 +538,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
 
     if (verifyFunction(*func, &errs())) {
         func->eraseFromParent();
-        return Helpers::Error("Error creating function body.");
+        return Helpers::Error("(%d:%d) - Error creating function body.", this->Prototype->LineNumber, this->Prototype->ColumnNumber);
     }
     else {
         codegen->TheFPM->run(*func);

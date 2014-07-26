@@ -20,5 +20,8 @@ int main(int argc, char **argv) {
 #endif
     if (compiler.UseArgs(args))
         compiler.Run();
+#if defined(_WIN32) && defined(_DEBUG)
+    system("PAUSE");
+#endif
     return 0;
 }
