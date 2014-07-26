@@ -1,6 +1,6 @@
 #include "llvm/Analysis/Passes.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-//#include "llvm/ExecutionEngine/JIT.h"
+#include "llvm/ExecutionEngine/JIT.h"
 //#include "llvm/IR/DataLayout.h"
 //#include "llvm/IR/DerivedTypes.h"
 //#include "llvm/IR/IRBuilder.h"
@@ -30,6 +30,9 @@ CodeGenerator::CodeGenerator()
     TheExecutionEngine = EngineBuilder(TheModule).setErrorStr(&ErrStr).create();
     if (!TheExecutionEngine) {
         fprintf(stderr, "Could not create ExecutionEngine: %s\n", ErrStr.c_str());
+#ifdef _WIN32
+        system("PAUSE");
+#endif
         exit(1);
     }
 
@@ -231,6 +234,7 @@ Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
     return codegen->Builder.CreateLoad(v, this->Name.c_str());
 }
 Value *AstVarNode::Codegen(CodeGenerator *codegen) {
+    this;
     return nullptr;
 }
 Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
