@@ -77,27 +77,56 @@ namespace Helpers {
     // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
     std::vector<llvm::Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IExpressionAST*> &block, bool stopAtFirstReturn = false, bool *stopped = nullptr);
+  
     // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
     // the function.  This is used for mutable variables etc.
     llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function *function, const std::string &varName, llvm::Type *type);
   
     // Creates a LLVM::Value* of double type from the llvm::Value passed.
     llvm::Value *GetDouble(CodeGenerator *codegen, double val);
+    
     // Creates a LLVM::Value* of integer type with specified width from the value passed.
     llvm::Value *GetInt(CodeGenerator *codegen, unsigned long long int val, int bitwidth);
+    
+    // Creates a LLVM::Value* of integer64 type with a value of zero.
+    llvm::Value *GetZero_64(CodeGenerator *codegen);
+    
+    // Creates a LLVM::Value* of integer64 type with a value of one.
+    llvm::Value *GetOne_64(CodeGenerator *codegen);
+    
+    // Creates a LLVM::Value* of integer64 type with a value of two.
+    llvm::Value *GetTwo_64(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of integer8 type with a value of zero.
+    llvm::Value *GetZero_8(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of integer8 type with a value of one.
+    llvm::Value *GetOne_8(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of integer8 type with a value of two.
+    llvm::Value *GetTwo_8(CodeGenerator *codegen);
+    
     // Creates a LLVM::Value* of integer1 type from the llvm::Value passed.
     llvm::Value *GetBoolean(CodeGenerator *codegen, bool val);
+   
     // Creates a LLVM::Value* of integer64 type from the value passed.
     llvm::Value *GetInt64(CodeGenerator *codegen, unsigned long long int val);
+   
     // Creates a LLVM::Value* of integer8* type from the llvm::Value passed.
     llvm::Value *GetString(CodeGenerator *codegen, std::string val);
+  
     // Returns a string representation of the passed llvm type.
     std::string GetLLVMTypeName(llvm::Type *Ty);
+  
     // Will attempt to cast one llvm::Value to another type and sets 'castSuccessful' to true if a cast happened, otherwise false.
     llvm::Value *CreateCastTo(CodeGenerator *codegen, llvm::Value *val, llvm::Type *castToType, bool *castSuccessful = nullptr);
+  
     // Creates a default value for a given type, returns nullptr if default value isn't known.
     llvm::Value *GetDefaultValue(CodeGenerator *codegen, AstTypeNode *typeNode);
     llvm::Value *GetDefaultValue(CodeGenerator *codegen, llvm::Type *type);
+
+    // Returns the current llvm::Function*
+    llvm::Function *GetCurrentFunction(CodeGenerator *codegen);
 }
 
 #endif

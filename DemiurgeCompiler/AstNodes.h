@@ -30,52 +30,53 @@ public:
 };
 
 class AstDoubleNode : public IExpressionAST {
-    double Value;
+    double Val;
 public:
     AstDoubleNode(double value, int line, int column)
-        : Value(value) {
+        : Val(value) {
         setNodeType(node_double);
         setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
+    double getValue() const { return Val; }
 };
 
 class AstIntegerNode : public IExpressionAST {
     // The reason this is unsigned is because rather than trying to parse a negative number
     // we will rely on the negate, '-', operator to create negative numbers.
-    unsigned long long int Value;
+    unsigned long long int Val;
 public:
     AstIntegerNode(unsigned long long int value, int line, int column)
-        : Value(value) {
+        : Val(value) {
         setNodeType(node_integer);
         setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
-    unsigned long long int getValue() const { return Value; }
+    unsigned long long int getValue() const { return Val; }
 };
 
 class AstBooleanNode : public IExpressionAST {
-    bool Value;
+    bool Val;
 public:
     AstBooleanNode(bool value, int line, int column)
-        : Value(value) {
+        : Val(value) {
         setNodeType(node_boolean);
         setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
-    bool getValue() const { return Value; }
+    bool getValue() const { return Val; }
 };
 
 class AstStringNode : public IExpressionAST {
-    std::string Value;
+    std::string Val;
 public:
     AstStringNode(const std::string &value, int line, int column)
-        : Value(value) {
+        : Val(value) {
         setNodeType(node_string);
         setPos(PossiblePosition{ line, column });
     }
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
-    const std::string &getValue() const { return Value; }
+    const std::string &getValue() const { return Val; }
 };
 
 class AstBinaryOperatorExpr : public IExpressionAST {

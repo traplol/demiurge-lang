@@ -295,6 +295,31 @@ namespace Helpers {
     Value *GetDouble(CodeGenerator *codegen, double val) {
         return ConstantFP::get(codegen->Context, APFloat(val));
     }
+    // Creates a LLVM::Value* of integer64 type with a value of zero.
+    Value *GetZero_64(CodeGenerator *codegen) {
+        return GetInt64(codegen, 0);
+    }
+    // Creates a LLVM::Value* of integer64 type with a value of one.
+    Value *GetOne_64(CodeGenerator *codegen) {
+        return GetInt64(codegen, 1);
+    }
+    // Creates a LLVM::Value* of integer64 type with a value of two.
+    Value *GetTwo_64(CodeGenerator *codegen) {
+        return GetInt64(codegen, 2);
+    }
+    // Creates a LLVM::Value* of integer8 type with a value of zero.
+    llvm::Value *GetZero_8(CodeGenerator *codegen) {
+        return GetInt(codegen, 0, 0);
+    }
+    // Creates a LLVM::Value* of integer8 type with a value of one.
+    llvm::Value *GetOne_8(CodeGenerator *codegen) {
+        return GetInt(codegen, 1, 8);
+    }
+    // Creates a LLVM::Value* of integer8 type with a value of two.
+    llvm::Value *GetTwo_8(CodeGenerator *codegen) {
+        return GetInt(codegen, 2, 8);
+    }
+
     // Creates a LLVM::Value* of integer type with specified width from the value passed.
     Value *GetInt(CodeGenerator *codegen, unsigned long long int val, int bitwidth) {
         return ConstantInt::get(codegen->Context, APInt(bitwidth, val));
@@ -315,15 +340,25 @@ namespace Helpers {
     // Returns a string representation of the passed llvm type.
     std::string GetLLVMTypeName(Type *Ty) {
         switch (Ty->getTypeID()) {
-        default: return "not supported";
-        case Type::TypeID::DoubleTyID: return "double";
-        case Type::TypeID::FloatTyID: return "float";
-        case Type::TypeID::ArrayTyID: return "array";
-        case Type::TypeID::FunctionTyID: return "function";
-        case Type::TypeID::IntegerTyID: return "int";
-        case Type::TypeID::PointerTyID: return "pointer";
-        case Type::TypeID::StructTyID: return "struct";
-        case Type::TypeID::VoidTyID: return "void";
+        case Type::TypeID::VoidTyID: return "void";                     //  0: type with no size
+        case Type::TypeID::FloatTyID: return "float32";                 //  2: 32-bit floating point type
+        case Type::TypeID::DoubleTyID: return "float64";                //  3: 64-bit floating point type
+
+        case Type::TypeID::IntegerTyID: return "integer";               // 10: Arbitrary bit width integers
+        case Type::TypeID::FunctionTyID: return "function";             // 11: Functions
+        case Type::TypeID::StructTyID: return "struct";                 // 12: Structures
+        case Type::TypeID::ArrayTyID: return "array";                   // 13: Arrays
+        case Type::TypeID::PointerTyID: return "pointer";               // 14: Pointers
+        case Type::TypeID::VectorTyID: return "vector";                 // 15: SIMD 'packed' format: or other vector type
+
+        case Type::TypeID::LabelTyID: return "label";                   //  7: Labels
+        case Type::TypeID::MetadataTyID: return "metadata";             //  8: Metadata
+        //  Likely to never be used:
+        //case Type::TypeID::HalfTyID: return "float16";                  //  1: 16-bit floating point type
+        //case Type::TypeID::X86_FP80TyID: return "float80_x87";          //  4: 80-bit floating point type (X87)
+        //case Type::TypeID::FP128TyID: return "float128_112bit_mantissa";//  5: 128-bit floating point type (112-bit mantissa)
+        //case Type::TypeID::PPC_FP128TyID: return "float128_ppc";        //  6: 128-bit floating point type (two 64-bits: PowerPC)
+        //case Type::TypeID::X86_MMXTyID: return "mmx_vector_64_x86";     //  9: MMX vectors (64 bits: X86 specific)
         }
     }
 
@@ -375,5 +410,10 @@ namespace Helpers {
         case Type::DoubleTyID: return GetDouble(codegen, 0.0);
         case Type::IntegerTyID: return GetInt64(codegen, 0);
         }
+    }
+
+    // Returns the current llvm::Function*
+    Function *GetCurrentFunction(CodeGenerator *codegen) {
+        return codegen->Builder.GetInsertBlock()->getParent();
     }
 }

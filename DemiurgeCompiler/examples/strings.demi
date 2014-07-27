@@ -1,11 +1,18 @@
+func test(x:string) : int {
+    println(x);
+    return 1;
+}
+
 func main() : int {
-    var str = "Hello world!";
-    /*var x = str;
-    var num = 54;*/
-    print(str);
-    //println("Hello world!!!");
-    //printi(num);
-    //printd(5.5);
-    //printc(65);
+    var str = "Hello world!\n"; // Added a new line char to the end of the string.
+    test(str);              // example of passing a string to another function.
+    var x = str;            // inferred type
+    var num = 54;
+    print(x);               // Does not append a new line.
+    println("test123");     // Appends a new line char
+    printi(num);            // prints an integer
+    printd(5.5);            // prints a floating point value
+    printc(65);             // prints an integer as a character
+    println("");            // empty line.
     return 0;
 }

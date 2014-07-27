@@ -37,7 +37,7 @@ CodeGenerator::CodeGenerator()
 #endif
         exit(1);
     }
-
+    
     TheFPM = new FunctionPassManager(TheModule);
 
     // Set up the optimizer pipeline.  Start with registering info about how the
@@ -58,7 +58,6 @@ CodeGenerator::CodeGenerator()
     TheFPM->add(createCFGSimplificationPass());
 
     TheFPM->doInitialization();
-
     InitJitOutputFunctions();
 }
 
@@ -140,18 +139,18 @@ Type *AstTypeNode::GetLLVMType(CodeGenerator *codegen) {
 }
 
 Value *AstDoubleNode::Codegen(CodeGenerator *codegen) {
-    return ConstantFP::get(codegen->Context, APFloat(this->Value));
+    return ConstantFP::get(codegen->Context, APFloat(this->Val));
 }
 Value *AstIntegerNode::Codegen(CodeGenerator *codegen) {
-    return ConstantInt::get(Type::getInt64Ty(codegen->Context), this->Value, true);
+    return ConstantInt::get(Type::getInt64Ty(codegen->Context), this->Val, true);
 }
 Value *AstBooleanNode::Codegen(CodeGenerator *codegen) {
-    if (this->Value == true)
+    if (this->Val == true)
         return codegen->Builder.getTrue();
     return codegen->Builder.getFalse();
 }
 Value *AstStringNode::Codegen(CodeGenerator *codegen) {
-    return ConstantDataArray::getString(codegen->Context, this->Value.c_str());
+    return codegen->Builder.CreateGlobalStringPtr(this->Val, "globalstr_" + this->Val.substr(0, 10));
 }
 Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     AstVariableNode *lhse = dynamic_cast<AstVariableNode*>(this->LHS);
@@ -286,7 +285,7 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
         bool castSuccess;
         val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
         if (val == nullptr)
-            return Helpers::Error(this->Args[i]->getPos(), "Function argument not valid type, failed to cast to destination.");
+            return Helpers::Error(this->Args[i]->getPos(), "Function argument not valid type, failed to cast to destination type.");
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
             Helpers::Warning(this->Args[i]->getPos(), "Casting from %s to %s, possible loss of data.",
                 Helpers::GetLLVMTypeName(val->getType()).c_str(), Helpers::GetLLVMTypeName(calleeArg->getType()).c_str());
@@ -298,6 +297,7 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
 Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
     Value *v = codegen->NamedValues[this->Name];
     if (v == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name.");
+    auto type = Helpers::GetLLVMTypeName(v->getType());
     return codegen->Builder.CreateLoad(v, this->Name.c_str());
 }
 Value *AstVarNode::Codegen(CodeGenerator *codegen) {
@@ -313,6 +313,7 @@ Value *AstVarNode::Codegen(CodeGenerator *codegen) {
     }
     else {
         initialVal = expr->Codegen(codegen);
+        auto type = Helpers::GetLLVMTypeName(initialVal->getType());
         Alloca = Helpers::CreateEntryBlockAlloca(func, this->Name, initialVal->getType());
     }
     codegen->Builder.CreateStore(initialVal, Alloca);
@@ -411,5 +412,6 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     }
     return func;
 }
+
 
 
