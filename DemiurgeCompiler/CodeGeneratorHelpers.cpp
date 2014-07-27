@@ -271,6 +271,10 @@ namespace Helpers {
             }
             
             Value *val = expr->Codegen(codegen);
+            if (val == nullptr) {
+                vals.clear();
+                return vals;
+            }
             vals.push_back(val);
             if (stopAtFirstReturn && expr->getNodeType() == AstNodeType::node_return) {
                 if (stopped != nullptr) { *stopped = true; }
@@ -331,26 +335,27 @@ namespace Helpers {
         if (valType->isIntegerTy() && castToType->isIntegerTy()) {
             unsigned int fromWidth = val->getType()->getIntegerBitWidth();
             unsigned int toWidth = castToType->getIntegerBitWidth();
-            if (fromWidth != toWidth) {
+            if (fromWidth != toWidth) { // resize the width of the the val
                 if (castSuccessful != nullptr)
                     *castSuccessful = true;
                 return codegen->Builder.CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
             }
         }
-        if (valType->getTypeID() == castToType->getTypeID())
+        auto valTypeId = valType->getTypeID();
+        auto castTypeId = castToType->getTypeID();
+        if (valTypeId == castTypeId) // already same type, just return what was sent
             return val;
-        if (valType->canLosslesslyBitCastTo(castToType)) {
+        if (valType->canLosslesslyBitCastTo(castToType)) { // bitcasting
             if (castSuccessful != nullptr)
                 *castSuccessful = true;
             return codegen->Builder.CreateBitCast(val, castToType, "bitcasted");
         }
-        if (CastInst::isCastable(valType, castToType)) {
+        if (CastInst::isCastable(valType, castToType)) { // typical cast to type
             if (castSuccessful != nullptr)
                 *castSuccessful = true;
-
             return codegen->Builder.CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
         }
-        return nullptr;
+        return val;
     }
 
     Value *GetDefaultValue(CodeGenerator *codegen, AstTypeNode *typeNode) {
@@ -359,6 +364,7 @@ namespace Helpers {
         case node_boolean: return codegen->Builder.getFalse();
         case node_double: return GetDouble(codegen, 0.0);
         case node_integer: return GetInt64(codegen, 0);
+        case node_string: return GetString(codegen, "");
         }
     }
 

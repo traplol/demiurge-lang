@@ -20,7 +20,7 @@ class CodeGenerator {
 public:
     CodeGenerator();
     ~CodeGenerator();
-    void GenerateCode(TreeContainer *trees);
+    bool GenerateCode(TreeContainer *trees);
     void DumpMainModule();
     void DumpLastModule();
     void CacheLastModule();
@@ -33,6 +33,8 @@ public:
     llvm::ExecutionEngine *TheExecutionEngine;
     llvm::BasicBlock *ReturnBlock;
     std::map<std::string, llvm::AllocaInst*> NamedValues;
+private:
+    void InitJitOutputFunctions();
 };
 
 #endif

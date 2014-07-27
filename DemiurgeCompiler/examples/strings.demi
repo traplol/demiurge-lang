@@ -1,0 +1,11 @@
+func main() : int {
+    var str = "Hello world!";
+    /*var x = str;
+    var num = 54;*/
+    print(str);
+    //println("Hello world!!!");
+    //printi(num);
+    //printd(5.5);
+    //printc(65);
+    return 0;
+}

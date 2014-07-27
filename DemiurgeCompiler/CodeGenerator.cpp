@@ -18,6 +18,8 @@
 
 #include "DEFINES.h"
 
+#include "DemiurgeJitOutputFunctions.h"
+
 using namespace llvm;
 CodeGenerator::CodeGenerator() 
     : Context(getGlobalContext())
@@ -56,19 +58,49 @@ CodeGenerator::CodeGenerator()
     TheFPM->add(createCFGSimplificationPass());
 
     TheFPM->doInitialization();
+
+    InitJitOutputFunctions();
 }
 
 
 CodeGenerator::~CodeGenerator() {
 }
 
-void CodeGenerator::GenerateCode(TreeContainer *trees) {
+void updateGMap(CodeGenerator *codegen, Type *returnType, const char *name, void *addr, Type *argType) {
+    std::vector<Type*> args(1, argType);
+    FunctionType *funcType = FunctionType::get(returnType, args, false);
+    Function *func = Function::Create(funcType, Function::ExternalLinkage, name, codegen->TheModule);
+    codegen->TheExecutionEngine->updateGlobalMapping(func, addr);
+}
+
+void CodeGenerator::InitJitOutputFunctions() {
+#define VOID_TYPE Type::getVoidTy(this->Context)
+#define STRING_TYPE Type::getInt8PtrTy(this->Context)
+#define INT_TYPE Type::getInt64Ty(this->Context)
+#define DOUBLE_TYPE Type::getDoubleTy(this->Context)
+
+    
+    updateGMap(this, VOID_TYPE, "print", &print, STRING_TYPE);
+    updateGMap(this, VOID_TYPE, "println", &println, STRING_TYPE);
+    updateGMap(this, VOID_TYPE, "printd", &printd, DOUBLE_TYPE);
+    updateGMap(this, VOID_TYPE, "printi", &printi, INT_TYPE);
+    updateGMap(this, VOID_TYPE, "printc", &printc, INT_TYPE);
+
+
+#undef VOID_TYPE
+#undef STRING_TYPE
+#undef INT_TYPE
+#undef DOUBLE_TYPE
+}
+
+bool CodeGenerator::GenerateCode(TreeContainer *trees) {
     for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) {
-        trees->FunctionDefinitions[i]->Codegen(this);
+        if (trees->FunctionDefinitions[i]->Codegen(this) == nullptr) return false;
     }
     for (int i = 0, e = trees->TopLevelExpressions.size(); i < e; ++i) {
-        trees->TopLevelExpressions[i]->Codegen(this);
+        if (trees->TopLevelExpressions[i]->Codegen(this) == nullptr) return false;
     }
+    return true;
 }
 
 void CodeGenerator::CacheLastModule() {
@@ -93,15 +125,12 @@ void CodeGenerator::RunMain() {
     void *mainFnPtr = TheExecutionEngine->getPointerToFunction(mainFunc);
 
     int(*FP)() = (int(*)())mainFnPtr;
-
-    int val = FP();
-
-    printf("%f\n", (double)val);
+    FP();
 }
 
 Type *AstTypeNode::GetLLVMType(CodeGenerator *codegen) {
     switch (this->TypeType) {
-    default: return nullptr;
+    default: Helpers::Error(this->getPos(), "Unknown type.");
     case node_boolean: return Type::getInt1Ty(codegen->Context);
     case node_double: return Type::getDoubleTy(codegen->Context);
     case node_integer: return Type::getInt64Ty(codegen->Context);
@@ -131,7 +160,7 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
 
     // Codegen to evaluate the expression to store within the variable.
     Value *val = this->RHS->Codegen(codegen);
-    if (val == nullptr) return nullptr;
+    if (val == nullptr) return Helpers::Error(this->RHS->getPos(), "Right operand could not be evaluated.");
 
     // Lookup the name of the variable
     Value *variable = codegen->NamedValues[lhse->getName()];
@@ -150,7 +179,7 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     }
     Value *l = this->LHS->Codegen(codegen);
     Value *r = this->RHS->Codegen(codegen);
-    if (l == nullptr || r == nullptr) return nullptr;
+    if (l == nullptr || r == nullptr) return Helpers::Error(this->getPos(), "Could not evaluate expression!");
     Type *lType = l->getType();
     Type *rType = r->getType();
     auto funcPtr = Helpers::GetBinopCodeGenFuncPointer(this->Operator, lType, rType);
@@ -228,16 +257,16 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     }
     ifelseBB = codegen->Builder.GetInsertBlock();
 
-    if (goesToMerge) {
+    if (goesToMerge) { // if either of the blocks jump to merge, change the insert point
         codegen->Builder.SetInsertPoint(ifendBB);
     }
-    else {
+    else { // otherwise remove the block
         ifendBB->removeFromParent();
     }
-    return nullptr;
+    return ifendBB;
 }
 Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
-    return nullptr;
+    return Helpers::Error(this->getPos(), "While loop not yet implemented");
 }
 Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     // Lookup the name in the global module table.
@@ -252,17 +281,19 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     auto calleeArg = CalleeF->arg_begin();
     for (unsigned i = 0, len = this->Args.size(); i < len; ++i, ++calleeArg){
         Value *val = this->Args[i]->Codegen(codegen);
+        if (val == nullptr)
+            return Helpers::Error(this->Args[i]->getPos(), "Function argument could not be evaulated.");
         bool castSuccess;
         val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
         if (val == nullptr)
-            return Helpers::Error(this->Args[i]->getPos(), "Argument not valid type, failed to cast to destination.");
+            return Helpers::Error(this->Args[i]->getPos(), "Function argument not valid type, failed to cast to destination.");
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
             Helpers::Warning(this->Args[i]->getPos(), "Casting from %s to %s, possible loss of data.",
                 Helpers::GetLLVMTypeName(val->getType()).c_str(), Helpers::GetLLVMTypeName(calleeArg->getType()).c_str());
         argsvals.push_back(val);
-        if (argsvals.back() == nullptr) return nullptr;
     }
-    return codegen->Builder.CreateCall(CalleeF, argsvals, "calltmp");
+    bool isVoidReturn = CalleeF->getReturnType()->isVoidTy();
+    return codegen->Builder.CreateCall(CalleeF, argsvals, isVoidReturn ? "" : "calltmp");
 }
 Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
     Value *v = codegen->NamedValues[this->Name];
@@ -275,18 +306,18 @@ Value *AstVarNode::Codegen(CodeGenerator *codegen) {
 
     IExpressionAST *expr = this->getAssignmentExpression();
     Value *initialVal;
+    AllocaInst *Alloca;
     if (expr == nullptr) { // variable declaration without an assignment, e.g: 'var x : int;'
         initialVal = Helpers::GetDefaultValue(codegen, this->InferredType);
-        Helpers::CreateEntryBlockAlloca(func, this->Name.c_str(), this->InferredType->GetLLVMType(codegen));
+        Alloca = Helpers::CreateEntryBlockAlloca(func, this->Name.c_str(), this->InferredType->GetLLVMType(codegen));
     }
     else {
         initialVal = expr->Codegen(codegen);
+        Alloca = Helpers::CreateEntryBlockAlloca(func, this->Name, initialVal->getType());
     }
-
-    AllocaInst *Alloca = Helpers::CreateEntryBlockAlloca(func, this->Name, initialVal->getType());
     codegen->Builder.CreateStore(initialVal, Alloca);
     codegen->NamedValues[this->Name] = Alloca;
-    return nullptr;
+    return initialVal;
 }
 Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
     // TODO: Serialize the prototype to allow for function overriding.
@@ -341,7 +372,7 @@ void PrototypeAst::CreateArgumentAllocas(CodeGenerator *codegen, Function *func)
 Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     codegen->NamedValues.clear();
     Function *func = this->Prototype->Codegen(codegen);
-    if (func == nullptr) return nullptr;
+    if (func == nullptr) return Helpers::Error(this->Prototype->getPos(), "Failed to create function!");
 
     // Create our entry block
     BasicBlock *entryBB = BasicBlock::Create(codegen->Context, "entry", func);
@@ -358,15 +389,17 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     
     if (codegen->Builder.GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
         codegen->Builder.CreateBr(retBB);
+        // Switch to the return block
+        codegen->Builder.SetInsertPoint(retBB);
+        // Load the return value and get ready to return it.
+        Value *derefRetVal = codegen->Builder.CreateLoad(retVal, COMPILER_RETURN_VALUE_STRING);
+        // return the function's return value.
+        codegen->Builder.CreateRet(derefRetVal);
+        retBB = codegen->Builder.GetInsertBlock();
     }
-
-    // Switch to the return block
-    codegen->Builder.SetInsertPoint(retBB); 
-    // Load the return value and get ready to return it.
-    Value *derefRetVal = codegen->Builder.CreateLoad(retVal, COMPILER_RETURN_VALUE_STRING);
-    // return the function's return value.
-    codegen->Builder.CreateRet(derefRetVal);
-    retBB = codegen->Builder.GetInsertBlock();
+    else {
+        retBB->removeFromParent();
+    }
 
     if (verifyFunction(*func, &errs())) {
         func->dump();
@@ -374,7 +407,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else {
-        codegen->TheFPM->run(*func);
+        //codegen->TheFPM->run(*func);
     }
     return func;
 }

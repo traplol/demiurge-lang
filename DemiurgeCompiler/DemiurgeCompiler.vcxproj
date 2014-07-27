@@ -81,6 +81,7 @@
     <ClInclude Include="DEFINES.h" />
     <ClInclude Include="DemiurgeCompiler.h" />
     <ClInclude Include="AstNodes.h" />
+    <ClInclude Include="DemiurgeJitOutputFunctions.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="LibComments.h" />
     <ClInclude Include="Parser.h" />

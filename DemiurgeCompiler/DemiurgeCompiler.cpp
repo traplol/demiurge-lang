@@ -34,17 +34,21 @@ void DemiurgeCompiler::Run() {
     if (!_isInInteractiveMode) {
         auto iter = _sourceFiles.begin();
         auto end = _sourceFiles.end();
+        bool success = true;
         for (; iter != end; ++iter) {
             std::vector<Token*> tokens = _lexer->Tokenize(iter->first, iter->second);
             TreeContainer *trees = _parser->ParseTrees(tokens);
             if (trees == nullptr) return;
 
-            _codeGenerator->GenerateCode(trees);
+            success = success && _codeGenerator->GenerateCode(trees);
+            if (!success) break;
             //_codeGenerator->DumpLastModule();
             //_codeGenerator->CacheLastModule();
         }
+        
         _codeGenerator->DumpMainModule();
-        _codeGenerator->RunMain();
+        if (success)
+            _codeGenerator->RunMain();
     }
     else {
         // TODO: Interactive mode setup
