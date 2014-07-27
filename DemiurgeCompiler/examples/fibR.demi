@@ -9,5 +9,6 @@ func fib(x : int) : int {
 
 
 func main() : int {
-    return fib(40);
+    printi(fib(40));
+    return 0;
 }

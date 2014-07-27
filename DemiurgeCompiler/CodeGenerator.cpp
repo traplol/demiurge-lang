@@ -226,9 +226,12 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     Function *func = codegen->Builder.GetInsertBlock()->getParent();
     
     // Create blocks for the 'if' cases.
-    BasicBlock *ifendBB = BasicBlock::Create(codegen->Context, "cond_merge", func, codegen->ReturnBlock); // both blocks merge back here.
-    BasicBlock *ifelseBB = BasicBlock::Create(codegen->Context, "cond_false", func, ifendBB);
-    BasicBlock *ifthenBB = BasicBlock::Create(codegen->Context, "cond_true", func, ifelseBB);
+    BasicBlock *outsideNestBB = codegen->MergeBlock; // save the outside to branch to at end of loop.
+    BasicBlock *ifendBB = BasicBlock::Create(codegen->Context, "if_end", func, outsideNestBB); // both blocks merge back here.
+    codegen->MergeBlock = ifendBB;
+    BasicBlock *ifelseBB = BasicBlock::Create(codegen->Context, "if_false", func, ifendBB);
+    BasicBlock *ifthenBB = BasicBlock::Create(codegen->Context, "if_true", func, ifelseBB);
+
 
     // Create the conditional branch.
     codegen->Builder.CreateCondBr(ifCondition, ifthenBB, ifelseBB);
@@ -236,36 +239,83 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
 
     // emit 'if.then' block.
     codegen->Builder.SetInsertPoint(ifthenBB);
-    bool ifthenStopped;
-    std::vector<Value*> ifThenVals = Helpers::EmitBlock(codegen, this->IfBody, true, &ifthenStopped);
+    bool ifthenReturns;
+    Helpers::EmitBlock(codegen, this->IfBody, true, &ifthenReturns);
     if (ifthenBB->getTerminator() == nullptr) { // if there was no return statement within the else block
         codegen->Builder.CreateBr(ifendBB); // go to merge since there was no return in the then block
         goesToMerge = true;
     }
-    ifthenBB = codegen->Builder.GetInsertBlock();
+    
 
     // emit 'if.else' block
-    //func->getBasicBlockList().push_back(ifelseBB);
     codegen->Builder.SetInsertPoint(ifelseBB);
-
-    bool ifelseStopped;
-    std::vector<Value*> ifElseVals = Helpers::EmitBlock(codegen, this->ElseBody, true, &ifelseStopped);
+    bool ifelseReturns;
+    Helpers::EmitBlock(codegen, this->ElseBody, true, &ifelseReturns);
     if (ifelseBB->getTerminator() == nullptr) { // if there was no return statement within the else block
         codegen->Builder.CreateBr(ifendBB); // go to merge since there was no return in the else block
         goesToMerge = true;
     }
-    ifelseBB = codegen->Builder.GetInsertBlock();
-
-    if (goesToMerge) { // if either of the blocks jump to merge, change the insert point
+    
+    if (ifelseReturns && ifthenReturns) {
+        goesToMerge = false;
+        //ifendBB->removeFromParent();
+    }
+    if (ifendBB->getTerminator() != nullptr) {
+        goesToMerge = false;
+    }
+    if (goesToMerge || ifendBB->getTerminator() == nullptr) {// merge back to the rest of the code.
         codegen->Builder.SetInsertPoint(ifendBB);
+        codegen->Builder.CreateBr(outsideNestBB);
     }
-    else { // otherwise remove the block
-        ifendBB->removeFromParent();
-    }
+    ifthenBB = codegen->Builder.GetInsertBlock();
+    ifelseBB = codegen->Builder.GetInsertBlock();
+    ifendBB = codegen->Builder.GetInsertBlock();
+    codegen->Builder.SetInsertPoint(outsideNestBB);
     return ifendBB;
 }
 Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
-    return Helpers::Error(this->getPos(), "While loop not yet implemented");
+    Value *cond = this->Condition->Codegen(codegen);
+    if (cond == nullptr)
+        return Helpers::Error(this->Condition->getPos(), "Could not evaluate 'while' condition.");
+    if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
+        return Helpers::Error(this->Condition->getPos(), "'while' condition not boolean type.");
+
+    Value *zero = Helpers::GetInt64(codegen, 0); // get zero with 64 bit width
+    Value *toboolean = Helpers::CreateCastTo(codegen, cond, Type::getInt64Ty(codegen->Context)); // cast our condition to 64 bits if needed
+    Value *condition = codegen->Builder.CreateICmpUGT(toboolean, zero, "toboolean"); // check if the unsgined condition is greater than zero
+
+    Function *func = codegen->Builder.GetInsertBlock()->getParent();
+    
+    BasicBlock *outsideNestBB = codegen->MergeBlock; // save the outside to branch to at end of loop.
+    BasicBlock *whileEndBB = BasicBlock::Create(codegen->Context, "while_end", func, outsideNestBB); // end of while loop jumps here
+    codegen->MergeBlock = whileEndBB; // set the outside merge block for any nested blocks
+    BasicBlock *whileBodyBB = BasicBlock::Create(codegen->Context, "while_body", func, whileEndBB);
+    
+    // evaluate the condition and branch accordingly, 
+    // e.g while (false) {...} should be skipped. 
+    codegen->Builder.CreateCondBr(condition, whileBodyBB, whileEndBB); 
+    
+    // emit the body
+    codegen->Builder.SetInsertPoint(whileBodyBB);
+    bool whileHitReturn = false;
+    Helpers::EmitBlock(codegen, this->WhileBody, true, &whileHitReturn); // emit the while block
+
+    if (whileBodyBB->getTerminator() == nullptr)
+        codegen->Builder.CreateBr(whileEndBB);
+    
+    if (whileEndBB->getTerminator() == nullptr) {
+        // re-evaluate the condition
+        codegen->Builder.SetInsertPoint(whileEndBB);
+        cond = this->Condition->Codegen(codegen);
+        toboolean = Helpers::CreateCastTo(codegen, cond, Type::getInt64Ty(codegen->Context)); // cast our condition to 64 bits if needed
+        condition = codegen->Builder.CreateICmpUGT(toboolean, zero, "toboolean"); // check if the unsgined condition is greater than zero
+        codegen->Builder.CreateCondBr(condition, whileBodyBB, outsideNestBB); // evaluate the condition and branch accordingly
+    }
+
+    whileBodyBB = codegen->Builder.GetInsertBlock();
+    whileEndBB = codegen->Builder.GetInsertBlock();
+    codegen->Builder.SetInsertPoint(outsideNestBB);
+    return whileEndBB;// Helpers::Error(this->getPos(), "While loop not yet implemented");
 }
 Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     // Lookup the name in the global module table.
@@ -377,6 +427,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
 
     // Create our entry block
     BasicBlock *entryBB = BasicBlock::Create(codegen->Context, "entry", func);
+    BasicBlock *mergeBB = BasicBlock::Create(codegen->Context, "merge", func);
     BasicBlock *retBB = BasicBlock::Create(codegen->Context, "return", func);
     codegen->ReturnBlock = retBB; // save our return block to jump to.
     codegen->Builder.SetInsertPoint(entryBB);
@@ -386,7 +437,9 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     AllocaInst *retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, returnType);
     codegen->NamedValues[COMPILER_RETURN_VALUE_STRING] = retVal;
     
+    codegen->MergeBlock = mergeBB;
     Helpers::EmitBlock(codegen, this->FunctionBody, true);
+
     
     if (codegen->Builder.GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
         codegen->Builder.CreateBr(retBB);
@@ -402,13 +455,16 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         retBB->removeFromParent();
     }
 
+    if (mergeBB->getTerminator() == nullptr) {
+        mergeBB->removeFromParent();
+    }
     if (verifyFunction(*func, &errs())) {
         func->dump();
         func->eraseFromParent();
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else {
-        //codegen->TheFPM->run(*func);
+        codegen->TheFPM->run(*func);
     }
     return func;
 }

@@ -4,5 +4,6 @@ func add(a : int, b : int) : int {
 
 
 func main() : int {
-    return add(6,5);
+    printi(add(6,5));
+    return 0;
 }

@@ -1,0 +1,32 @@
+func test() : int {
+    var x = 4;
+    while ( x > 0 ) {
+        if ( x != 3) {
+            printi(42);
+            var b = 5;
+            while ( b <= 10) {  printi(b); b = b + 1; }
+            //return 5;
+        } 
+        else {
+            printi(x);
+            return 105;
+        }
+        x = x - 1;
+        
+        return 2;
+    }
+    
+    return 4;
+}
+
+
+
+
+func main() : int {
+
+    var x = test()
+    
+    print("\ntest() returned: ");
+    printi(x);
+    return 0;
+}

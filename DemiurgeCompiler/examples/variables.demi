@@ -42,5 +42,6 @@ func difftypes(): double {
 }
 
 func main() : int {
-    return difftypes();
+    printi(difftypes());
+    return 0;
 }

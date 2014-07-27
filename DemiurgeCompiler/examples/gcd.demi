@@ -9,5 +9,6 @@ func gcd(x : int, y : int) : int {
 
 
 func main() : int {
-    return gcd(54, 10);
+    printi(gcd(54, 10));
+    return 0;
 }

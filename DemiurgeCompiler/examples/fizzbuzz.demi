@@ -1,8 +1,8 @@
 func fizzbuzz(x:int):int {
     var y = 1;
-    while (y < x) {
+    while (y <= x) {
         if (y % 15 == 0) {
-            println("Fizzbuzz");
+            println("FizzBuzz");
         }
         else if (y % 3 == 0) {
             println("Fizz");
@@ -13,7 +13,7 @@ func fizzbuzz(x:int):int {
         else {
             printi(y);
         }
-        y = y-1;
+        y = y + 1;
     }
     return 0;
 }
