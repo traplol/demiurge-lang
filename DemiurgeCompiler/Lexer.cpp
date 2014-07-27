@@ -3,14 +3,15 @@
 #include "TokenTypes.h"
 
 Lexer::Lexer() {
-    _i = 0;
-    _column = 1;
-    _line = 1;
-    _lastChar = ' ';
 }
 
 
 std::vector<Token*> Lexer::Tokenize(const std::string &filename, const std::vector<char> &sourceCode) {
+    _i = 0;
+    _column = 1;
+    _line = 1;
+    _lastChar = ' ';
+
     _file = filename;
     _sourceCode = sourceCode;
     std::vector<Token*> retVal;
@@ -183,9 +184,10 @@ Token *Lexer::trimWhiteSpace() {
 Token *Lexer::trimCommentBlock() {
     while (true) {
         _lastChar = getNextChar();
-        if (_lastChar == EOF || (_lastChar == '-' && peekChar() == '#')) {
-            _lastChar = getNextChar(); // eat '-'
-            _lastChar = getNextChar(); // eat '#'
+        if (_lastChar == '\n') _line++;
+        if (_lastChar == EOF || (_lastChar == '*' && peekChar() == '/')) {
+            _lastChar = getNextChar(); // eat '*'
+            _lastChar = getNextChar(); // eat '/'
             break;
         }
     }

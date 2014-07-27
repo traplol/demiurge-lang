@@ -40,9 +40,11 @@ void DemiurgeCompiler::Run() {
             if (trees == nullptr) return;
 
             _codeGenerator->GenerateCode(trees);
-            _codeGenerator->DumpLastModule();
-            _codeGenerator->CacheLastModule();
+            //_codeGenerator->DumpLastModule();
+            //_codeGenerator->CacheLastModule();
         }
+        _codeGenerator->DumpMainModule();
+        _codeGenerator->RunMain();
     }
     else {
         // TODO: Interactive mode setup

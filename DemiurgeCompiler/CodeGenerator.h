@@ -21,8 +21,10 @@ public:
     CodeGenerator();
     ~CodeGenerator();
     void GenerateCode(TreeContainer *trees);
+    void DumpMainModule();
     void DumpLastModule();
     void CacheLastModule();
+    void RunMain();
 
     llvm::LLVMContext &Context;
     llvm::IRBuilder<> Builder;

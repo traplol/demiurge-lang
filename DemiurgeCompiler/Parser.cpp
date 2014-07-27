@@ -40,7 +40,7 @@ Parser::~Parser() {
 
 TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
     _tokens = tokens;
-    next(); // setup first token.
+    next(1); // setup first token.
 
     TreeContainer *trees = new TreeContainer();;
     
@@ -66,8 +66,10 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
     return trees;
 }
 
-Token *Parser::next() {
+Token *Parser::next(int reset) {
     static unsigned i = 0;
+    if (reset != 0)
+        i = 0;
     if (i >= _tokens.size()) {
         _curToken = nullptr;
         _curTokenType = EOF;

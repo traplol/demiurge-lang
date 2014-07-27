@@ -7,6 +7,7 @@ func gcd(x : int, y : int) : int {
     return gcd(x - y, y);
 }
 
+
 func main() : int {
     return gcd(54, 10);
 }

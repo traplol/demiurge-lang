@@ -213,6 +213,7 @@ public:
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
     const std::string &getName() const { return Name; }
     AstTypeNode *getInferredType() const { return InferredType; }
+    IExpressionAST *getAssignmentExpression() const { return AssignmentExpression; }
 };
 
 class AstTopLevelExpression : public IExpressionAST {

@@ -24,7 +24,7 @@ private:
     std::map<int, int> _operatorPrecedence;
     std::vector<Token*> _tokens;
 
-    Token *next();
+    Token *next(int reset = 0);
     int getTokenPrecedence();
 
     IExpressionAST *parseTopLevelExpression();
