@@ -12,8 +12,8 @@ func varTesting(num:int) : int {
 }
 
 
-func multivar(x : int) : int {
-    var num1 : int;
+func multivar(x: int): int {
+    var num1: int;
     num1 = x;
     var num2 = num1 + x;
     var num3 = num2 * num1;
@@ -31,7 +31,16 @@ func multivar(x : int) : int {
     return xx; // correctly marks this as unreachable.
 }
 
+func difftypes(): double {
+    var x: double;
+    var y: int;
+    x = 25;
+    y = 5;
+    y = y + 2.5;
+    x = x / 2;
+    return x + y;
+}
 
 func main() : int {
-    return multivar(3);
+    return difftypes();
 }

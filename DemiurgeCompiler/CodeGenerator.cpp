@@ -134,7 +134,13 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     // Lookup the name of the variable
     Value *variable = codegen->NamedValues[lhse->getName()];
     if (variable == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name '%s'", lhse->getName().c_str());
+    
+    // Check if the we should cast to
+    Type *varType = variable->getType()->getContainedType(0);
+    auto valtypeId = val->getType()->getTypeID();
+    auto vartypeId = varType->getTypeID();
 
+    val = Helpers::CreateCastTo(codegen, val, varType);
     codegen->Builder.CreateStore(val, variable);
     return val;
 }
