@@ -36,7 +36,7 @@ func difftypes(): double {
     var y: int;
     x = 25;
     y = 5;
-    y = y + 2.5;
+    y = y + 2.5; // implicit cast from double to int.
     x = x / 2;
     return x + y;
 }

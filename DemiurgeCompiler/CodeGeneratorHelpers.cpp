@@ -296,8 +296,8 @@ namespace Helpers {
         return ConstantInt::get(codegen->Context, APInt(bitwidth, val));
     }
     // Creates a LLVM::Value* of integer1 type from the value passed.
-    Value *GetBoolean(CodeGenerator *codegen, bool val) {
-        return GetInt(codegen, val, 1);
+    Value *GetBoolean(CodeGenerator *codegen, int val) {
+        return ConstantInt::get(Type::getInt1Ty(codegen->Context), APInt(1, val));
     }
     // Creates a LLVM::Value* of integer64 type from the value passed.
     Value *GetInt64(CodeGenerator *codegen, unsigned long long int val) {
@@ -328,6 +328,15 @@ namespace Helpers {
         if (castSuccessful != nullptr)
             *castSuccessful = false;
         Type *valType = val->getType();
+        if (valType->isIntegerTy() && castToType->isIntegerTy()) {
+            unsigned int fromWidth = val->getType()->getIntegerBitWidth();
+            unsigned int toWidth = castToType->getIntegerBitWidth();
+            if (fromWidth != toWidth) {
+                if (castSuccessful != nullptr)
+                    *castSuccessful = true;
+                return codegen->Builder.CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
+            }
+        }
         if (valType->getTypeID() == castToType->getTypeID())
             return val;
         if (valType->canLosslesslyBitCastTo(castToType)) {

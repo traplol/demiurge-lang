@@ -1,0 +1,23 @@
+func main() : int {
+    if (true) {         // valid - true
+        return 10;
+    }
+    if (false) {        // valid - false
+        return 11;
+    }
+    if (1) {            // valid - true
+        return 12;
+    }
+    if (2) {           // valid - true, note that 2 is '10' in binary so it doesn't only look at the LSB.
+        return 12;
+    }
+    if (0) {            // valid - false
+        return 13;
+    }
+    if (1.0) {          // not valid
+        return 14;
+    }
+    if (0.0) {          // not valid
+        return 15;
+    }
+}

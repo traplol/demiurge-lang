@@ -114,10 +114,12 @@ Value *AstDoubleNode::Codegen(CodeGenerator *codegen) {
     return ConstantFP::get(codegen->Context, APFloat(this->Value));
 }
 Value *AstIntegerNode::Codegen(CodeGenerator *codegen) {
-    return ConstantInt::get(codegen->Context, APInt(64, this->Value));
+    return ConstantInt::get(Type::getInt64Ty(codegen->Context), this->Value, true);
 }
 Value *AstBooleanNode::Codegen(CodeGenerator *codegen) {
-    return ConstantInt::get(codegen->Context, APInt(this->Value, 1));
+    if (this->Value == true)
+        return codegen->Builder.getTrue();
+    return codegen->Builder.getFalse();
 }
 Value *AstStringNode::Codegen(CodeGenerator *codegen) {
     return ConstantDataArray::getString(codegen->Context, this->Value.c_str());
@@ -135,12 +137,10 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     Value *variable = codegen->NamedValues[lhse->getName()];
     if (variable == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name '%s'", lhse->getName().c_str());
     
-    // Check if the we should cast to
+    // Implicit casting to destination type when assigning to variables.
     Type *varType = variable->getType()->getContainedType(0);
-    auto valtypeId = val->getType()->getTypeID();
-    auto vartypeId = varType->getTypeID();
-
     val = Helpers::CreateCastTo(codegen, val, varType);
+    
     codegen->Builder.CreateStore(val, variable);
     return val;
 }
@@ -190,8 +190,10 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Condition->getPos(), "Could not evaluate 'if' condition.");
     if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
         return Helpers::Error(this->Condition->getPos(), "'if' condition not boolean type.");
-    Value *booltrue = codegen->Builder.getTrue();
-    Value *ifCondition = codegen->Builder.CreateICmpUGE(cond, booltrue, "cond");
+
+    Value *zero = Helpers::GetInt64(codegen, 0); // get zero with 64 bit width
+    Value *toboolean = Helpers::CreateCastTo(codegen, cond, Type::getInt64Ty(codegen->Context)); // cast our condition to 64 bits if needed
+    Value *ifCondition = codegen->Builder.CreateICmpUGT(toboolean, zero, "toboolean"); // check if the unsgined condition is greater than zero
 
     Function *func = codegen->Builder.GetInsertBlock()->getParent();
     
