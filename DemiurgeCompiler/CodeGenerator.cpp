@@ -219,11 +219,7 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Condition->getPos(), "Could not evaluate 'if' condition.");
     if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
         return Helpers::Error(this->Condition->getPos(), "'if' condition not boolean type.");
-
-    Value *zero = Helpers::GetInt64(codegen, 0); // get zero with 64 bit width
-    Value *toboolean = Helpers::CreateCastTo(codegen, cond, Type::getInt64Ty(codegen->Context)); // cast our condition to 64 bits if needed
-    Value *ifCondition = codegen->Builder.CreateICmpUGT(toboolean, zero, "toboolean"); // check if the unsgined condition is greater than zero
-
+    Value *tobool = Helpers::ToBoolean(codegen, cond);
     Function *func = codegen->Builder.GetInsertBlock()->getParent();
     
     // Create blocks for the 'if' cases.
@@ -235,7 +231,7 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
 
 
     // Create the conditional branch.
-    codegen->Builder.CreateCondBr(ifCondition, ifthenBB, ifelseBB);
+    codegen->Builder.CreateCondBr(tobool, ifthenBB, ifelseBB);
     bool goesToMerge = false;
 
     // emit 'if.then' block.
@@ -281,9 +277,7 @@ Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
     if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
         return Helpers::Error(this->Condition->getPos(), "'while' condition not boolean type.");
 
-    Value *zero = Helpers::GetInt64(codegen, 0); // get zero with 64 bit width
-    Value *toboolean = Helpers::CreateCastTo(codegen, cond, Type::getInt64Ty(codegen->Context)); // cast our condition to 64 bits if needed
-    Value *condition = codegen->Builder.CreateICmpUGT(toboolean, zero, "toboolean"); // check if the unsgined condition is greater than zero
+    Value *tobool = Helpers::ToBoolean(codegen, cond);
 
     Function *func = codegen->Builder.GetInsertBlock()->getParent();
     
@@ -294,7 +288,7 @@ Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
     
     // evaluate the condition and branch accordingly, 
     // e.g while (false) {...} should be skipped. 
-    codegen->Builder.CreateCondBr(condition, whileBodyBB, whileEndBB); 
+    codegen->Builder.CreateCondBr(tobool, whileBodyBB, whileEndBB);
     
     // emit the body
     codegen->Builder.SetInsertPoint(whileBodyBB);
@@ -308,9 +302,8 @@ Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
         // re-evaluate the condition
         codegen->Builder.SetInsertPoint(whileEndBB);
         cond = this->Condition->Codegen(codegen);
-        toboolean = Helpers::CreateCastTo(codegen, cond, Type::getInt64Ty(codegen->Context)); // cast our condition to 64 bits if needed
-        condition = codegen->Builder.CreateICmpUGT(toboolean, zero, "toboolean"); // check if the unsgined condition is greater than zero
-        codegen->Builder.CreateCondBr(condition, whileBodyBB, outsideNestBB); // evaluate the condition and branch accordingly
+        tobool = Helpers::ToBoolean(codegen, cond);
+        codegen->Builder.CreateCondBr(tobool, whileBodyBB, outsideNestBB); // evaluate the condition and branch accordingly
     }
 
     whileBodyBB = codegen->Builder.GetInsertBlock();
@@ -470,6 +463,3 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     }
     return func;
 }
-
-
-

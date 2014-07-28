@@ -127,6 +127,9 @@ namespace Helpers {
 
     // Returns the current llvm::Function*
     llvm::Function *GetCurrentFunction(CodeGenerator *codegen);
+    
+    // Converts a Value* to a boolean.
+    llvm::Value *ToBoolean(CodeGenerator *codegen, llvm::Value *num);
 }
 
 #endif

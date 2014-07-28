@@ -416,4 +416,8 @@ namespace Helpers {
     Function *GetCurrentFunction(CodeGenerator *codegen) {
         return codegen->Builder.GetInsertBlock()->getParent();
     }
+
+    Value *ToBoolean(CodeGenerator *codegen, Value *num) {
+        return codegen->Builder.CreateICmpNE(num, codegen->Builder.getFalse(), "tobool");
+    }
 }
