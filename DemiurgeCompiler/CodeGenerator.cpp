@@ -466,7 +466,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else {
-        //codegen->TheFPM->run(*func);
+        codegen->TheFPM->run(*func);
     }
     return func;
 }
