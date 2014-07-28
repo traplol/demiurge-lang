@@ -65,9 +65,9 @@ CodeGenerator::CodeGenerator()
 CodeGenerator::~CodeGenerator() {
 }
 
-void updateGMap(CodeGenerator *codegen, Type *returnType, const char *name, void *addr, Type *argType) {
+void updateGMap(CodeGenerator *codegen, Type *returnType, const char *name, void *addr, Type *argType, bool isVarArgs = false) {
     std::vector<Type*> args(1, argType);
-    FunctionType *funcType = FunctionType::get(returnType, args, false);
+    FunctionType *funcType = FunctionType::get(returnType, args, isVarArgs);
     Function *func = Function::Create(funcType, Function::ExternalLinkage, name, codegen->TheModule);
     codegen->TheExecutionEngine->updateGlobalMapping(func, addr);
 }
@@ -84,6 +84,7 @@ void CodeGenerator::InitJitOutputFunctions() {
     updateGMap(this, VOID_TYPE, "printd", &printd, DOUBLE_TYPE);
     updateGMap(this, VOID_TYPE, "printi", &printi, INT_TYPE);
     updateGMap(this, VOID_TYPE, "printc", &printc, INT_TYPE);
+    updateGMap(this, VOID_TYPE, "printf", &_printf, STRING_TYPE, true);
 
 
 #undef VOID_TYPE
@@ -324,7 +325,7 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->getPos(), "Unknown function, '%s', referenced.", this->Name.c_str());
 
     // If argument count is mismatched
-    if (CalleeF->arg_size() != Args.size())
+    if (CalleeF->arg_size() != Args.size() && !CalleeF->isVarArg())
         return Helpers::Error(this->getPos(), "Incorrect number of arguments passed to function '%s'", this->Name.c_str());
     std::vector<Value*> argsvals;
     auto calleeArg = CalleeF->arg_begin();
@@ -332,8 +333,9 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
         Value *val = this->Args[i]->Codegen(codegen);
         if (val == nullptr)
             return Helpers::Error(this->Args[i]->getPos(), "Function argument could not be evaulated.");
-        bool castSuccess;
-        val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
+        bool castSuccess = false;
+        if (!CalleeF->isVarArg()) // don't try to cast varargs.
+            val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
         if (val == nullptr)
             return Helpers::Error(this->Args[i]->getPos(), "Function argument not valid type, failed to cast to destination type.");
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
@@ -374,7 +376,7 @@ Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
     // TODO: Serialize the prototype to allow for function overriding.
     std::vector<Type *> argTypes;
     for (auto itr = this->Args.begin(); itr != this->Args.end(); ++itr) {
-        Type *type = (*itr).second->GetLLVMType(codegen);
+        Type *type = itr->second->GetLLVMType(codegen);
         argTypes.push_back(type);
     }
     FunctionType *funcType = FunctionType::get(this->ReturnType->GetLLVMType(codegen), argTypes, false);
@@ -464,7 +466,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else {
-        codegen->TheFPM->run(*func);
+        //codegen->TheFPM->run(*func);
     }
     return func;
 }

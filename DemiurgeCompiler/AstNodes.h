@@ -224,10 +224,11 @@ class AstTopLevelExpression : public IExpressionAST {
 class PrototypeAst {
     PossiblePosition Pos;
     std::string Name;
-    std::map<std::string, AstTypeNode*> Args;
+    //std::map<std::string, AstTypeNode*> Args;
+    std::vector<std::pair<std::string, AstTypeNode*>> Args;
     AstTypeNode *ReturnType;
 public:
-    PrototypeAst(const std::string &name, AstTypeNode *returnType, const std::map<std::string, AstTypeNode*> &args,
+    PrototypeAst(const std::string &name, AstTypeNode *returnType, const std::vector<std::pair<std::string, AstTypeNode*>> &args,
         int line, int column)
         : Name(name)
         , ReturnType(returnType)

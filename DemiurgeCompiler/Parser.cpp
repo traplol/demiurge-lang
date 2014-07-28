@@ -411,7 +411,7 @@ PrototypeAst *Parser::parsePrototype() {
         return Error("Expected '('.");
     next(); // eat '('
 
-    std::map<std::string, AstTypeNode*> args;
+    std::vector<std::pair<std::string, AstTypeNode*>> args;
     while (_curTokenType != ')') {
 
         std::string argName = _curToken->Value();
@@ -421,7 +421,8 @@ PrototypeAst *Parser::parsePrototype() {
         next(); // eat ':'
         AstTypeNode *argType = parseTypeNode();
 
-        args[argName] = argType;
+        auto pair = std::make_pair(argName, argType);
+        args.push_back(pair);
 
         if (_curTokenType != ',')
             break;
