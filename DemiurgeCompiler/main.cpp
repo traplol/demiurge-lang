@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 #ifdef _DEBUG
     args.push_back(argv[0]); // program name.
     args.push_back("-c");
-    args.push_back("examples/test-cases.demi");
+    args.push_back("examples/operator-tests.demi");
 #else
     args.assign(argv, argv + argc);
 #endif
