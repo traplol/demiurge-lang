@@ -64,11 +64,14 @@ public:
     // Clears the named values
     void clearNamedValues() { NamedValues.clear(); }
     // Returns the AllocaInst at a given key
-    llvm::AllocaInst *getNamedValue(std::string key) const { return NamedValues.at(key); }
+    llvm::AllocaInst *getNamedValue(const std::string &key) const { return NamedValues.at(key); }
     // Sets the AllocaInst at a given key if it does not exist yet, and returns a <itr, bool> pair
     std::pair<std::map<std::string, llvm::AllocaInst*>::iterator, bool> setNamedValue(std::string key, llvm::AllocaInst *val) { 
         return NamedValues.insert({ key, val }); 
     }
+    // Erases an AllocaInst from the map.
+    void eraseNamedValue(const std::string &key) { NamedValues.erase(key); }
+    
 
 private:
     llvm::LLVMContext &Context;

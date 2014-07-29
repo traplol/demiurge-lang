@@ -51,6 +51,21 @@ namespace Helpers {
         Value *intintMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateSRem(lhs, rhs, "intintMod");
         }
+        Value *intintAnd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateAnd(lhs, rhs, "intintAnd");
+        }
+        Value *intintOr(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateOr(lhs, rhs, "intintOr");
+        }
+        Value *intintXor(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateXor(lhs, rhs, "intintXor");
+        }
+        Value *intintSHL(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateShl(lhs, rhs, "intintLSH");
+        }
+        Value *intintSHR(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateLShr(lhs, rhs, "intintRSH");
+        }
         Value *intintLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateICmpSLT(lhs, rhs, "intintLT");
         }
@@ -80,6 +95,11 @@ namespace Helpers {
             case '%': return intintMod;
             case '<': return intintLT;
             case '>': return intintGT;
+            case '&': return intintAnd;
+            case '|': return intintOr;
+            case '^': return intintXor;
+            case tok_leftshift: return intintSHL;
+            case tok_rightshift: return intintSHR;
             case tok_lessequal: return intintLE;
             case tok_greatequal: return intintGE;
             case tok_equalequal: return intintEQ;

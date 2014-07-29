@@ -17,16 +17,21 @@ Parser::Parser() {
     _operatorPrecedence[tok_modequals] = 30;    // '%='
 
     _operatorPrecedence[tok_booleanor] = 40;    // '||'
-    _operatorPrecedence[tok_booleanand] = 45;   // '&&'
+    _operatorPrecedence[tok_booleanand] = 41;   // '&&'
+
+    _operatorPrecedence['|'] = 45;              // '|'
+    _operatorPrecedence['^'] = 46;              // '^'
+    _operatorPrecedence['&'] = 47;              // '&'
 
     _operatorPrecedence[tok_notequal] = 50;     // '!='
     _operatorPrecedence[tok_equalequal] = 50;   // '=='
-
     _operatorPrecedence['<'] = 60;              // '<'
     _operatorPrecedence[tok_lessequal] = 60;    // '<='
     _operatorPrecedence['>'] = 60;              // '>'
     _operatorPrecedence[tok_greatequal] = 60;   // '>=
     
+    _operatorPrecedence[tok_leftshift] = 75;    // '<<'
+    _operatorPrecedence[tok_rightshift] = 75;   // '>>'
     _operatorPrecedence['+'] = 80;              // '+'
     _operatorPrecedence['-'] = 80;              // '-'
     _operatorPrecedence['%'] = 100;             // '%'

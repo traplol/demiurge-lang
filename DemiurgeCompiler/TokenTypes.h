@@ -40,6 +40,8 @@ typedef enum tag_TokenType {
     tok_greatequal,         // '>='
     tok_equalequal,         // '=='
     tok_notequal,           // '!='
+    tok_leftshift,          // '<<'
+    tok_rightshift,         // '>>'
 } TokenType;
 
 #endif

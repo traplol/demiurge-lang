@@ -34,6 +34,11 @@ namespace Helpers {
         llvm::Value *intintMul(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintDiv(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintMod(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintAnd(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintOr(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintXor(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSHL(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSHR(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintLT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintGT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintLE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);

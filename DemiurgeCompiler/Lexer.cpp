@@ -61,6 +61,8 @@ Token *Lexer::getNextToken() {
     else if (operTest == ">=") tokType = tok_greatequal;
     else if (operTest == "==") tokType = tok_equalequal;
     else if (operTest == "!=") tokType = tok_notequal;
+    else if (operTest == "<<") tokType = tok_leftshift;
+    else if (operTest == ">>") tokType = tok_rightshift;
     else if (operTest == "..") tokType = tok_dotdot;
     // if all of our tests failed we should hit this and just return the single char operator
     else return new Token(thisChar, _builderWord, _line, _column);  
