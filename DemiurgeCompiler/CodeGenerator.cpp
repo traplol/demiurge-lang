@@ -163,7 +163,7 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     if (val == nullptr) return Helpers::Error(this->RHS->getPos(), "Right operand could not be evaluated.");
 
     // Lookup the name of the variable
-    Value *variable = codegen->getNamedValues().at(lhse->getName());
+    Value *variable = codegen->getNamedValue(lhse->getName());
     if (variable == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name '%s'", lhse->getName().c_str());
     
     // Implicit casting to destination type when assigning to variables.
@@ -205,7 +205,7 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
             Helpers::Warning(this->Expr->getPos(), "Casting from %s to %s, possible loss of data.",
                 Helpers::GetLLVMTypeName(valType).c_str(), Helpers::GetLLVMTypeName(retType).c_str());
     }
-    AllocaInst *retVal = codegen->getNamedValues().at(COMPILER_RETURN_VALUE_STRING);
+    AllocaInst *retVal = codegen->getNamedValue(COMPILER_RETURN_VALUE_STRING);
     codegen->getBuilder().CreateStore(val, retVal);
 
     Value *derefRetVal = codegen->getBuilder().CreateLoad(retVal, "retval");
@@ -340,7 +340,7 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     return codegen->getBuilder().CreateCall(CalleeF, argsvals, isVoidReturn ? "" : "calltmp");
 }
 Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
-    Value *v = codegen->getNamedValues().at(this->Name);
+    Value *v = codegen->getNamedValue(this->Name);
     if (v == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name.");
     auto type = Helpers::GetLLVMTypeName(v->getType());
     return codegen->getBuilder().CreateLoad(v, this->Name.c_str());
@@ -362,7 +362,7 @@ Value *AstVarNode::Codegen(CodeGenerator *codegen) {
         Alloca = Helpers::CreateEntryBlockAlloca(func, this->Name, initialVal->getType());
     }
     codegen->getBuilder().CreateStore(initialVal, Alloca);
-    codegen->getNamedValues().insert({ this->Name, Alloca });
+    codegen->setNamedValue( this->Name, Alloca );
     return initialVal;
 }
 Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
@@ -411,12 +411,12 @@ void PrototypeAst::CreateArgumentAllocas(CodeGenerator *codegen, Function *func)
         codegen->getBuilder().CreateStore(arg_itr, Alloca);
         
         // Add arguments to variable symbol table.
-        codegen->getNamedValues().insert({ argName, Alloca });
+        codegen->setNamedValue(argName, Alloca);
     }
 }
 
 Function *FunctionAst::Codegen(CodeGenerator *codegen) {
-    codegen->getNamedValues().clear();
+    codegen->clearNamedValues();
     Function *func = this->Prototype->Codegen(codegen);
     if (func == nullptr) return Helpers::Error(this->Prototype->getPos(), "Failed to create function!");
 
@@ -430,7 +430,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     Type *returnType = this->Prototype->getReturnType()->GetLLVMType(codegen);
     // TODO: Check if return type is void and do not create return value, but return void.
     AllocaInst *retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, returnType);
-    codegen->getNamedValues().insert({ COMPILER_RETURN_VALUE_STRING, retVal });
+    codegen->setNamedValue(COMPILER_RETURN_VALUE_STRING, retVal);
     
     codegen->setMergeBlock(mergeBB);
     Helpers::EmitBlock(codegen, this->FunctionBody, true);
