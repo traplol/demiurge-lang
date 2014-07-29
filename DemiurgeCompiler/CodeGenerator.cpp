@@ -68,8 +68,8 @@ CodeGenerator::~CodeGenerator() {
 void updateGMap(CodeGenerator *codegen, Type *returnType, const char *name, void *addr, Type *argType, bool isVarArgs = false) {
     std::vector<Type*> args(1, argType);
     FunctionType *funcType = FunctionType::get(returnType, args, isVarArgs);
-    Function *func = Function::Create(funcType, Function::ExternalLinkage, name, codegen->TheModule);
-    codegen->TheExecutionEngine->updateGlobalMapping(func, addr);
+    Function *func = Function::Create(funcType, Function::ExternalLinkage, name, codegen->getTheModule());
+    codegen->getTheExecutionEngine()->updateGlobalMapping(func, addr);
 }
 
 void CodeGenerator::InitJitOutputFunctions() {
@@ -131,27 +131,27 @@ void CodeGenerator::RunMain() {
 Type *AstTypeNode::GetLLVMType(CodeGenerator *codegen) {
     switch (this->TypeType) {
     default: Helpers::Error(this->getPos(), "Unknown type.");
-    case node_boolean: return Type::getInt1Ty(codegen->Context);
-    case node_double: return Type::getDoubleTy(codegen->Context);
-    case node_integer: return Type::getInt64Ty(codegen->Context);
-    case node_string: return Type::getInt8PtrTy(codegen->Context);
-    case node_void: return Type::getVoidTy(codegen->Context);
+    case node_boolean: return Type::getInt1Ty(codegen->getContext());
+    case node_double: return Type::getDoubleTy(codegen->getContext());
+    case node_integer: return Type::getInt64Ty(codegen->getContext());
+    case node_string: return Type::getInt8PtrTy(codegen->getContext());
+    case node_void: return Type::getVoidTy(codegen->getContext());
     }
 }
 
 Value *AstDoubleNode::Codegen(CodeGenerator *codegen) {
-    return ConstantFP::get(codegen->Context, APFloat(this->Val));
+    return ConstantFP::get(codegen->getContext(), APFloat(this->Val));
 }
 Value *AstIntegerNode::Codegen(CodeGenerator *codegen) {
-    return ConstantInt::get(Type::getInt64Ty(codegen->Context), this->Val, true);
+    return ConstantInt::get(Type::getInt64Ty(codegen->getContext()), this->Val, true);
 }
 Value *AstBooleanNode::Codegen(CodeGenerator *codegen) {
     if (this->Val == true)
-        return codegen->Builder.getTrue();
-    return codegen->Builder.getFalse();
+        return codegen->getBuilder().getTrue();
+    return codegen->getBuilder().getFalse();
 }
 Value *AstStringNode::Codegen(CodeGenerator *codegen) {
-    return codegen->Builder.CreateGlobalStringPtr(this->Val, "globalstr_" + this->Val.substr(0, 10));
+    return codegen->getBuilder().CreateGlobalStringPtr(this->Val, "globalstr_" + this->Val.substr(0, 10));
 }
 Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     AstVariableNode *lhse = dynamic_cast<AstVariableNode*>(this->LHS);
@@ -163,14 +163,14 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     if (val == nullptr) return Helpers::Error(this->RHS->getPos(), "Right operand could not be evaluated.");
 
     // Lookup the name of the variable
-    Value *variable = codegen->NamedValues[lhse->getName()];
+    Value *variable = codegen->getNamedValues().at(lhse->getName());
     if (variable == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name '%s'", lhse->getName().c_str());
     
     // Implicit casting to destination type when assigning to variables.
     Type *varType = variable->getType()->getContainedType(0);
     val = Helpers::CreateCastTo(codegen, val, varType);
     
-    codegen->Builder.CreateStore(val, variable);
+    codegen->getBuilder().CreateStore(val, variable);
     return val;
 }
 Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
@@ -195,7 +195,7 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
     if (val == nullptr)
         return Helpers::Error(this->getPos(), "Could not evaluate return statement.");
     Type *valType = val->getType();
-    Type *retType = codegen->Builder.getCurrentFunctionReturnType();
+    Type *retType = codegen->getBuilder().getCurrentFunctionReturnType();
     if (valType->getTypeID() != retType->getTypeID()) {
         bool castSuccess;
         val = Helpers::CreateCastTo(codegen, val, retType, &castSuccess);
@@ -205,11 +205,11 @@ Value *AstReturnNode::Codegen(CodeGenerator *codegen) {
             Helpers::Warning(this->Expr->getPos(), "Casting from %s to %s, possible loss of data.",
                 Helpers::GetLLVMTypeName(valType).c_str(), Helpers::GetLLVMTypeName(retType).c_str());
     }
-    AllocaInst *retVal = codegen->NamedValues[COMPILER_RETURN_VALUE_STRING];
-    codegen->Builder.CreateStore(val, retVal);
+    AllocaInst *retVal = codegen->getNamedValues().at(COMPILER_RETURN_VALUE_STRING);
+    codegen->getBuilder().CreateStore(val, retVal);
 
-    Value *derefRetVal = codegen->Builder.CreateLoad(retVal, "retval");
-    codegen->Builder.CreateRet(derefRetVal);
+    Value *derefRetVal = codegen->getBuilder().CreateLoad(retVal, "retval");
+    codegen->getBuilder().CreateRet(derefRetVal);
     //codegen->Builder.CreateBr(codegen->ReturnBlock);
     return derefRetVal;
 }
@@ -220,36 +220,36 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
         return Helpers::Error(this->Condition->getPos(), "'if' condition not boolean type.");
     Value *tobool = Helpers::ToBoolean(codegen, cond);
-    Function *func = codegen->Builder.GetInsertBlock()->getParent();
+    Function *func = codegen->getBuilder().GetInsertBlock()->getParent();
     
     // Create blocks for the 'if' cases.
-    BasicBlock *outsideNestBB = codegen->MergeBlock; // save the outside to branch to at end of loop.
-    BasicBlock *ifendBB = BasicBlock::Create(codegen->Context, "if_end", func, outsideNestBB); // both blocks merge back here.
-    codegen->MergeBlock = ifendBB;
-    BasicBlock *ifelseBB = BasicBlock::Create(codegen->Context, "if_false", func, ifendBB);
-    BasicBlock *ifthenBB = BasicBlock::Create(codegen->Context, "if_true", func, ifelseBB);
+    BasicBlock *outsideNestBB = codegen->getMergeBlock(); // save the outside to branch to at end of loop.
+    BasicBlock *ifendBB = BasicBlock::Create(codegen->getContext(), "if_end", func, outsideNestBB); // both blocks merge back here.
+    codegen->setMergeBlock(ifendBB);
+    BasicBlock *ifelseBB = BasicBlock::Create(codegen->getContext(), "if_false", func, ifendBB);
+    BasicBlock *ifthenBB = BasicBlock::Create(codegen->getContext(), "if_true", func, ifelseBB);
 
 
     // Create the conditional branch.
-    codegen->Builder.CreateCondBr(tobool, ifthenBB, ifelseBB);
+    codegen->getBuilder().CreateCondBr(tobool, ifthenBB, ifelseBB);
     bool goesToMerge = false;
 
     // emit 'if.then' block.
-    codegen->Builder.SetInsertPoint(ifthenBB);
+    codegen->getBuilder().SetInsertPoint(ifthenBB);
     bool ifthenReturns;
     Helpers::EmitBlock(codegen, this->IfBody, true, &ifthenReturns);
     if (ifthenBB->getTerminator() == nullptr) { // if there was no return statement within the else block
-        codegen->Builder.CreateBr(ifendBB); // go to merge since there was no return in the then block
+        codegen->getBuilder().CreateBr(ifendBB); // go to merge since there was no return in the then block
         goesToMerge = true;
     }
     
 
     // emit 'if.else' block
-    codegen->Builder.SetInsertPoint(ifelseBB);
+    codegen->getBuilder().SetInsertPoint(ifelseBB);
     bool ifelseReturns;
     Helpers::EmitBlock(codegen, this->ElseBody, true, &ifelseReturns);
     if (ifelseBB->getTerminator() == nullptr) { // if there was no return statement within the else block
-        codegen->Builder.CreateBr(ifendBB); // go to merge since there was no return in the else block
+        codegen->getBuilder().CreateBr(ifendBB); // go to merge since there was no return in the else block
         goesToMerge = true;
     }
     
@@ -261,13 +261,13 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
         goesToMerge = false;
     }
     if (goesToMerge || ifendBB->getTerminator() == nullptr) {// merge back to the rest of the code.
-        codegen->Builder.SetInsertPoint(ifendBB);
-        codegen->Builder.CreateBr(outsideNestBB);
+        codegen->getBuilder().SetInsertPoint(ifendBB);
+        codegen->getBuilder().CreateBr(outsideNestBB);
     }
-    ifthenBB = codegen->Builder.GetInsertBlock();
-    ifelseBB = codegen->Builder.GetInsertBlock();
-    ifendBB = codegen->Builder.GetInsertBlock();
-    codegen->Builder.SetInsertPoint(outsideNestBB);
+    ifthenBB = codegen->getBuilder().GetInsertBlock();
+    ifelseBB = codegen->getBuilder().GetInsertBlock();
+    ifendBB = codegen->getBuilder().GetInsertBlock();
+    codegen->getBuilder().SetInsertPoint(outsideNestBB);
     return ifendBB;
 }
 Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
@@ -279,41 +279,41 @@ Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
 
     Value *tobool = Helpers::ToBoolean(codegen, cond);
 
-    Function *func = codegen->Builder.GetInsertBlock()->getParent();
+    Function *func = codegen->getBuilder().GetInsertBlock()->getParent();
     
-    BasicBlock *outsideNestBB = codegen->MergeBlock; // save the outside to branch to at end of loop.
-    BasicBlock *whileEndBB = BasicBlock::Create(codegen->Context, "while_end", func, outsideNestBB); // end of while loop jumps here
-    codegen->MergeBlock = whileEndBB; // set the outside merge block for any nested blocks
-    BasicBlock *whileBodyBB = BasicBlock::Create(codegen->Context, "while_body", func, whileEndBB);
+    BasicBlock *outsideNestBB = codegen->getMergeBlock(); // save the outside to branch to at end of loop.
+    BasicBlock *whileEndBB = BasicBlock::Create(codegen->getContext(), "while_end", func, outsideNestBB); // end of while loop jumps here
+    codegen->setMergeBlock(whileEndBB); // set the outside merge block for any nested blocks
+    BasicBlock *whileBodyBB = BasicBlock::Create(codegen->getContext(), "while_body", func, whileEndBB);
     
     // evaluate the condition and branch accordingly, 
     // e.g while (false) {...} should be skipped. 
-    codegen->Builder.CreateCondBr(tobool, whileBodyBB, whileEndBB);
+    codegen->getBuilder().CreateCondBr(tobool, whileBodyBB, whileEndBB);
     
     // emit the body
-    codegen->Builder.SetInsertPoint(whileBodyBB);
+    codegen->getBuilder().SetInsertPoint(whileBodyBB);
     bool whileHitReturn = false;
     Helpers::EmitBlock(codegen, this->WhileBody, true, &whileHitReturn); // emit the while block
 
     if (whileBodyBB->getTerminator() == nullptr)
-        codegen->Builder.CreateBr(whileEndBB);
+        codegen->getBuilder().CreateBr(whileEndBB);
     
     if (whileEndBB->getTerminator() == nullptr) {
         // re-evaluate the condition
-        codegen->Builder.SetInsertPoint(whileEndBB);
+        codegen->getBuilder().SetInsertPoint(whileEndBB);
         cond = this->Condition->Codegen(codegen);
         tobool = Helpers::ToBoolean(codegen, cond);
-        codegen->Builder.CreateCondBr(tobool, whileBodyBB, outsideNestBB); // evaluate the condition and branch accordingly
+        codegen->getBuilder().CreateCondBr(tobool, whileBodyBB, outsideNestBB); // evaluate the condition and branch accordingly
     }
 
-    whileBodyBB = codegen->Builder.GetInsertBlock();
-    whileEndBB = codegen->Builder.GetInsertBlock();
-    codegen->Builder.SetInsertPoint(outsideNestBB);
+    whileBodyBB = codegen->getBuilder().GetInsertBlock();
+    whileEndBB = codegen->getBuilder().GetInsertBlock();
+    codegen->getBuilder().SetInsertPoint(outsideNestBB);
     return whileEndBB;// Helpers::Error(this->getPos(), "While loop not yet implemented");
 }
 Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     // Lookup the name in the global module table.
-    Function *CalleeF = codegen->TheModule->getFunction(this->Name);
+    Function *CalleeF = codegen->getTheModule()->getFunction(this->Name);
     if (CalleeF == nullptr)
         return Helpers::Error(this->getPos(), "Unknown function, '%s', referenced.", this->Name.c_str());
 
@@ -337,17 +337,17 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
         argsvals.push_back(val);
     }
     bool isVoidReturn = CalleeF->getReturnType()->isVoidTy();
-    return codegen->Builder.CreateCall(CalleeF, argsvals, isVoidReturn ? "" : "calltmp");
+    return codegen->getBuilder().CreateCall(CalleeF, argsvals, isVoidReturn ? "" : "calltmp");
 }
 Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
-    Value *v = codegen->NamedValues[this->Name];
+    Value *v = codegen->getNamedValues().at(this->Name);
     if (v == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name.");
     auto type = Helpers::GetLLVMTypeName(v->getType());
-    return codegen->Builder.CreateLoad(v, this->Name.c_str());
+    return codegen->getBuilder().CreateLoad(v, this->Name.c_str());
 }
 Value *AstVarNode::Codegen(CodeGenerator *codegen) {
     std::vector<AllocaInst*> oldBindings;
-    Function *func = codegen->Builder.GetInsertBlock()->getParent();
+    Function *func = codegen->getBuilder().GetInsertBlock()->getParent();
 
     IExpressionAST *expr = this->getAssignmentExpression();
     Value *initialVal;
@@ -361,8 +361,8 @@ Value *AstVarNode::Codegen(CodeGenerator *codegen) {
         auto type = Helpers::GetLLVMTypeName(initialVal->getType());
         Alloca = Helpers::CreateEntryBlockAlloca(func, this->Name, initialVal->getType());
     }
-    codegen->Builder.CreateStore(initialVal, Alloca);
-    codegen->NamedValues[this->Name] = Alloca;
+    codegen->getBuilder().CreateStore(initialVal, Alloca);
+    codegen->getNamedValues().insert({ this->Name, Alloca });
     return initialVal;
 }
 Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
@@ -373,14 +373,14 @@ Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
         argTypes.push_back(type);
     }
     FunctionType *funcType = FunctionType::get(this->ReturnType->GetLLVMType(codegen), argTypes, false);
-    Function *func = Function::Create(funcType, Function::ExternalLinkage, this->Name, codegen->TheModule);
+    Function *func = Function::Create(funcType, Function::ExternalLinkage, this->Name, codegen->getTheModule());
 
     // If 'func' conflicted, ther was already something named 'Name'. If it has a body,
     // don't allow redefinition.
     if (func->getName() != this->Name) {
         // Delete the one we just made and get the existing one.
         func->eraseFromParent();
-        func = codegen->TheModule->getFunction(this->Name);
+        func = codegen->getTheModule()->getFunction(this->Name);
 
         // if func already has a body, reject this.
         if (!func->empty()) {
@@ -408,43 +408,43 @@ void PrototypeAst::CreateArgumentAllocas(CodeGenerator *codegen, Function *func)
         AllocaInst *Alloca = Helpers::CreateEntryBlockAlloca(func, argName, arg->GetLLVMType(codegen));
 
         // Store the initial value
-        codegen->Builder.CreateStore(arg_itr, Alloca);
+        codegen->getBuilder().CreateStore(arg_itr, Alloca);
         
         // Add arguments to variable symbol table.
-        codegen->NamedValues[argName] = Alloca;
+        codegen->getNamedValues().insert({ argName, Alloca });
     }
 }
 
 Function *FunctionAst::Codegen(CodeGenerator *codegen) {
-    codegen->NamedValues.clear();
+    codegen->getNamedValues().clear();
     Function *func = this->Prototype->Codegen(codegen);
     if (func == nullptr) return Helpers::Error(this->Prototype->getPos(), "Failed to create function!");
 
     // Create our entry block
-    BasicBlock *entryBB = BasicBlock::Create(codegen->Context, "entry", func);
-    BasicBlock *mergeBB = BasicBlock::Create(codegen->Context, "merge", func);
-    BasicBlock *retBB = BasicBlock::Create(codegen->Context, "return", func);
-    codegen->ReturnBlock = retBB; // save our return block to jump to.
-    codegen->Builder.SetInsertPoint(entryBB);
+    BasicBlock *entryBB = BasicBlock::Create(codegen->getContext(), "entry", func);
+    BasicBlock *mergeBB = BasicBlock::Create(codegen->getContext(), "merge", func);
+    BasicBlock *retBB = BasicBlock::Create(codegen->getContext(), "return", func);
+    codegen->setReturnBlock(retBB); // save our return block to jump to.
+    codegen->getBuilder().SetInsertPoint(entryBB);
     this->Prototype->CreateArgumentAllocas(codegen, func);
     Type *returnType = this->Prototype->getReturnType()->GetLLVMType(codegen);
     // TODO: Check if return type is void and do not create return value, but return void.
     AllocaInst *retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, returnType);
-    codegen->NamedValues[COMPILER_RETURN_VALUE_STRING] = retVal;
+    codegen->getNamedValues().insert({ COMPILER_RETURN_VALUE_STRING, retVal });
     
-    codegen->MergeBlock = mergeBB;
+    codegen->setMergeBlock(mergeBB);
     Helpers::EmitBlock(codegen, this->FunctionBody, true);
 
     
-    if (codegen->Builder.GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
-        codegen->Builder.CreateBr(retBB);
+    if (codegen->getBuilder().GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
+        codegen->getBuilder().CreateBr(retBB);
         // Switch to the return block
-        codegen->Builder.SetInsertPoint(retBB);
+        codegen->getBuilder().SetInsertPoint(retBB);
         // Load the return value and get ready to return it.
-        Value *derefRetVal = codegen->Builder.CreateLoad(retVal, COMPILER_RETURN_VALUE_STRING);
+        Value *derefRetVal = codegen->getBuilder().CreateLoad(retVal, COMPILER_RETURN_VALUE_STRING);
         // return the function's return value.
-        codegen->Builder.CreateRet(derefRetVal);
-        retBB = codegen->Builder.GetInsertBlock();
+        codegen->getBuilder().CreateRet(derefRetVal);
+        retBB = codegen->getBuilder().GetInsertBlock();
     }
     else {
         retBB->removeFromParent();
@@ -459,7 +459,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else {
-        codegen->TheFPM->run(*func);
+        codegen->getTheFPM()->run(*func);
     }
     return func;
 }

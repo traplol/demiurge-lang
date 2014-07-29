@@ -37,37 +37,37 @@ namespace Helpers {
         // int:int
 
         Value *intintAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateAdd(lhs, rhs, "intintAdd");
+            return codegen->getBuilder().CreateAdd(lhs, rhs, "intintAdd");
         }
         Value *intintSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateSub(lhs, rhs, "intintSub");
+            return codegen->getBuilder().CreateSub(lhs, rhs, "intintSub");
         }
         Value *intintMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateMul(lhs, rhs, "intintMul");
+            return codegen->getBuilder().CreateMul(lhs, rhs, "intintMul");
         }
         Value *intintDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateSDiv(lhs, rhs, "intintDiv");
+            return codegen->getBuilder().CreateSDiv(lhs, rhs, "intintDiv");
         }
         Value *intintMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateSRem(lhs, rhs, "intintMod");
+            return codegen->getBuilder().CreateSRem(lhs, rhs, "intintMod");
         }
         Value *intintLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateICmpSLT(lhs, rhs, "intintLT");
+            return codegen->getBuilder().CreateICmpSLT(lhs, rhs, "intintLT");
         }
         Value *intintGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateICmpSGT(lhs, rhs, "intintGT");
+            return codegen->getBuilder().CreateICmpSGT(lhs, rhs, "intintGT");
         }
         Value *intintLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateICmpSLE(lhs, rhs, "intintLE");
+            return codegen->getBuilder().CreateICmpSLE(lhs, rhs, "intintLE");
         }
         Value *intintGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateICmpSGE(lhs, rhs, "intintGE");
+            return codegen->getBuilder().CreateICmpSGE(lhs, rhs, "intintGE");
         }
         Value *intintEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateICmpEQ(lhs, rhs, "intintEQ");
+            return codegen->getBuilder().CreateICmpEQ(lhs, rhs, "intintEQ");
         }
         Value *intintNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateICmpNE(lhs, rhs, "intintNE");
+            return codegen->getBuilder().CreateICmpNE(lhs, rhs, "intintNE");
         }
 
         BinOpCodeGenFuncPtr getIntIntFuncPtr(TokenType type) {
@@ -89,10 +89,10 @@ namespace Helpers {
 
         // int:double | double:int
         Value *intToDouble(CodeGenerator *codegen, Value *intValue) {
-            return codegen->Builder.CreateSIToFP(intValue, Type::getDoubleTy(codegen->Context), "uintToFp");
+            return codegen->getBuilder().CreateSIToFP(intValue, Type::getDoubleTy(codegen->getContext()), "uintToFp");
         }
         Value *doubleToInt(CodeGenerator *codegen, Value *doubleValue) {
-            return codegen->Builder.CreateSIToFP(doubleValue, Type::getInt64Ty(codegen->Context), "fpToUint");
+            return codegen->getBuilder().CreateSIToFP(doubleValue, Type::getInt64Ty(codegen->getContext()), "fpToUint");
         }
 
         Value *intdoubleAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
@@ -100,77 +100,77 @@ namespace Helpers {
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFAdd(lhs, rhs, "intdoubleAdd");
+            return codegen->getBuilder().CreateFAdd(lhs, rhs, "intdoubleAdd");
         }
         Value *intdoubleSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFSub(lhs, rhs, "intdoubleSub");
+            return codegen->getBuilder().CreateFSub(lhs, rhs, "intdoubleSub");
         }
         Value *intdoubleMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFMul(lhs, rhs, "intdoubleMul");
+            return codegen->getBuilder().CreateFMul(lhs, rhs, "intdoubleMul");
         }
         Value *intdoubleDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFDiv(lhs, rhs, "intdoubleDiv");
+            return codegen->getBuilder().CreateFDiv(lhs, rhs, "intdoubleDiv");
         }
         Value *intdoubleMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFRem(lhs, rhs, "intdoubleMod");
+            return codegen->getBuilder().CreateFRem(lhs, rhs, "intdoubleMod");
         }
         Value *intdoubleLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFCmpULT(lhs, rhs, "intdoubleLT");
+            return codegen->getBuilder().CreateFCmpULT(lhs, rhs, "intdoubleLT");
         }
         Value *intdoubleGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFCmpUGT(lhs, rhs, "intdoubleGT");
+            return codegen->getBuilder().CreateFCmpUGT(lhs, rhs, "intdoubleGT");
         }
         Value *intdoubleLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFCmpULE(lhs, rhs, "intdoubleLE");
+            return codegen->getBuilder().CreateFCmpULE(lhs, rhs, "intdoubleLE");
         }
         Value *intdoubleGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFCmpUGE(lhs, rhs, "intdoubleGE");
+            return codegen->getBuilder().CreateFCmpUGE(lhs, rhs, "intdoubleGE");
         }
         Value *intdoubleEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->isIntegerTy())
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFCmpOEQ(lhs, rhs, "intdoubleEQ");
+            return codegen->getBuilder().CreateFCmpOEQ(lhs, rhs, "intdoubleEQ");
         }
         Value *intdoubleNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
                 lhs = intToDouble(codegen, lhs);
             else rhs = intToDouble(codegen, rhs);
 
-            return codegen->Builder.CreateFCmpONE(lhs, rhs, "intdoubleNE");
+            return codegen->getBuilder().CreateFCmpONE(lhs, rhs, "intdoubleNE");
         }
 
         BinOpCodeGenFuncPtr getIntDoubleFuncPtr(TokenType type) {
@@ -192,37 +192,37 @@ namespace Helpers {
 
         // double:double
         Value *doubledoubleAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFAdd(lhs, rhs, "doubledoubleAdd");
+            return codegen->getBuilder().CreateFAdd(lhs, rhs, "doubledoubleAdd");
         }
         Value *doubledoubleSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFSub(lhs, rhs, "doubledoubleSub");
+            return codegen->getBuilder().CreateFSub(lhs, rhs, "doubledoubleSub");
         }
         Value *doubledoubleMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFMul(lhs, rhs, "doubledoubleMul");
+            return codegen->getBuilder().CreateFMul(lhs, rhs, "doubledoubleMul");
         }
         Value *doubledoubleDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFDiv(lhs, rhs, "doubledoubleDiv");
+            return codegen->getBuilder().CreateFDiv(lhs, rhs, "doubledoubleDiv");
         }
         Value *doubledoubleMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFRem(lhs, rhs, "doubledoubleMod");
+            return codegen->getBuilder().CreateFRem(lhs, rhs, "doubledoubleMod");
         }
         Value *doubledoubleLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFCmpULT(lhs, rhs, "doubledoubleLT");
+            return codegen->getBuilder().CreateFCmpULT(lhs, rhs, "doubledoubleLT");
         }
         Value *doubledoubleGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFCmpUGT(lhs, rhs, "doubledoubleGT");
+            return codegen->getBuilder().CreateFCmpUGT(lhs, rhs, "doubledoubleGT");
         }
         Value *doubledoubleLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFCmpULE(lhs, rhs, "doubledoubleLE");
+            return codegen->getBuilder().CreateFCmpULE(lhs, rhs, "doubledoubleLE");
         }
         Value *doubledoubleGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFCmpUGE(lhs, rhs, "doubledoubleGE");
+            return codegen->getBuilder().CreateFCmpUGE(lhs, rhs, "doubledoubleGE");
         }
         Value *doubledoubleEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFCmpOEQ(lhs, rhs, "doubledoubleEQ");
+            return codegen->getBuilder().CreateFCmpOEQ(lhs, rhs, "doubledoubleEQ");
         }
         Value *doubledoubleNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            return codegen->Builder.CreateFCmpONE(lhs, rhs, "doubledoubleNE");
+            return codegen->getBuilder().CreateFCmpONE(lhs, rhs, "doubledoubleNE");
         }
 
         BinOpCodeGenFuncPtr getDoubleDoubleFuncPtr(TokenType type) {
@@ -264,7 +264,7 @@ namespace Helpers {
         std::vector<Value*> vals;
         for (unsigned i = 0, size = block.size(); i < size; ++i) {
             IExpressionAST *expr = block[i];
-            if (codegen->Builder.GetInsertBlock()->getTerminator() != nullptr) // stops multiple terminators per block.
+            if (codegen->getBuilder().GetInsertBlock()->getTerminator() != nullptr) // stops multiple terminators per block.
             {
                 Warning(expr->getPos(), "Unreachable code.");
                 continue;
@@ -293,7 +293,7 @@ namespace Helpers {
 
     // Creates a LLVM::Value* of double type from the value passed.
     Value *GetDouble(CodeGenerator *codegen, double val) {
-        return ConstantFP::get(codegen->Context, APFloat(val));
+        return ConstantFP::get(codegen->getContext(), APFloat(val));
     }
     // Creates a LLVM::Value* of integer64 type with a value of zero.
     Value *GetZero_64(CodeGenerator *codegen) {
@@ -322,11 +322,11 @@ namespace Helpers {
 
     // Creates a LLVM::Value* of integer type with specified width from the value passed.
     Value *GetInt(CodeGenerator *codegen, unsigned long long int val, int bitwidth) {
-        return ConstantInt::get(codegen->Context, APInt(bitwidth, val));
+        return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val));
     }
     // Creates a LLVM::Value* of integer1 type from the value passed.
     Value *GetBoolean(CodeGenerator *codegen, int val) {
-        return ConstantInt::get(Type::getInt1Ty(codegen->Context), APInt(1, val));
+        return ConstantInt::get(Type::getInt1Ty(codegen->getContext()), APInt(1, val));
     }
     // Creates a LLVM::Value* of integer64 type from the value passed.
     Value *GetInt64(CodeGenerator *codegen, unsigned long long int val) {
@@ -334,7 +334,7 @@ namespace Helpers {
     }
     // Creates a LLVM::Value* of integer8* type from the value passed.
     Value *GetString(CodeGenerator *codegen, std::string val) {
-        return ConstantDataArray::getString(codegen->Context, val.c_str());
+        return ConstantDataArray::getString(codegen->getContext(), val.c_str());
     }
 
     // Returns a string representation of the passed llvm type.
@@ -373,7 +373,7 @@ namespace Helpers {
             if (fromWidth != toWidth) { // resize the width of the the val
                 if (castSuccessful != nullptr)
                     *castSuccessful = true;
-                return codegen->Builder.CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
+                return codegen->getBuilder().CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
             }
         }
         auto valTypeId = valType->getTypeID();
@@ -383,12 +383,12 @@ namespace Helpers {
         if (valType->canLosslesslyBitCastTo(castToType)) { // bitcasting
             if (castSuccessful != nullptr)
                 *castSuccessful = true;
-            return codegen->Builder.CreateBitCast(val, castToType, "bitcasted");
+            return codegen->getBuilder().CreateBitCast(val, castToType, "bitcasted");
         }
         if (CastInst::isCastable(valType, castToType)) { // typical cast to type
             if (castSuccessful != nullptr)
                 *castSuccessful = true;
-            return codegen->Builder.CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
+            return codegen->getBuilder().CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
         }
         return val;
     }
@@ -396,7 +396,7 @@ namespace Helpers {
     Value *GetDefaultValue(CodeGenerator *codegen, AstTypeNode *typeNode) {
         switch (typeNode->getTypeType()) {
         default: return nullptr;
-        case node_boolean: return codegen->Builder.getFalse();
+        case node_boolean: return codegen->getBuilder().getFalse();
         case node_double: return GetDouble(codegen, 0.0);
         case node_integer: return GetInt64(codegen, 0);
         case node_string: return GetString(codegen, "");
@@ -414,10 +414,10 @@ namespace Helpers {
 
     // Returns the current llvm::Function*
     Function *GetCurrentFunction(CodeGenerator *codegen) {
-        return codegen->Builder.GetInsertBlock()->getParent();
+        return codegen->getBuilder().GetInsertBlock()->getParent();
     }
 
     Value *ToBoolean(CodeGenerator *codegen, Value *num) {
-        return codegen->Builder.CreateICmpNE(num, codegen->Builder.getFalse(), "tobool");
+        return codegen->getBuilder().CreateICmpNE(num, codegen->getBuilder().getFalse(), "tobool");
     }
 }
