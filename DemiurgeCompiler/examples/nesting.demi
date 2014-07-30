@@ -1,3 +1,6 @@
+extern func printi(int):void;
+extern func print(string):void;
+
 func test() : int {
     var x = 4;
     while ( x > 0 ) {

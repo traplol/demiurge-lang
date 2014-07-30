@@ -1,3 +1,5 @@
+extern func printi(int):void;
+
 func gcd(x : int, y : int) : int {
     if(x == y) {
         return x;

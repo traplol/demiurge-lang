@@ -1,3 +1,6 @@
+extern func printf(string,...):void;
+extern func println(string):void;
+
 func fizzbuzz(x:int):int {
     var y = 1;
     while (y <= x) {
@@ -11,7 +14,7 @@ func fizzbuzz(x:int):int {
             println("Buzz");
         }
         else {
-            printi(y);
+            printf("%d\n",y);
         }
         y = y + 1;
     }

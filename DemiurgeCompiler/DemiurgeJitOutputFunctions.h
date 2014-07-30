@@ -2,32 +2,43 @@
 #define _DEMIURGE_JIT_OUTPUT_FUNCTIONS_H
 #include <stdio.h>
 #include <stdarg.h>
-static void print(const char* string) {
-    printf(string);
+
+#ifdef _WIN32
+#define EXPORT __declspec( dllexport )   
+#else
+#define EXPORT
+#endif
+
+typedef unsigned long long int uint64;
+
+extern "C" {
+
+    EXPORT int printf(const char *fmt, ...);
+
+    EXPORT int print(const char *string) {
+        printf(string);
+        return strlen(string);
+    }
+
+    EXPORT int println(const char *string) {
+        printf("%s\n", string);
+        return strlen(string);
+    }
+
+    EXPORT double printd(double x) {
+        printf("%f", x);
+        return x;
+    }
+
+    EXPORT uint64 printi(uint64 x) {
+        printf("%llu", x);
+        return x;
+    }
+
+    EXPORT uint64 printc(uint64 x) {
+        putchar((char)x);
+        return x;
+    }
+
 }
-
-static void println(const char* string) {
-    printf("%s\n", string);
-}
-
-static void _printf(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    vfprintf(stderr, format, args);
-    va_end(args);
-}
-
-static void printd(double x) {
-    printf("%f", x);
-}
-
-static void printi(unsigned long long int x) {
-    printf("%llu", x);
-}
-
-static void printc(unsigned long long int x) {
-    putchar((char)x);
-}
-
-
 #endif

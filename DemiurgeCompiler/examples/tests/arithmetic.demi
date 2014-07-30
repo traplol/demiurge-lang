@@ -1,3 +1,5 @@
+extern func printf(string,...):void;
+
 func test3() : int { // expected 2
     return 1 + 1;
 }

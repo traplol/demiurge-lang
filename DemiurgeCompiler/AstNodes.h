@@ -227,12 +227,14 @@ class PrototypeAst {
     //std::map<std::string, AstTypeNode*> Args;
     std::vector<std::pair<std::string, AstTypeNode*>> Args;
     AstTypeNode *ReturnType;
+    bool IsVarArgs;
 public:
     PrototypeAst(const std::string &name, AstTypeNode *returnType, const std::vector<std::pair<std::string, AstTypeNode*>> &args,
-        int line, int column)
+        bool isVarArgs, int line, int column)
         : Name(name)
         , ReturnType(returnType)
-        , Args(args) {
+        , Args(args)
+        , IsVarArgs(isVarArgs) {
         Pos.LineNumber = line;
         Pos.ColumnNumber = column;
     }

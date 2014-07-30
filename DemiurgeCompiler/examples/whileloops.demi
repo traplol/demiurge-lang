@@ -1,25 +1,4 @@
-func fizzbuzz(x:int):int {
-    var y = 1;
-    while (y < x) {
-        if (y % 15 == 0) {
-            println("Fizzbuzz");
-        }
-        else if (y % 3 == 0) {
-            println("Fizz");
-        }
-        else if (y % 5 == 0) {
-            println("Buzz");
-        }
-        else {
-            printi(y);
-        }
-        y = y-1;
-    }
-    return 0;
-}
-
-
-func main() : int {
-    fizzbuzz(100);
-    return 0;
+extern func print(string):void;
+func main():void{
+    print("todo");
 }

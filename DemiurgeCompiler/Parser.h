@@ -46,6 +46,7 @@ private:
     AstTypeNode *tryInferType(IExpressionAST *expr);
     FunctionAst *parseFunctionDefinition();
     PrototypeAst *parsePrototype();
+    PrototypeAst *parseExternDeclaration();
 
     nullptr_t Error(const char *fmt, ...);
     void Warning(const char *fmt, ...);

@@ -79,12 +79,12 @@ void CodeGenerator::initJitOutputFunctions() {
 #define DOUBLE_TYPE Type::getDoubleTy(this->Context)
 
     
-    updateGMap(this, VOID_TYPE, "print", &print, STRING_TYPE);
-    updateGMap(this, VOID_TYPE, "println", &println, STRING_TYPE);
-    updateGMap(this, VOID_TYPE, "printd", &printd, DOUBLE_TYPE);
-    updateGMap(this, VOID_TYPE, "printi", &printi, INT_TYPE);
-    updateGMap(this, VOID_TYPE, "printc", &printc, INT_TYPE);
-    updateGMap(this, VOID_TYPE, "printf", &_printf, STRING_TYPE, true);
+    //updateGMap(this, VOID_TYPE, "print", &print, STRING_TYPE);
+    //updateGMap(this, VOID_TYPE, "println", &println, STRING_TYPE);
+    //updateGMap(this, VOID_TYPE, "printd", &printd, DOUBLE_TYPE);
+    //updateGMap(this, VOID_TYPE, "printi", &printi, INT_TYPE);
+    //updateGMap(this, VOID_TYPE, "printc", &printc, INT_TYPE);
+    //updateGMap(this, VOID_TYPE, "printf", &_printf, STRING_TYPE, true);
 
 
 #undef VOID_TYPE
@@ -93,14 +93,19 @@ void CodeGenerator::initJitOutputFunctions() {
 #undef DOUBLE_TYPE
 }
 
-bool CodeGenerator::declareFunctions(std::vector<FunctionAst*> functions) {
-    for (int i = 0, e = functions.size(); i < e; ++i) {
-        if (functions[i]->getPrototype()->Codegen(this) == nullptr) return false;
+bool CodeGenerator::declareFunctions(TreeContainer *trees) {
+    for (int i = 0, e = trees->ExternalDeclarations.size(); i < e; ++i) { // declare external declarations
+        if (trees->ExternalDeclarations[i]->Codegen(this) == nullptr) return false;
+    }
+    for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // declare user functions
+        if (trees->FunctionDefinitions[i]->getPrototype()->Codegen(this) == nullptr) return false;
     }
 }
 
 bool CodeGenerator::GenerateCode(TreeContainer *trees) {
-    if (!declareFunctions(trees->FunctionDefinitions)) return false; // declare the functions
+
+    if (!declareFunctions(trees)) return false; // declare functions
+    
     for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // define the functions
         if (trees->FunctionDefinitions[i]->Codegen(this) == nullptr) return false;
     }
@@ -384,9 +389,11 @@ Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
     std::vector<Type *> argTypes;
     for (auto itr = this->Args.begin(); itr != this->Args.end(); ++itr) {
         Type *type = itr->second->GetLLVMType(codegen);
+        if (type->isVoidTy()) // void is not a valid function parameter type.
+            return Helpers::Error(itr->second->getPos(), "'void' not valid function parameter type.");
         argTypes.push_back(type);
     }
-    FunctionType *funcType = FunctionType::get(this->ReturnType->GetLLVMType(codegen), argTypes, false);
+    FunctionType *funcType = FunctionType::get(this->ReturnType->GetLLVMType(codegen), argTypes, this->IsVarArgs);
     Function *func = Function::Create(funcType, Function::ExternalLinkage, this->Name, codegen->getTheModule());
 
     // If 'func' conflicted, ther was already something named 'Name'. If it has a body,
@@ -435,9 +442,9 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     if (func == nullptr) return Helpers::Error(this->Prototype->getPos(), "Failed to create function!");
 
     // Create our entry block
-    BasicBlock *entryBB = BasicBlock::Create(codegen->getContext(), "entry", func);
-    BasicBlock *mergeBB = BasicBlock::Create(codegen->getContext(), "merge", func);
-    BasicBlock *retBB = BasicBlock::Create(codegen->getContext(), "return", func);
+    BasicBlock *entryBB = BasicBlock::Create(codegen->getContext(), "entry", func); // head of the function
+    BasicBlock *mergeBB = BasicBlock::Create(codegen->getContext(), "merge", func); // where everything merges
+    BasicBlock *retBB = BasicBlock::Create(codegen->getContext(), "return", func); // where a return will be branched to on void return type.
     codegen->setReturnBlock(retBB); // save our return block to jump to.
     codegen->getBuilder().SetInsertPoint(entryBB);
     this->Prototype->CreateArgumentAllocas(codegen, func);

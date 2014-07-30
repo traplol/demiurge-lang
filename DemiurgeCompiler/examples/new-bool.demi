@@ -1,3 +1,5 @@
+extern func printf(string,...):void;
+
 func main() : int {
     if (1 != 5) printf("boop\n");
     printf("%d %d\n", 1==1, 1==0);

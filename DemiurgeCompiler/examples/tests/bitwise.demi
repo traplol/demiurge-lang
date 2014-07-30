@@ -1,3 +1,5 @@
+extern func printf(string,...):void;
+
 func shiftleft() : int {
     return 4 << 2; // expected 16
 }

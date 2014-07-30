@@ -84,7 +84,7 @@ private:
     llvm::BasicBlock *ReturnBlock;
     std::map<std::string, llvm::AllocaInst*> NamedValues;
     void initJitOutputFunctions();
-    bool declareFunctions(std::vector<FunctionAst*> functions);
+    bool declareFunctions(TreeContainer *trees);
 };
 
 #endif

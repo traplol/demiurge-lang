@@ -5,6 +5,7 @@
 #include "AstNodes.h"
 
 struct TreeContainer {
+    std::vector<PrototypeAst*> ExternalDeclarations;
     std::vector<IExpressionAST*> TopLevelExpressions;
     std::vector<FunctionAst*> FunctionDefinitions;
 };

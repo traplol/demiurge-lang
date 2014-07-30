@@ -1,4 +1,5 @@
 //recursive Fibonacci sequence
+extern func printi(int):void;
 
 func fib(x : int) : int {
     if (x < 3)

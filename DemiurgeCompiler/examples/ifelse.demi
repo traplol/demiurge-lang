@@ -1,3 +1,6 @@
+extern func printi(int):void;
+extern func print(string):void;
+
 func nested() : int {
     if (false) {
         if (false) {

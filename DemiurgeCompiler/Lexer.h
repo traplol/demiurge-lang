@@ -34,6 +34,10 @@ private:
 
     Token *getNextToken();
 
+    Token *tryTwoCharOper(int thisChar);
+    Token *tryThreeCharOper(int thisChar);
+    Token *tryFourCharOper(int thisChar);
+
     Token *buildStringLiteral();
     Token *buildNumber();
     Token *buildWord();

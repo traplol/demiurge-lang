@@ -1,3 +1,8 @@
+extern func printi(int):void;
+extern func printc(int):void;
+extern func print(string):void;
+extern func println(string):void;
+
 func test(x:string) : int {
     println(x);
     return 1;

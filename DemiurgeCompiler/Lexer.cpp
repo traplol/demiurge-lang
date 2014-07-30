@@ -42,13 +42,23 @@ Token *Lexer::getNextToken() {
 
     if (_lastChar == EOF)
         return new Token(EOF, "EOF", _line, _column);
-
     // Checking for two char operators.
-    tag_TokenType tokType;
+    if (Token *tok = tryFourCharOper(thisChar))
+        return tok;
+    if (Token *tok = tryThreeCharOper(thisChar))
+        return tok;
+    if (Token *tok = tryTwoCharOper(thisChar))
+        return tok;
+    
+    return new Token(thisChar, _builderWord, _line, _column); // test should have succeeded if we hit this.
+}
+
+Token *Lexer::tryTwoCharOper(int thisChar) {
+    TokenType tokType;
     std::string operTest;
     operTest = thisChar;
     operTest += _lastChar;
-    
+
     if (operTest == "++") tokType = tok_plusplus;
     else if (operTest == "--") tokType = tok_minusminus;
     else if (operTest == "+=") tokType = tok_plusequals;
@@ -64,11 +74,34 @@ Token *Lexer::getNextToken() {
     else if (operTest == "<<") tokType = tok_leftshift;
     else if (operTest == ">>") tokType = tok_rightshift;
     else if (operTest == "..") tokType = tok_dotdot;
-    // if all of our tests failed we should hit this and just return the single char operator
-    else return new Token(thisChar, _builderWord, _line, _column);  
-    
-    _lastChar = getNextChar();
-    return new Token(tokType, operTest, _line, _column); // test should have succeeded if we hit this.
+    else return nullptr;
+    _lastChar = getNextChar(); // eat the second
+    return new Token(tokType, operTest, _line, _column);
+}
+Token *Lexer::tryThreeCharOper(int thisChar) {
+    TokenType tokType;
+    std::string operTest;
+    operTest = thisChar;
+    operTest += _lastChar;
+    operTest += peekChar();
+
+    if (operTest == "...") tokType = tok_dotdotdot;
+    else if (operTest == "<<=") tokType = tok_leftshiftequal;
+    else if (operTest == ">>=") tokType = tok_rightshiftequal;
+    else return nullptr;
+
+    getNextChar(); // eat the second
+    _lastChar = getNextChar(); // eat the third
+    return new Token(tokType, operTest, _line, _column);
+}
+Token *Lexer::tryFourCharOper(int thisChar) {
+    //TokenType tokType;
+    //std::string operTest;
+    //operTest = thisChar;
+    //operTest += _lastChar;
+    //operTest += peekChar();
+    //operTest += peekChar(1);
+    return nullptr;
 }
 
 Token *Lexer::buildStringLiteral() {

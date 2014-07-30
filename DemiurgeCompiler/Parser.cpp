@@ -60,6 +60,13 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
             }
             trees->FunctionDefinitions.push_back(func);
         }
+        else if (_curTokenType == tok_extern)  {
+            PrototypeAst *declaration = parseExternDeclaration();
+            if (declaration == nullptr) {
+                return nullptr;
+            }
+            trees->ExternalDeclarations.push_back(declaration);
+        }
         else {
             IExpressionAST *toplevel = parseTopLevelExpression();
             if (toplevel == nullptr) {
@@ -382,13 +389,8 @@ AstTypeNode *Parser::tryInferType(IExpressionAST *expr) {
     }
 }
 
-// <functionast>        ::= 'func' <prototype>  '{' <expression>* '}'
+// <functionast>        ::= <prototype>  '{' <expression>* '}'
 FunctionAst *Parser::parseFunctionDefinition() {
-    if (_curTokenType != tok_func)
-        return Error("Expected 'func'.");
-
-    next(); // eat 'func'
-
     PrototypeAst *proto = parsePrototype();
     if (proto == nullptr) return nullptr;
 
@@ -409,9 +411,12 @@ FunctionAst *Parser::parseFunctionDefinition() {
 }
 
 // let id := identifier
-// <prototype>          ::= id '(' id ':' <type> (',' id ':' <type>)* ')' ':' <type>
+// <prototype>          ::= 'func' id '(' id ':' <type> (',' id ':' <type>)* ')' ':' <type>
 PrototypeAst *Parser::parsePrototype() {
-    
+    if (_curTokenType != tok_func)
+        return Error("Expected 'func'.");
+    next(); // eat 'func'
+
     if (_curTokenType != tok_identifier)
         return Error("Expected identifier in function prototype.");
     std::string functionIdentifier = _curToken->Value();
@@ -420,20 +425,19 @@ PrototypeAst *Parser::parsePrototype() {
     if (_curTokenType != '(')
         return Error("Expected '('.");
     next(); // eat '('
-
     std::vector<std::pair<std::string, AstTypeNode*>> args;
-    while (_curTokenType != ')') {
-
+    while (_curTokenType != ')') { // this while loop short circuits zero parameter functions
+        if (_curTokenType != tok_identifier)
+            return Error("Expected identifier in parameter list.");
         std::string argName = _curToken->Value();
         next(); // eat identifier
         if (_curTokenType != ':')
-            return Error("Expected ':' for argument type definition.");
+            return Error("Expected ':' for parameter type definition.");
         next(); // eat ':'
         AstTypeNode *argType = parseTypeNode();
 
         auto pair = std::make_pair(argName, argType);
         args.push_back(pair);
-
         if (_curTokenType != ',')
             break;
         next(); // eat ','
@@ -451,5 +455,72 @@ PrototypeAst *Parser::parsePrototype() {
     if (returnType == nullptr)
         return Error("Expected function return type.");
 
-    return new PrototypeAst(functionIdentifier, returnType, args, _curToken->Line(), _curToken->Column());
+    return new PrototypeAst(functionIdentifier, returnType, args, false, _curToken->Line(), _curToken->Column());
+}
+
+// <extern>          ::= 'extern' 'func' id '(' (id ':')? <type> (',' (id ':')? <type>)* (',' '...')? ')' ':' <type>
+PrototypeAst *Parser::parseExternDeclaration() {
+    if (_curTokenType != tok_extern)
+        return Error("Expected 'extern'.");
+    next(); // eat 'extern'
+
+    if (_curTokenType != tok_func)
+        return Error("Expected 'func'.");
+    next(); // eat 'func'
+
+    if (_curTokenType != tok_identifier)
+        return Error("Expected function identifier in external declaration.");
+    std::string functionIdentifier = _curToken->Value();
+    next(); // eat identifier
+
+    if (_curTokenType != '(')
+        return Error("Expected '('.");
+    next(); // eat '('
+    bool isVarArgs = false;
+    std::vector<std::pair<std::string, AstTypeNode*>> args;
+    int i = 0;
+    while (_curTokenType != ')') { // this while loop short circuits zero parameter functions
+        if (isVarArgs)
+            return Error("Varags, '...', must be at the end of parameter list.");
+        if (_curTokenType == tok_dotdotdot) { // found a varargs
+            isVarArgs = true;
+            next(); // eat '...'
+        }
+        else { // should be a type.
+            if (_curTokenType == tok_identifier) // identifiers are optional in externs.
+            {
+                next(); // eat identifier
+                if (_curTokenType != ':')
+                    return Error("Expected ':' after parameter name.");
+                next(); // eat ':'
+            }
+            AstTypeNode *argType = parseTypeNode();
+            if (argType == nullptr)
+                return Error("Expected type identitifer in external declaration.");
+            auto pair = std::make_pair("param"+i, argType);
+            args.push_back(pair);
+        }
+        if (_curTokenType != ',')
+            break;
+        next(); // eat ','
+        i++;
+    }
+
+    if (_curTokenType != ')')
+        return Error("Expected ')'.");
+    next(); // eat ')'
+
+    if (_curTokenType != ':')
+        return Error("Expected ':' for function return type.");
+    next(); // eat ':'
+
+    AstTypeNode *returnType = parseTypeNode();
+    if (returnType == nullptr)
+        return Error("Expected function return type.");
+
+    if (_curTokenType != ';')
+        return Error("Expected ';'");
+    next(); // eat ';'
+
+    return new PrototypeAst(functionIdentifier, returnType, args, isVarArgs, _curToken->Line(), _curToken->Column());
 }

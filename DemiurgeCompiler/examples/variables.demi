@@ -1,3 +1,5 @@
+extern func printi(int):void;
+
 func varTesting(num:int) : int {
     var x = num;
     if (x == 5) {
