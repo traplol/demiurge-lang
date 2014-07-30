@@ -190,27 +190,32 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     return funcPtr(codegen, l, r);
 }
 Value *AstReturnNode::Codegen(CodeGenerator *codegen) { 
-    // TODO: returning void.
+    Type *returnType = codegen->getBuilder().getCurrentFunctionReturnType();
+    if (this->Expr == nullptr) // void return.
+    {
+        if (!returnType->isVoidTy()) // function return type not void, but trying to return void : error.
+            return Helpers::Error(this->getPos(), "Cannot return void on function of return type '%s'", Helpers::GetLLVMTypeName(returnType).c_str());
+        return codegen->getBuilder().CreateRetVoid();
+    }
     Value *val = this->Expr->Codegen(codegen);
     if (val == nullptr)
         return Helpers::Error(this->getPos(), "Could not evaluate return statement.");
     Type *valType = val->getType();
-    Type *retType = codegen->getBuilder().getCurrentFunctionReturnType();
-    if (valType->getTypeID() != retType->getTypeID()) {
+    
+    if (valType->getTypeID() != returnType->getTypeID()) {
         bool castSuccess;
-        val = Helpers::CreateCastTo(codegen, val, retType, &castSuccess);
+        val = Helpers::CreateCastTo(codegen, val, returnType, &castSuccess);
         if (val == nullptr) 
             return Helpers::Error(this->Expr->getPos(), "Could not cast return statement to function return type.");
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
             Helpers::Warning(this->Expr->getPos(), "Casting from %s to %s, possible loss of data.",
-                Helpers::GetLLVMTypeName(valType).c_str(), Helpers::GetLLVMTypeName(retType).c_str());
+            Helpers::GetLLVMTypeName(valType).c_str(), Helpers::GetLLVMTypeName(returnType).c_str());
     }
     AllocaInst *retVal = codegen->getNamedValue(COMPILER_RETURN_VALUE_STRING);
     codegen->getBuilder().CreateStore(val, retVal);
 
     Value *derefRetVal = codegen->getBuilder().CreateLoad(retVal, "retval");
     codegen->getBuilder().CreateRet(derefRetVal);
-    //codegen->Builder.CreateBr(codegen->ReturnBlock);
     return derefRetVal;
 }
 Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
@@ -428,22 +433,27 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     codegen->getBuilder().SetInsertPoint(entryBB);
     this->Prototype->CreateArgumentAllocas(codegen, func);
     Type *returnType = this->Prototype->getReturnType()->GetLLVMType(codegen);
-    // TODO: Check if return type is void and do not create return value, but return void.
-    AllocaInst *retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, returnType);
-    codegen->setNamedValue(COMPILER_RETURN_VALUE_STRING, retVal);
-    
+    AllocaInst *retVal = nullptr;
+    if (!func->getReturnType()->isVoidTy()) { // if the function is not void, create a pointer to the return value
+        retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, returnType);
+        codegen->setNamedValue(COMPILER_RETURN_VALUE_STRING, retVal);
+    }
     codegen->setMergeBlock(mergeBB);
-    Helpers::EmitBlock(codegen, this->FunctionBody, true);
+    Helpers::EmitBlock(codegen, this->FunctionBody, false);
 
-    
     if (codegen->getBuilder().GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
         codegen->getBuilder().CreateBr(retBB);
         // Switch to the return block
         codegen->getBuilder().SetInsertPoint(retBB);
         // Load the return value and get ready to return it.
-        Value *derefRetVal = codegen->getBuilder().CreateLoad(retVal, COMPILER_RETURN_VALUE_STRING);
-        // return the function's return value.
-        codegen->getBuilder().CreateRet(derefRetVal);
+        if (func->getReturnType()->isVoidTy()) {
+            codegen->getBuilder().CreateRetVoid();
+        }
+        else if (retVal != nullptr) { 
+            Value *derefRetVal = codegen->getBuilder().CreateLoad(retVal, COMPILER_RETURN_VALUE_STRING);
+            // return the function's return value.
+            codegen->getBuilder().CreateRet(derefRetVal);
+        } // if something else went wrong, we shouldn't reach this far
         retBB = codegen->getBuilder().GetInsertBlock();
     }
     else {
@@ -459,7 +469,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else {
-        codegen->getTheFPM()->run(*func);
+        //codegen->getTheFPM()->run(*func);
     }
     return func;
 }

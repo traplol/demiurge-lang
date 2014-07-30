@@ -274,6 +274,11 @@ IExpressionAST *Parser::parseReturnExpression() {
         return Error("Expected 'return'.");
     next(); // eat 'return'
 
+    if (_curTokenType == ';') { // void return
+        next(); // eat ';'
+        return new AstReturnNode(nullptr, _curToken->Line(), _curToken->Column());
+    }
+
     IExpressionAST *expr = parseExpression();
     if (expr == nullptr) return nullptr;
 

@@ -1,0 +1,8 @@
+func voidType() : void {
+    return; // return from function early.
+    printf("Hello world"); // this prompts a warning for unreachable code.
+}
+
+func main() : void {
+    voidType(); // void return is automatically generated.
+}
