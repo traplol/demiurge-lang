@@ -1,4 +1,4 @@
-#ifndef _DEMIURGE_JIT_OUTPUT_FUNCTION_H
+#ifndef _DEMIURGE_JIT_OUTPUT_FUNCTIONS_H
 #define _DEMIURGE_JIT_OUTPUT_FUNCTIONS_H
 #include <stdio.h>
 #include <stdarg.h>
