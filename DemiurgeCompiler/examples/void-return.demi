@@ -1,8 +1,9 @@
-func voidType() : void {
+func main() : void {
+    voidType(); // void return is automatically generated.
+}
+
+func voidType() : void { // function order does not matter
     return; // return from function early.
     printf("Hello world"); // this prompts a warning for unreachable code.
 }
 
-func main() : void {
-    voidType(); // void return is automatically generated.
-}

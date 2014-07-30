@@ -267,7 +267,7 @@ public:
     }
     virtual llvm::Function *Codegen(CodeGenerator *codegen);
     PossiblePosition getPos() const { return Pos; }
-    PrototypeAst *getReturnType() const { return Prototype; }
+    PrototypeAst *getPrototype() const { return Prototype; }
 };
 
 

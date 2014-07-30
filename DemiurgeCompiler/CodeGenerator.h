@@ -11,6 +11,7 @@
 // TODO: vector of the a module component containers.
 
 struct TreeContainer;
+class FunctionAst;
 namespace llvm {
     class ExecutionEngine;
     class FunctionPassManager;
@@ -82,7 +83,8 @@ private:
     llvm::BasicBlock *MergeBlock;
     llvm::BasicBlock *ReturnBlock;
     std::map<std::string, llvm::AllocaInst*> NamedValues;
-    void InitJitOutputFunctions();
+    void initJitOutputFunctions();
+    bool declareFunctions(std::vector<FunctionAst*> functions);
 };
 
 #endif

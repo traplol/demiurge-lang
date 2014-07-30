@@ -58,7 +58,7 @@ CodeGenerator::CodeGenerator()
     TheFPM->add(createCFGSimplificationPass());
 
     TheFPM->doInitialization();
-    InitJitOutputFunctions();
+    initJitOutputFunctions();
 }
 
 
@@ -72,7 +72,7 @@ void updateGMap(CodeGenerator *codegen, Type *returnType, const char *name, void
     codegen->getTheExecutionEngine()->updateGlobalMapping(func, addr);
 }
 
-void CodeGenerator::InitJitOutputFunctions() {
+void CodeGenerator::initJitOutputFunctions() {
 #define VOID_TYPE Type::getVoidTy(this->Context)
 #define STRING_TYPE Type::getInt8PtrTy(this->Context)
 #define INT_TYPE Type::getInt64Ty(this->Context)
@@ -93,10 +93,19 @@ void CodeGenerator::InitJitOutputFunctions() {
 #undef DOUBLE_TYPE
 }
 
+bool CodeGenerator::declareFunctions(std::vector<FunctionAst*> functions) {
+    for (int i = 0, e = functions.size(); i < e; ++i) {
+        if (functions[i]->getPrototype()->Codegen(this) == nullptr) return false;
+    }
+}
+
 bool CodeGenerator::GenerateCode(TreeContainer *trees) {
-    for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) {
+    if (!declareFunctions(trees->FunctionDefinitions)) return false; // declare the functions
+    for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // define the functions
         if (trees->FunctionDefinitions[i]->Codegen(this) == nullptr) return false;
     }
+
+    // TODO: Top level variables and declare/define them before function declarations.
     for (int i = 0, e = trees->TopLevelExpressions.size(); i < e; ++i) {
         if (trees->TopLevelExpressions[i]->Codegen(this) == nullptr) return false;
     }
@@ -460,16 +469,16 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         retBB->removeFromParent();
     }
 
-    if (mergeBB->getTerminator() == nullptr) {
+    if (mergeBB->getTerminator() == nullptr) { // do some branch cleanup
         mergeBB->removeFromParent();
     }
-    if (verifyFunction(*func, &errs())) {
+    if (verifyFunction(*func, &errs())) { // more branch cleanup
         func->dump();
         func->eraseFromParent();
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
-    else {
+    else { // try to optimize the function by running the function pass manager
         //codegen->getTheFPM()->run(*func);
     }
-    return func;
+    return func; // might as well return the generated function for potential closure support later.
 }
