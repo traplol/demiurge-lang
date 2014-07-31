@@ -26,6 +26,7 @@
     + Vectors
 
 ### Operators
+  - Unary operators
   - User defined operators and operator overloading
   - '++' - inc, pre and post
   - '--' - dec, pre and post
@@ -41,3 +42,4 @@
   - Switch case
   - continue keyword
   - break keyword
+  
