@@ -1,3 +1,8 @@
+### Refactor
+  - Refactor a directory structure
+  - AstNodes need dedicated files or categories
+  - Namespacing
+
 ### Arrays
   - Lexical Parsing
   - Array instantiation 
