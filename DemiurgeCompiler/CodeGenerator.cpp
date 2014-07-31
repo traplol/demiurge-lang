@@ -142,6 +142,86 @@ void CodeGenerator::RunMain() {
     FP();
 }
 
+// Returns the context
+LLVMContext &CodeGenerator::getContext() const { 
+    return Context; 
+}
+
+// Returns the module 
+Module *CodeGenerator::getTheModule() const { 
+    return TheModule; 
+}
+
+// Returns the function pass manager
+FunctionPassManager *CodeGenerator::getTheFPM() const { 
+    return TheFPM; 
+}
+
+// Returns the execution engine
+ExecutionEngine *CodeGenerator::getTheExecutionEngine() const { 
+    return TheExecutionEngine; 
+}
+
+// Returns the instruction builder
+IRBuilder<> &CodeGenerator::getBuilder() { 
+    return Builder; 
+}
+
+// Returns the block to merge to after scope goes away.
+BasicBlock *CodeGenerator::getMergeBlock() const { 
+    return MergeBlock; 
+}
+// Sets the merge block/
+void CodeGenerator::setMergeBlock(BasicBlock *mergeBlock) { 
+    this->MergeBlock = mergeBlock; 
+}
+
+// Returns the functions return block
+BasicBlock *CodeGenerator::getReturnBlock() const { 
+    return ReturnBlock; 
+}
+// Sets the functions return block
+void CodeGenerator::setReturnBlock(BasicBlock *returnBlock) { 
+    this->ReturnBlock = returnBlock; 
+}
+
+// Clears the named values
+void CodeGenerator::clearNamedValues() { NamedValues.clear(); }
+// Returns the AllocaInst at a given key
+AllocaInst *CodeGenerator::getNamedValue(const std::string &key) const {
+    if (NamedValues.count(key))
+        return NamedValues.at(key); 
+    return nullptr;
+}
+// Pushes the key to the Scope Stack and sets the AllocaInst at a given key 
+// if it does not exist yet, and returns a <itr, bool> pair
+std::pair<std::map<std::string, AllocaInst*>::iterator, bool> CodeGenerator::setNamedValue(std::string key, AllocaInst *val) {
+    auto success = NamedValues.insert({ key, val });
+    if (success.second) { // if the variable was successfully created, push it onto the stack.
+        ScopeStack.push_back(key);
+    }
+    return success;
+}
+// Erases an AllocaInst from the map.
+void CodeGenerator::eraseNamedValue(const std::string &key) { 
+    NamedValues.erase(key); 
+}
+
+// Clears the Scope Stack for the local scope and removes them from the NamedValues set.
+void CodeGenerator::popFromScopeStack(unsigned howMany) {
+    while (!ScopeStack.empty() && howMany-- && VarCount--) {
+        eraseNamedValue(ScopeStack.back());
+        ScopeStack.pop_back();
+    }
+}
+void CodeGenerator::incrementVarCount() { 
+    VarCount++; 
+}
+
+unsigned int CodeGenerator::getVarCount() const { 
+    return VarCount; 
+}
+
 Type *AstTypeNode::GetLLVMType(CodeGenerator *codegen) {
     switch (this->TypeType) {
     default: Helpers::Error(this->getPos(), "Unknown type.");
@@ -257,6 +337,7 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     codegen->getBuilder().SetInsertPoint(ifthenBB);
     bool ifthenReturns;
     Helpers::EmitBlock(codegen, this->IfBody, true, &ifthenReturns);
+    
     if (ifthenBB->getTerminator() == nullptr) { // if there was no return statement within the else block
         codegen->getBuilder().CreateBr(ifendBB); // go to merge since there was no return in the then block
         goesToMerge = true;
@@ -267,6 +348,7 @@ Value *AstIfElseExpression::Codegen(CodeGenerator *codegen) {
     codegen->getBuilder().SetInsertPoint(ifelseBB);
     bool ifelseReturns;
     Helpers::EmitBlock(codegen, this->ElseBody, true, &ifelseReturns);
+    
     if (ifelseBB->getTerminator() == nullptr) { // if there was no return statement within the else block
         codegen->getBuilder().CreateBr(ifendBB); // go to merge since there was no return in the else block
         goesToMerge = true;
@@ -313,6 +395,7 @@ Value *AstWhileExpression::Codegen(CodeGenerator *codegen) {
     codegen->getBuilder().SetInsertPoint(whileBodyBB);
     bool whileHitReturn = false;
     Helpers::EmitBlock(codegen, this->WhileBody, true, &whileHitReturn); // emit the while block
+    
 
     if (whileBodyBB->getTerminator() == nullptr)
         codegen->getBuilder().CreateBr(whileEndBB);
@@ -382,6 +465,7 @@ Value *AstVarNode::Codegen(CodeGenerator *codegen) {
     }
     codegen->getBuilder().CreateStore(initialVal, Alloca);
     codegen->setNamedValue( this->Name, Alloca );
+    codegen->incrementVarCount();
     return initialVal;
 }
 Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
@@ -456,6 +540,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     }
     codegen->setMergeBlock(mergeBB);
     Helpers::EmitBlock(codegen, this->FunctionBody, false);
+    //codegen->popFromScopeStack();
 
     if (codegen->getBuilder().GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
         codegen->getBuilder().CreateBr(retBB);

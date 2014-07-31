@@ -1,0 +1,23 @@
+extern func println(string):void;
+extern func printf(string,...):void;
+
+func scope(x:int) : void {
+    var str = "Outside"
+    if (x <= 5) {
+        str = "Inner1";
+        var y = x << 1;
+        if (y < 10) {
+            var z = 45;
+            printf("Inner 2 %d\n",y); 
+            println(str);
+        }
+        //printf("z:%d\n", z); // throws a codegen error
+    }
+    //printf("y:%d\n", y); // throws a codegen error
+    println(str);
+    printf("%d",x);
+}
+
+func main():void{
+    scope(4);
+}

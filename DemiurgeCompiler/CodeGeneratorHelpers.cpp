@@ -281,27 +281,31 @@ namespace Helpers {
     // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
     std::vector<Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IExpressionAST*> &block, bool stopAtFirstReturn, bool *stopped) {
+        unsigned varCount = codegen->getVarCount();
         std::vector<Value*> vals;
         for (unsigned i = 0, size = block.size(); i < size; ++i) {
             IExpressionAST *expr = block[i];
+            if (expr->getNodeType() == node_var)
             if (codegen->getBuilder().GetInsertBlock()->getTerminator() != nullptr) // stops multiple terminators per block.
             {
                 Warning(expr->getPos(), "Unreachable code.");
                 continue;
             }
-            
             Value *val = expr->Codegen(codegen);
             if (val == nullptr) {
                 vals.clear();
+                codegen->popFromScopeStack(codegen->getVarCount() - varCount);
                 return vals;
             }
             vals.push_back(val);
             if (stopAtFirstReturn && expr->getNodeType() == AstNodeType::node_return) {
                 if (stopped != nullptr) { *stopped = true; }
+                codegen->popFromScopeStack(codegen->getVarCount() - varCount);
                 return vals;
             }
         }
         if (stopped != nullptr) { *stopped = false; }
+        codegen->popFromScopeStack(codegen->getVarCount() - varCount);
         return vals;
     }
     // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
