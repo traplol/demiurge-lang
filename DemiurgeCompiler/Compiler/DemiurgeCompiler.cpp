@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <fstream>
 
-#include "Token.h"
-#include "ASTNodes.h"
-#include "Lexer.h"
-#include "Parser.h"
-#include "CodeGenerator.h"
+#include "../Lexer/Token.h"
+#include "../AstNodes/ASTNodes.h"
+#include "../Lexer/Lexer.h"
+#include "../Parser/Parser.h"
+#include "../CodeGenerator/CodeGenerator.h"
 #include "TreeContainer.h"
 
 DemiurgeCompiler::DemiurgeCompiler() {

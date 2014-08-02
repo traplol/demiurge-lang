@@ -5,7 +5,7 @@
 int platform_not_supported[0];
 #endif
 
-#include "DemiurgeCompiler.h"
+#include "Compiler/DemiurgeCompiler.h"
 
 int main(int argc, char **argv) {
     

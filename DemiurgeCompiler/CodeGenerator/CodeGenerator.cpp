@@ -10,15 +10,15 @@
 #include "llvm/PassManager.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TargetSelect.h"
-#include "llvm/Transforms/Scalar.h"c
+#include "llvm/Transforms/Scalar.h"
 
 #include "CodeGenerator.h"
 #include "CodeGeneratorHelpers.h"
-#include "TreeContainer.h"
+#include "../Compiler/TreeContainer.h"
 
-#include "DEFINES.h"
+#include "../DEFINES.h"
 
-#include "DemiurgeJitOutputFunctions.h"
+#include "../DemiurgeJitOutputFunctions.h"
 
 using namespace llvm;
 CodeGenerator::CodeGenerator() 

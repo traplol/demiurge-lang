@@ -1,10 +1,10 @@
 #include <stdarg.h>
 
-#include "TreeContainer.h"
-#include "Token.h"
+#include "../Compiler/TreeContainer.h"
+#include "../Lexer/Token.h"
 #include "Parser.h"
-#include "TokenTypes.h"
-#include "ASTNodes.h"
+#include "../Lexer/TokenTypes.h"
+#include "../AstNodes/ASTNodes.h"
 
 Parser::Parser() {
     

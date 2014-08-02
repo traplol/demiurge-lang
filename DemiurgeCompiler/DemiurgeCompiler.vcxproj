@@ -46,11 +46,15 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Program Files %28x86%29\LLVM\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Program Files %28x86%29\LLVM\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -67,28 +71,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CodeGenerator.cpp" />
-    <ClCompile Include="CodeGeneratorHelpers.cpp" />
-    <ClCompile Include="DemiurgeCompiler.cpp" />
-    <ClCompile Include="Lexer.cpp" />
+    <ClCompile Include="CodeGenerator\CodeGenerator.cpp" />
+    <ClCompile Include="CodeGenerator\CodeGeneratorHelpers.cpp" />
+    <ClCompile Include="Compiler\DemiurgeCompiler.cpp" />
+    <ClCompile Include="Lexer\Lexer.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="Parser\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AstNodeTypes.h" />
-    <ClInclude Include="CodeGenerator.h" />
-    <ClInclude Include="CodeGeneratorHelpers.h" />
+    <ClInclude Include="AstNodes\AstNodes.h" />
+    <ClInclude Include="AstNodes\AstNodeTypes.h" />
+    <ClInclude Include="AstNodes\ClassDeclarations.h" />
+    <ClInclude Include="CodeGenerator\CodeGenerator.h" />
+    <ClInclude Include="CodeGenerator\CodeGeneratorHelpers.h" />
+    <ClInclude Include="Compiler\DemiurgeCompiler.h" />
+    <ClInclude Include="Compiler\TreeContainer.h" />
     <ClInclude Include="DEFINES.h" />
-    <ClInclude Include="DemiurgeCompiler.h" />
-    <ClInclude Include="AstNodes.h" />
     <ClInclude Include="DemiurgeJitOutputFunctions.h" />
-    <ClInclude Include="Lexer.h" />
+    <ClInclude Include="Lexer\Lexer.h" />
+    <ClInclude Include="Lexer\PossiblePosition.h" />
+    <ClInclude Include="Lexer\Token.h" />
+    <ClInclude Include="Lexer\TokenTypes.h" />
     <ClInclude Include="LibComments.h" />
-    <ClInclude Include="Parser.h" />
-    <ClInclude Include="PossiblePosition.h" />
-    <ClInclude Include="Token.h" />
-    <ClInclude Include="TokenTypes.h" />
-    <ClInclude Include="TreeContainer.h" />
+    <ClInclude Include="Parser\Parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,7 +2,7 @@
 #include <stdarg.h>
 
 #include "CodeGenerator.h"
-#include "TreeContainer.h"
+#include "../Compiler/TreeContainer.h"
 #include "CodeGeneratorHelpers.h"
 
 using namespace llvm;

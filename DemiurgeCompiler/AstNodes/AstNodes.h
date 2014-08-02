@@ -5,16 +5,11 @@
 #include <string>
 #include <map>
 
-#include "PossiblePosition.h"
+#include "../Lexer/PossiblePosition.h"
+#include "../Lexer/TokenTypes.h"
 #include "AstNodeTypes.h"
-#include "TokenTypes.h"
 
-class CodeGenerator;
-namespace llvm {
-    class Value;
-    class Type;
-    class Function;
-}
+#include "ClassDeclarations.h"
 
 class IExpressionAST {
     PossiblePosition Pos;

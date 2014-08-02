@@ -2,8 +2,8 @@
 #define _CODE_GENERATOR_HELPERS_H
 #include <map>
 #include <vector>
-#include "TokenTypes.h"
-#include "PossiblePosition.h"
+#include "../Lexer/TokenTypes.h"
+#include "../Lexer/PossiblePosition.h"
 
 namespace llvm {
     class Value;
