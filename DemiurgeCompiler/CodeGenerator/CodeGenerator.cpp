@@ -1,14 +1,8 @@
 #include "llvm/Analysis/Passes.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/JIT.h"
-//#include "llvm/IR/DataLayout.h"
-//#include "llvm/IR/DerivedTypes.h"
-//#include "llvm/IR/IRBuilder.h"
-//#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/Verifier.h"
 #include "llvm/PassManager.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 
@@ -71,6 +65,10 @@ void updateGMap(CodeGenerator *codegen, Type *returnType, const char *name, void
 }
 
 void CodeGenerator::initJitOutputFunctions() {
+    /* 
+     * This is obsolete unless you don't want to export the function but still want it 
+     * to be accessible within the compiler.
+     */
 #define VOID_TYPE Type::getVoidTy(this->Context)
 #define STRING_TYPE Type::getInt8PtrTy(this->Context)
 #define INT_TYPE Type::getInt64Ty(this->Context)

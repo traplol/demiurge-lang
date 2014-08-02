@@ -1,6 +1,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/PassManager.h"
 
 #include "FunctionAst.h"
 #include "../CodeGenerator/CodeGenerator.h"
@@ -59,7 +60,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else { // try to optimize the function by running the function pass manager
-        //codegen->getTheFPM()->run(*func);
+        codegen->getTheFPM()->run(*func);
     }
     return func; // might as well return the generated function for potential closure support later.
 }
