@@ -2,18 +2,17 @@
 #define _CODE_GENERATOR_HELPERS_H
 #include <map>
 #include <vector>
-#include "../Lexer/TokenTypes.h"
+#include "../AstNodes/IAstExpression.h"
+#include "../AstNodes/AstTypeNode.h"
 #include "../Lexer/PossiblePosition.h"
 
+class CodeGenerator;
 namespace llvm {
     class Value;
     class Type;
     class Function;
     class AllocaInst;
 }
-class IExpressionAST;
-class CodeGenerator;
-class AstTypeNode;
 
 namespace Helpers {
 
@@ -81,7 +80,7 @@ namespace Helpers {
 
     // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
-    std::vector<llvm::Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IExpressionAST*> &block, bool stopAtFirstReturn = false, bool *stopped = nullptr);
+    std::vector<llvm::Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, bool stopAtFirstReturn = false, bool *stopped = nullptr);
   
     // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
     // the function.  This is used for mutable variables etc.

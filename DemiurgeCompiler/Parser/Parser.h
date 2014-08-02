@@ -6,7 +6,7 @@
 
 struct TreeContainer;
 class Token;
-class IExpressionAST;
+class IAstExpression;
 class AstTypeNode;
 class FunctionAst;
 class PrototypeAst;
@@ -27,23 +27,23 @@ private:
     Token *next(int reset = 0);
     int getTokenPrecedence();
 
-    IExpressionAST *parseTopLevelExpression();
-    IExpressionAST *parseExpression();
-    IExpressionAST *parseControlFlow();
-    IExpressionAST *parsePrimary();
-    IExpressionAST *parseVarExpression();
-    IExpressionAST *parseParenExpression();
-    IExpressionAST *parseIdentifierExpression();
-    IExpressionAST *parseNumberExpression();
-    IExpressionAST *parseStringExpression();
-    IExpressionAST *parseBooleanExpression();
-    IExpressionAST *parseReturnExpression();
-    IExpressionAST *parseIfElseExpression();
-    IExpressionAST *parseWhileExpression();
-    IExpressionAST *parseForExpression();
-    IExpressionAST *parseBinOpRhs(int precedence, IExpressionAST *lhs);
+    IAstExpression *parseTopLevelExpression();
+    IAstExpression *parseExpression();
+    IAstExpression *parseControlFlow();
+    IAstExpression *parsePrimary();
+    IAstExpression *parseVarExpression();
+    IAstExpression *parseParenExpression();
+    IAstExpression *parseIdentifierExpression();
+    IAstExpression *parseNumberExpression();
+    IAstExpression *parseStringExpression();
+    IAstExpression *parseBooleanExpression();
+    IAstExpression *parseReturnExpression();
+    IAstExpression *parseIfElseExpression();
+    IAstExpression *parseWhileExpression();
+    IAstExpression *parseForExpression();
+    IAstExpression *parseBinOpRhs(int precedence, IAstExpression *lhs);
     AstTypeNode *parseTypeNode();
-    AstTypeNode *tryInferType(IExpressionAST *expr);
+    AstTypeNode *tryInferType(IAstExpression *expr);
     FunctionAst *parseFunctionDefinition();
     PrototypeAst *parsePrototype();
     PrototypeAst *parseExternDeclaration();

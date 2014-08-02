@@ -71,6 +71,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AstNodes\AstBinaryOperatorExpr.cpp" />
+    <ClCompile Include="AstNodes\AstBooleanNode.cpp" />
+    <ClCompile Include="AstNodes\AstCallExpr.cpp" />
+    <ClCompile Include="AstNodes\AstDoubleNode.cpp" />
+    <ClCompile Include="AstNodes\AstIfElseExpr.cpp" />
+    <ClCompile Include="AstNodes\AstIntegerNode.cpp" />
+    <ClCompile Include="AstNodes\AstReturnExpr.cpp" />
+    <ClCompile Include="AstNodes\AstStringNode.cpp" />
+    <ClCompile Include="AstNodes\AstTopLevelExpr.cpp" />
+    <ClCompile Include="AstNodes\AstTypeNode.cpp" />
+    <ClCompile Include="AstNodes\AstVarExpr.cpp" />
+    <ClCompile Include="AstNodes\AstVariableNode.cpp" />
+    <ClCompile Include="AstNodes\AstWhileExpr.cpp" />
+    <ClCompile Include="AstNodes\FunctionAst.cpp" />
+    <ClCompile Include="AstNodes\PrototypeAst.cpp" />
     <ClCompile Include="CodeGenerator\CodeGenerator.cpp" />
     <ClCompile Include="CodeGenerator\CodeGeneratorHelpers.cpp" />
     <ClCompile Include="Compiler\DemiurgeCompiler.cpp" />
@@ -79,9 +94,24 @@
     <ClCompile Include="Parser\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AstNodes\AstNodes.h" />
+    <ClInclude Include="AstNodes\AstBinaryOperatorExpr.h" />
+    <ClInclude Include="AstNodes\AstBooleanNode.h" />
+    <ClInclude Include="AstNodes\AstCallExpr.h" />
+    <ClInclude Include="AstNodes\AstDoubleNode.h" />
+    <ClInclude Include="AstNodes\AstIfElseExpr.h" />
+    <ClInclude Include="AstNodes\AstIntegerNode.h" />
     <ClInclude Include="AstNodes\AstNodeTypes.h" />
-    <ClInclude Include="AstNodes\ClassDeclarations.h" />
+    <ClInclude Include="AstNodes\AstReturnExpr.h" />
+    <ClInclude Include="AstNodes\AstStringNode.h" />
+    <ClInclude Include="AstNodes\AstTopLevelExpr.h" />
+    <ClInclude Include="AstNodes\AstTypeNode.h" />
+    <ClInclude Include="AstNodes\AstVarExpr.h" />
+    <ClInclude Include="AstNodes\AstVariableNode.h" />
+    <ClInclude Include="AstNodes\AstWhileExpr.h" />
+    <ClInclude Include="AstNodes\AST_DEPENDENCIES.h" />
+    <ClInclude Include="AstNodes\FunctionAst.h" />
+    <ClInclude Include="AstNodes\IAstExpression.h" />
+    <ClInclude Include="AstNodes\PrototypeAst.h" />
     <ClInclude Include="CodeGenerator\CodeGenerator.h" />
     <ClInclude Include="CodeGenerator\CodeGeneratorHelpers.h" />
     <ClInclude Include="Compiler\DemiurgeCompiler.h" />

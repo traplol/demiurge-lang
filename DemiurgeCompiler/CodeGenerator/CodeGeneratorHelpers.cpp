@@ -5,6 +5,7 @@
 #include "../Compiler/TreeContainer.h"
 #include "CodeGeneratorHelpers.h"
 
+
 using namespace llvm;
 namespace Helpers {
 
@@ -280,11 +281,11 @@ namespace Helpers {
 
     // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
-    std::vector<Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IExpressionAST*> &block, bool stopAtFirstReturn, bool *stopped) {
+    std::vector<Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, bool stopAtFirstReturn, bool *stopped) {
         unsigned varCount = codegen->getVarCount();
         std::vector<Value*> vals;
         for (unsigned i = 0, size = block.size(); i < size; ++i) {
-            IExpressionAST *expr = block[i];
+            IAstExpression *expr = block[i];
             if (expr->getNodeType() == node_var)
             if (codegen->getBuilder().GetInsertBlock()->getTerminator() != nullptr) // stops multiple terminators per block.
             {
