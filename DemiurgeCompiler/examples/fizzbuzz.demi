@@ -1,28 +1,28 @@
-extern func printf(string,...):void;
-extern func println(string):void;
+extern func printf(string,...):void
+extern func println(string):void
 
 func fizzbuzz(x:int):int {
-    var y = 1;
+    var y = 1
     while (y <= x) {
         if (y % 15 == 0) {
-            println("FizzBuzz");
+            println("FizzBuzz")
         }
         else if (y % 3 == 0) {
-            println("Fizz");
+            println("Fizz")
         }
         else if (y % 5 == 0) {
-            println("Buzz");
+            println("Buzz")
         }
         else {
-            printf("%d\n",y);
+            printf("%d\n",y)
         }
-        y = y + 1;
+        y = y + 1
     }
-    return 0;
+    return 0
 }
 
 
 func main() : int {
-    fizzbuzz(100);
-    return 0;
+    fizzbuzz(100)
+    return 0
 }

@@ -25,12 +25,11 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     Type *returnType = this->Prototype->getReturnType()->GetLLVMType(codegen);
     AllocaInst *retVal = nullptr;
     if (!func->getReturnType()->isVoidTy()) { // if the function is not void, create a pointer to the return value
-        retVal = Helpers::CreateEntryBlockAlloca(func, COMPILER_RETURN_VALUE_STRING, returnType);
+        retVal = Helpers::CreateEntryBlockAlloca(codegen, func, COMPILER_RETURN_VALUE_STRING, returnType);
         codegen->setNamedValue(COMPILER_RETURN_VALUE_STRING, retVal);
     }
     codegen->setMergeBlock(mergeBB);
     Helpers::EmitBlock(codegen, this->FunctionBody, false);
-    //codegen->popFromScopeStack();
 
     if (codegen->getBuilder().GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
         codegen->getBuilder().CreateBr(retBB);
@@ -60,7 +59,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else { // try to optimize the function by running the function pass manager
-        codegen->getTheFPM()->run(*func);
+        //codegen->getTheFPM()->run(*func);
     }
     return func; // might as well return the generated function for potential closure support later.
 }

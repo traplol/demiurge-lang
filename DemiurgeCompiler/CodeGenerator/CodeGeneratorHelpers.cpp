@@ -311,9 +311,12 @@ namespace Helpers {
     }
     // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
     // the function.  This is used for mutable variables etc.
-    AllocaInst* CreateEntryBlockAlloca(Function *function, const std::string &varName, Type *type) {
-        IRBuilder<> tmpBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
-        return tmpBuilder.CreateAlloca(type, 0, varName.c_str());
+    AllocaInst *CreateEntryBlockAlloca(CodeGenerator *codegen, Function *function, const std::string &varName, Type *type) {
+        BasicBlock *prevInsertPoint = codegen->getBuilder().GetInsertBlock();
+        codegen->getBuilder().SetInsertPoint(&function->getEntryBlock(), function->getEntryBlock().begin());
+        AllocaInst *Alloca = codegen->getBuilder().CreateAlloca(type, 0, varName.c_str());
+        codegen->getBuilder().SetInsertPoint(prevInsertPoint);
+        return Alloca;
     }
 
     // Creates a LLVM::Value* of double type from the value passed.
@@ -346,7 +349,7 @@ namespace Helpers {
     }
 
     // Creates a LLVM::Value* of integer type with specified width from the value passed.
-    Value *GetInt(CodeGenerator *codegen, unsigned long long int val, int bitwidth) {
+    Value *GetInt(CodeGenerator *codegen, demi_int val, int bitwidth) {
         return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val));
     }
     // Creates a LLVM::Value* of integer1 type from the value passed.
@@ -354,12 +357,23 @@ namespace Helpers {
         return ConstantInt::get(Type::getInt1Ty(codegen->getContext()), APInt(1, val));
     }
     // Creates a LLVM::Value* of integer64 type from the value passed.
-    Value *GetInt64(CodeGenerator *codegen, unsigned long long int val) {
+    Value *GetInt64(CodeGenerator *codegen, demi_int val) {
         return GetInt(codegen, val, 64);
     }
     // Creates a LLVM::Value* of integer8* type from the value passed.
     Value *GetString(CodeGenerator *codegen, std::string val) {
         return ConstantDataArray::getString(codegen->getContext(), val.c_str());
+    }
+
+
+    // Returns true if the value is a pointer to a pointer
+    bool IsPtrToPtr(llvm::Value *val) {
+        return val->getType()->getContainedType(0)->getTypeID() == Type::TypeID::PointerTyID;
+    }
+
+    // Returns true if the value is a pointer to an array
+    bool IsPtrToArray(llvm::Value *val) {
+        return val->getType()->getContainedType(0)->isArrayTy();
     }
 
     // Returns a string representation of the passed llvm type.

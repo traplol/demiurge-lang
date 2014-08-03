@@ -8,7 +8,7 @@
 using namespace llvm;
 
 Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
-    // TODO: Serialize the prototype to allow for function overriding.
+    // TODO: Serialize the prototype to allow for function overloading.
     std::vector<Type *> argTypes;
     for (auto itr = this->Args.begin(); itr != this->Args.end(); ++itr) {
         Type *type = itr->second->GetLLVMType(codegen);
@@ -49,7 +49,7 @@ void PrototypeAst::CreateArgumentAllocas(CodeGenerator *codegen, Function *func)
         AstTypeNode *arg = this_arg_itr->second;
 
         // Create an alloca for this variable
-        AllocaInst *Alloca = Helpers::CreateEntryBlockAlloca(func, argName, arg->GetLLVMType(codegen));
+        AllocaInst *Alloca = Helpers::CreateEntryBlockAlloca(codegen, func, argName, arg->GetLLVMType(codegen));
 
         // Store the initial value
         codegen->getBuilder().CreateStore(arg_itr, Alloca);

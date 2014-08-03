@@ -20,11 +20,13 @@ public:
 private:
     Token *_curToken;
     int _curTokenType;
+    int _tokenIndex;
 
     std::map<int, int> _operatorPrecedence;
     std::vector<Token*> _tokens;
 
-    Token *next(int reset = 0);
+    Token *next();
+    Token *peek(int offset = 1);
     int getTokenPrecedence();
 
     IAstExpression *parseTopLevelExpression();
@@ -41,6 +43,7 @@ private:
     IAstExpression *parseIfElseExpression();
     IAstExpression *parseWhileExpression();
     IAstExpression *parseForExpression();
+    IAstExpression *parseArraySubscript();
     IAstExpression *parseBinOpRhs(int precedence, IAstExpression *lhs);
     AstTypeNode *parseTypeNode();
     AstTypeNode *tryInferType(IAstExpression *expr);

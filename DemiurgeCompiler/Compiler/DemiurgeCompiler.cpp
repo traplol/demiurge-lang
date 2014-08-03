@@ -21,6 +21,13 @@ DemiurgeCompiler::~DemiurgeCompiler() {
     delete _codeGenerator;
 }
 
+void DemiurgeCompiler::dump() {
+    this->_codeGenerator->DumpMainModule();
+#ifdef _WIN32
+    system("PAUSE");
+#endif
+}
+
 bool DemiurgeCompiler::UseArgs(const std::vector<std::string> &args) {
     _args = args;
     return _canRun = (verifyArgs() && setStateVars());

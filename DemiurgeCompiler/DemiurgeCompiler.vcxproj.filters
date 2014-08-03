@@ -78,6 +78,9 @@
     <ClCompile Include="AstNodes\PrototypeAst.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AstNodes\AstArraySubscriptExpr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LibComments.h">
@@ -168,6 +171,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AstNodes\AST_DEPENDENCIES.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Typedefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AstNodes\AstArraySubscriptExpr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

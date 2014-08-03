@@ -71,6 +71,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AstNodes\AstArraySubscriptExpr.cpp" />
     <ClCompile Include="AstNodes\AstBinaryOperatorExpr.cpp" />
     <ClCompile Include="AstNodes\AstBooleanNode.cpp" />
     <ClCompile Include="AstNodes\AstCallExpr.cpp" />
@@ -94,6 +95,7 @@
     <ClCompile Include="Parser\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AstNodes\AstArraySubscriptExpr.h" />
     <ClInclude Include="AstNodes\AstBinaryOperatorExpr.h" />
     <ClInclude Include="AstNodes\AstBooleanNode.h" />
     <ClInclude Include="AstNodes\AstCallExpr.h" />
@@ -124,6 +126,7 @@
     <ClInclude Include="Lexer\TokenTypes.h" />
     <ClInclude Include="LibComments.h" />
     <ClInclude Include="Parser\Parser.h" />
+    <ClInclude Include="Typedefs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

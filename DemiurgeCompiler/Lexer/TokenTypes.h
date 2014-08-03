@@ -42,6 +42,7 @@ typedef enum tag_TokenType {
     tok_notequal,           // '!='
     tok_leftshift,          // '<<'
     tok_rightshift,         // '>>'
+    tok_LRSqBrackets,       // '[]'
 
     tok_dotdotdot,          // '...'
     tok_leftshiftequal,     // '<<='

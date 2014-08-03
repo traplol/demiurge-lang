@@ -9,7 +9,8 @@
 using namespace llvm;
 
 Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
-    if (this->LHS == nullptr) return nullptr;
+    if (this->LHS == nullptr) 
+        return nullptr;
     AstVariableNode *lhse = dynamic_cast<AstVariableNode*>(this->LHS);
     if (lhse == nullptr) // left side of assign operator isn't a variable.
         return Helpers::Error(this->LHS->getPos(), "Destination of assignment operator must be variable.");

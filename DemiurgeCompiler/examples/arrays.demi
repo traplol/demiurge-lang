@@ -1,0 +1,10 @@
+
+func test(x : int[] ) : void {
+    x[1] = 125;
+}
+
+func main() : void {
+    
+    var x : int[5];
+    test(x);
+}

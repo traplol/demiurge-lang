@@ -4,6 +4,7 @@
 #include "../Lexer/PossiblePosition.h"
 #include "../Lexer/TokenTypes.h"
 #include "AstNodeTypes.h"
+#include "../Typedefs.h"
 
 class CodeGenerator;
 namespace llvm {

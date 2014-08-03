@@ -31,6 +31,7 @@ public:
     bool UseArgs(const std::vector<std::string> &args);
     void Run();
 
+    void dump();
 public:
     
     void printHelpMessage();

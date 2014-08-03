@@ -80,17 +80,19 @@ namespace Helpers {
 
     // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
-    std::vector<llvm::Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, bool stopAtFirstReturn = false, bool *stopped = nullptr);
+    std::vector<llvm::Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, 
+        bool stopAtFirstReturn = false, bool *stopped = nullptr);
   
     // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
     // the function.  This is used for mutable variables etc.
-    llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function *function, const std::string &varName, llvm::Type *type);
+    llvm::AllocaInst *CreateEntryBlockAlloca(CodeGenerator *codegen, llvm::Function *function, const std::string &varName, 
+        llvm::Type *type);
   
     // Creates a LLVM::Value* of double type from the llvm::Value passed.
     llvm::Value *GetDouble(CodeGenerator *codegen, double val);
     
     // Creates a LLVM::Value* of integer type with specified width from the value passed.
-    llvm::Value *GetInt(CodeGenerator *codegen, unsigned long long int val, int bitwidth);
+    llvm::Value *GetInt(CodeGenerator *codegen, demi_int val, int bitwidth);
     
     // Creates a LLVM::Value* of integer64 type with a value of zero.
     llvm::Value *GetZero_64(CodeGenerator *codegen);
@@ -114,13 +116,19 @@ namespace Helpers {
     llvm::Value *GetBoolean(CodeGenerator *codegen, bool val);
    
     // Creates a LLVM::Value* of integer64 type from the value passed.
-    llvm::Value *GetInt64(CodeGenerator *codegen, unsigned long long int val);
+    llvm::Value *GetInt64(CodeGenerator *codegen, demi_int val);
    
     // Creates a LLVM::Value* of integer8* type from the llvm::Value passed.
     llvm::Value *GetString(CodeGenerator *codegen, std::string val);
-  
+
     // Returns a string representation of the passed llvm type.
     std::string GetLLVMTypeName(llvm::Type *Ty);
+
+    // Returns true if the value is a pointer to a pointer
+    bool IsPtrToPtr(llvm::Value *val);
+
+    // Returns true if the value is a pointer to an array
+    bool IsPtrToArray(llvm::Value *val);
   
     // Will attempt to cast one llvm::Value to another type and sets 'castSuccessful' to true if a cast happened, otherwise false.
     llvm::Value *CreateCastTo(CodeGenerator *codegen, llvm::Value *val, llvm::Type *castToType, bool *castSuccessful = nullptr);

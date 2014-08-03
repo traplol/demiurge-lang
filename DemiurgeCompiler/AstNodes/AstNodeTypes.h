@@ -18,6 +18,7 @@ typedef enum tag_AstNodeType {
     node_integer,
     node_string,
     node_void,
+    node_struct,
     node_toplevel,
     node_type,
 } AstNodeType;

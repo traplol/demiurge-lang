@@ -74,6 +74,7 @@ Token *Lexer::tryTwoCharOper(int thisChar) {
     else if (operTest == "<<") tokType = tok_leftshift;
     else if (operTest == ">>") tokType = tok_rightshift;
     else if (operTest == "..") tokType = tok_dotdot;
+    else if (operTest == "[]") tokType = tok_LRSqBrackets;
     else return nullptr;
     _lastChar = getNextChar(); // eat the second
     return new Token(tokType, operTest, _line, _column);

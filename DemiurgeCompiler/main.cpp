@@ -6,15 +6,25 @@ int platform_not_supported[0];
 #endif
 
 #include "Compiler/DemiurgeCompiler.h"
+#include <csignal>
+
+DemiurgeCompiler *compilerptr;
+
+void abortCallback(int x) {
+    compilerptr->dump();
+}
 
 int main(int argc, char **argv) {
-    
+
+    signal(SIGABRT, abortCallback);
+
     DemiurgeCompiler compiler;
+    compilerptr = &compiler;
     std::vector<std::string> args;
 #ifdef _DEBUG
     args.push_back(argv[0]); // program name.
     args.push_back("-c");
-    args.push_back("examples/scope.demi");
+    args.push_back("examples/arrays.demi");
 #else
     args.assign(argv, argv + argc);
 #endif

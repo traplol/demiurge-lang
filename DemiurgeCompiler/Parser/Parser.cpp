@@ -61,8 +61,9 @@ Parser::~Parser() {
 }
 
 TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
+    _tokenIndex = 0;
     _tokens = tokens;
-    next(1); // setup first token.
+    next(); // setup first token.
 
     TreeContainer *trees = new TreeContainer();;
     
@@ -95,18 +96,21 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
     return trees;
 }
 
-Token *Parser::next(int reset) {
-    static unsigned i = 0;
-    if (reset != 0)
-        i = 0;
-    if (i >= _tokens.size()) {
+Token *Parser::next() {
+    if (_tokenIndex >= _tokens.size()) {
         _curToken = nullptr;
         _curTokenType = EOF;
         return nullptr;
     }
-    _curToken = _tokens[i++];
+    _curToken = _tokens[_tokenIndex++];
     _curTokenType = _curToken->Type();
     return _curToken;
+}
+Token *Parser::peek(int offset) {
+    if (_tokenIndex + offset >= _tokens.size()) {
+        return nullptr;
+    }
+    return _tokens[_tokenIndex + offset];
 }
 int Parser::getTokenPrecedence() {
     if (_operatorPrecedence.count(_curTokenType) == 0) // not an operator, or not in the precedence table.
@@ -137,26 +141,41 @@ void Parser::Warning(const char *fmt, ...) {
 IAstExpression *Parser::parseTopLevelExpression() {
     return parseExpression();
 }
+
 // <expression>         ::= <primary> <binoprhs>
 IAstExpression *Parser::parseExpression() {
     IAstExpression *primary = parsePrimary();
+    if (_curTokenType == ';') next();
     if (primary != nullptr) {
         IAstExpression *expr = parseBinOpRhs(0, primary);
+        if (_curTokenType == ';') next();
         if (expr != nullptr) return expr;
-    } // if we fail to parse an operation, try to assume it's a control flow statement
-    return parseControlFlow();
+    } // if we fail to parse an operation, we'll try to assume it's a control flow statement
+    return primary;
 }
 
+// <flowcontrol>        ::= <ifelseexpr>
+//                      |   <whileexpr>
+//                      |   <forexpr>
+
+//                      |   <varexpr>
 IAstExpression *Parser::parseControlFlow() {
     switch (_curTokenType) {
     default: return Error("Unexpected token.");
+    case ';': next(); return parseExpression();
     case tok_if: return parseIfElseExpression();
     case tok_while: return parseWhileExpression();
     case tok_for: return parseForExpression();
-    case tok_return: return parseReturnExpression();
     case tok_var: return parseVarExpression();
     }
 }
+
+// <primary>            ::= <parenexpr>
+//                      |   <identifier>
+//                      |   <string>
+//                      |   <bool>
+//                      |   <number>
+//                      |   <returnexpr>
 IAstExpression *Parser::parsePrimary() {
     switch (_curTokenType) {
     default: return nullptr;/* Error("Unexpected token.");*/
@@ -166,6 +185,7 @@ IAstExpression *Parser::parsePrimary() {
     case tok_string: return parseStringExpression();
     case tok_bool: return parseBooleanExpression();
     case tok_number: return parseNumberExpression();
+    case tok_return: return parseReturnExpression();
     }
 }
 
@@ -173,7 +193,6 @@ IAstExpression *Parser::parsePrimary() {
 IAstExpression *Parser::parseBinOpRhs(int precedence, IAstExpression *lhs) {
     while (true) {
         if (_curTokenType == ';') {
-            next(); // eat ';'
             return lhs;
         }
 
@@ -209,16 +228,17 @@ IAstExpression *Parser::parseVarExpression() {
     std::string identifier = _curToken->Value();
     next(); // eat identifier
 
-    if (_curTokenType == ':') {
+    if (_curTokenType == ':') { // "var x : int"
         next(); // 'eat ':'
         AstTypeNode *type = parseTypeNode();
+        if (type == nullptr) return Error("Could not parse variable type.");
         return new AstVarExpr(identifier, nullptr, type, _curToken->Line(), _curToken->Column());
     }
-    else if (_curTokenType == '=') {
+    else if (_curTokenType == '=') { // "var x = 5"
         next(); // eat '='
         IAstExpression *expression = parseExpression();
-        AstTypeNode *type = tryInferType(expression); // if this fails we 
-        // will try to infer type at code generation if possible or runtime
+        // if this fails we will try to infer type at code generation if possible or runtime
+        AstTypeNode *type = tryInferType(expression);
         return new AstVarExpr(identifier, expression, type, _curToken->Line(), _curToken->Column());
     }
     else return Error("Expected expression or type declaration when defining a variable.");
@@ -244,7 +264,7 @@ IAstExpression *Parser::parseIdentifierExpression() {
         return Error("Expected identifier.");
     std::string identifier = _curToken->Value();
     next(); // eat identifier
-    if (_curTokenType != '(') // standard identifier reference
+    if (_curTokenType != '(' && _curTokenType != '.' && _curTokenType != '[') // standard identifier reference
         return new AstVariableNode(identifier, _curToken->Line(), _curToken->Column());
 
     // otherwise it's a call.
@@ -261,6 +281,7 @@ IAstExpression *Parser::parseIdentifierExpression() {
     next(); // eat ')'
     return new AstCallExpression(identifier, args, _curToken->Line(), _curToken->Column());
 }
+
 // <numberexpr>         ::= number_literal
 IAstExpression *Parser::parseNumberExpression() {
     if (_curTokenType != tok_number)
@@ -272,10 +293,11 @@ IAstExpression *Parser::parseNumberExpression() {
         return new AstDoubleNode(val, _curToken->Line(), _curToken->Column());
     }
     // otherwise assume it's an integer.
-    unsigned long long int val = _curToken->AsULong64();
+    demi_int val = _curToken->AsULong64();
     next(); // eat number
     return new AstIntegerNode(val, _curToken->Line(), _curToken->Column());
 }
+
 // <stringexpr>         ::= string_literal
 IAstExpression *Parser::parseStringExpression() {
     if (_curTokenType != tok_string)
@@ -284,6 +306,7 @@ IAstExpression *Parser::parseStringExpression() {
     next(); // eat string
     return new AstStringNode(string, _curToken->Line(), _curToken->Column());
 }
+
 // <booleanexpr>        ::= boolean_literal
 IAstExpression *Parser::parseBooleanExpression() {
     if (_curTokenType != tok_bool)
@@ -292,6 +315,7 @@ IAstExpression *Parser::parseBooleanExpression() {
     next(); // eat bool
     return new AstBooleanNode(val, _curToken->Line(), _curToken->Column());
 }
+
 // <returnexpr>         ::= 'return' <expression>
 IAstExpression *Parser::parseReturnExpression() {
     if (_curTokenType != tok_return)
@@ -299,7 +323,7 @@ IAstExpression *Parser::parseReturnExpression() {
     next(); // eat 'return'
 
     if (_curTokenType == ';') { // void return
-        next(); // eat ';'
+        //next(); // eat ';'
         return new AstReturnExpr(nullptr, _curToken->Line(), _curToken->Column());
     }
 
@@ -308,6 +332,7 @@ IAstExpression *Parser::parseReturnExpression() {
 
     return new AstReturnExpr(expr, _curToken->Line(), _curToken->Column());
 }
+
 // <elseexpr>           ::= 'else' '{' <expression>* '}'
 //                      |   'else' <expression>
 // <ifexpr>             ::= 'if' <parenexpr> '{' <expression>* '}'
@@ -353,6 +378,7 @@ IAstExpression *Parser::parseIfElseExpression() {
     }
     return new AstIfElseExpr(condition, ifBody, elseBody, _curToken->Line(), _curToken->Column());
 }
+
 // <whileexpr>          ::= 'while' <parenexpr> '{' <expression>* '}'
 //                      |   'while' <parenexpr> <expression>
 IAstExpression *Parser::parseWhileExpression() {
@@ -378,31 +404,64 @@ IAstExpression *Parser::parseWhileExpression() {
 
     return new AstWhileExpr(condition, whileBody, _curToken->Line(), _curToken->Column());
 }
+
 // <forexpr>            ::=
 IAstExpression *Parser::parseForExpression() {
     return Error("'for' expression not yet implemented.");
 }
-// <type>               ::= 'double' | 'int' | 'bool' | 'string'
+
+// <arraysubscript>     ::= '[' <expression> ']'
+IAstExpression *Parser::parseArraySubscript() {
+    if (_curTokenType != '[')
+        return Error("Expected '['");
+    next(); // eat '['
+    IAstExpression *expr = parseExpression();
+    next(); // eat ']'
+    return expr;
+}
+
+// <type>               ::= ( identifier | 'double' | 'int' | 'bool' | 'string' ) ( '[' <numberexpr>? ']' )?
 AstTypeNode *Parser::parseTypeNode() {
     int curTokType = _curTokenType;
+    std::string typeName = _curToken->Value();
+    next(); // eat type
+
+    AstNodeType nodeType;
+    demi_int arraySize = 0;
+    bool isArray = _curTokenType == '[' || _curTokenType == tok_LRSqBrackets;
+    
+    if (_curTokenType == tok_LRSqBrackets) next(); // eat or '[]'
+    else if (_curTokenType == '[') {
+        next(); // eat '['
+        if (_curTokenType != tok_number || _curToken->Value().find('.') != std::string::npos)
+            return Error("Expected integer constant in array size declaration.");
+        arraySize = _curToken->AsULong64();
+        next(); // eat number
+        if (_curTokenType != ']')
+            return Error("Expected ']'");
+        next(); // ']'
+    }
     switch (curTokType) {
     default: return nullptr;
-    case tok_typevoid: next(); return new AstTypeNode(node_void, _curToken->Line(), _curToken->Column());
-    case tok_typebool: next(); return new AstTypeNode(node_boolean, _curToken->Line(), _curToken->Column());
-    case tok_typedouble: next(); return new AstTypeNode(node_double, _curToken->Line(), _curToken->Column());
-    case tok_typeint: next(); return new AstTypeNode(node_integer, _curToken->Line(), _curToken->Column());
-    case tok_typestring: next(); return new AstTypeNode(node_string, _curToken->Line(), _curToken->Column());
+    case tok_identifier: nodeType = node_struct; break;
+    case tok_typevoid: nodeType = node_void; break;
+    case tok_typebool: nodeType = node_boolean; break;
+    case tok_typedouble: nodeType = node_double; break;
+    case tok_typeint: nodeType = node_integer; break;
+    case tok_typestring: nodeType = node_string; break;
     }
+    return new AstTypeNode(nodeType, typeName,_curToken->Line(), _curToken->Column(), isArray, arraySize);
 }
+
 // Attempts to generate an AstTypeNode from the expression's type.
 AstTypeNode *Parser::tryInferType(IAstExpression *expr) {
     switch (expr->getNodeType()) {
     default: return nullptr;
-    case node_void: return new AstTypeNode(node_void, _curToken->Line(), _curToken->Column());
-    case node_boolean: return new AstTypeNode(node_boolean, _curToken->Line(), _curToken->Column());
-    case node_double: return new AstTypeNode(node_double, _curToken->Line(), _curToken->Column());
-    case node_integer: return new AstTypeNode(node_integer, _curToken->Line(), _curToken->Column());
-    case node_string: return new AstTypeNode(node_string, _curToken->Line(), _curToken->Column());
+    case node_void: return new AstTypeNode(node_void, "void", _curToken->Line(), _curToken->Column());
+    case node_boolean: return new AstTypeNode(node_boolean, "bool", _curToken->Line(), _curToken->Column());
+    case node_double: return new AstTypeNode(node_double, "double", _curToken->Line(), _curToken->Column());
+    case node_integer: return new AstTypeNode(node_integer, "int", _curToken->Line(), _curToken->Column());
+    case node_string: return new AstTypeNode(node_string, "string", _curToken->Line(), _curToken->Column());
     }
 }
 
@@ -417,7 +476,10 @@ FunctionAst *Parser::parseFunctionDefinition() {
 
     std::vector<IAstExpression*> functionBody;
     while (_curTokenType != '}') {
-        functionBody.push_back(parseExpression());
+        IAstExpression *expr = parseExpression();
+        if (expr == nullptr) expr = parseControlFlow();
+        if (expr == nullptr) return nullptr;
+        functionBody.push_back(expr);
     }
     next(); // eat '}'
 
@@ -535,9 +597,9 @@ PrototypeAst *Parser::parseExternDeclaration() {
     if (returnType == nullptr)
         return Error("Expected function return type.");
 
-    if (_curTokenType != ';')
-        return Error("Expected ';'");
-    next(); // eat ';'
+    //if (_curTokenType != ';')
+    //    return Error("Expected ';'");
+    //next(); // eat ';'
 
     return new PrototypeAst(functionIdentifier, returnType, args, isVarArgs, _curToken->Line(), _curToken->Column());
 }
