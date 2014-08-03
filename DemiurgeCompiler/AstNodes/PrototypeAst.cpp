@@ -7,6 +7,32 @@
 
 using namespace llvm;
 
+PrototypeAst::PrototypeAst(const std::string &name, AstTypeNode *returnType, const std::vector<std::pair<std::string, AstTypeNode*>> &args,
+    bool isVarArgs, int line, int column)
+    : Name(name)
+    , ReturnType(returnType)
+    , Args(args)
+    , IsVarArgs(isVarArgs) {
+    Pos.LineNumber = line;
+    Pos.ColumnNumber = column;
+}
+PrototypeAst::~PrototypeAst() {
+    delete ReturnType;
+    for (auto begin = Args.begin(); begin != Args.end(); ++begin) {
+        delete begin->second;
+    }
+}
+
+PossiblePosition PrototypeAst::getPos() const {
+    return Pos; 
+}
+const std::string &PrototypeAst::getName() const {
+    return Name; 
+}
+AstTypeNode *PrototypeAst::getReturnType() const {
+    return ReturnType; 
+}
+
 Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
     // TODO: Serialize the prototype to allow for function overloading.
     std::vector<Type *> argTypes;

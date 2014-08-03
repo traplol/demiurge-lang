@@ -71,7 +71,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AstNodes\AstArraySubscriptExpr.cpp" />
     <ClCompile Include="AstNodes\AstBinaryOperatorExpr.cpp" />
     <ClCompile Include="AstNodes\AstBooleanNode.cpp" />
     <ClCompile Include="AstNodes\AstCallExpr.cpp" />
@@ -82,6 +81,7 @@
     <ClCompile Include="AstNodes\AstStringNode.cpp" />
     <ClCompile Include="AstNodes\AstTopLevelExpr.cpp" />
     <ClCompile Include="AstNodes\AstTypeNode.cpp" />
+    <ClCompile Include="AstNodes\AstUnaryOperatorExpr.cpp" />
     <ClCompile Include="AstNodes\AstVarExpr.cpp" />
     <ClCompile Include="AstNodes\AstVariableNode.cpp" />
     <ClCompile Include="AstNodes\AstWhileExpr.cpp" />
@@ -95,7 +95,6 @@
     <ClCompile Include="Parser\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AstNodes\AstArraySubscriptExpr.h" />
     <ClInclude Include="AstNodes\AstBinaryOperatorExpr.h" />
     <ClInclude Include="AstNodes\AstBooleanNode.h" />
     <ClInclude Include="AstNodes\AstCallExpr.h" />
@@ -107,6 +106,7 @@
     <ClInclude Include="AstNodes\AstStringNode.h" />
     <ClInclude Include="AstNodes\AstTopLevelExpr.h" />
     <ClInclude Include="AstNodes\AstTypeNode.h" />
+    <ClInclude Include="AstNodes\AstUnaryOperatorExpr.h" />
     <ClInclude Include="AstNodes\AstVarExpr.h" />
     <ClInclude Include="AstNodes\AstVariableNode.h" />
     <ClInclude Include="AstNodes\AstWhileExpr.h" />

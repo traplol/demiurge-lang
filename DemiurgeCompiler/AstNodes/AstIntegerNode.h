@@ -8,13 +8,9 @@ class AstIntegerNode : public IAstExpression {
     // we will rely on the negate, '-', operator to create negative numbers.
     demi_int Val;
 public:
-    AstIntegerNode(demi_int value, int line, int column)
-        : Val(value) {
-        setNodeType(node_integer);
-        setPos(PossiblePosition{ line, column });
-    }
+    AstIntegerNode(demi_int value, int line, int column);
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
-    demi_int getValue() const { return Val; }
+    demi_int getValue() const;
 };
 
 #endif

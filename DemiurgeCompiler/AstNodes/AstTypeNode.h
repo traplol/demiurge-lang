@@ -11,21 +11,14 @@ class AstTypeNode {
     demi_int ArraySize;
     std::string TypeName;
 public:
-    AstTypeNode(AstNodeType type, const std::string &typeName, int line, int column, bool isArray = false, 
-        demi_int arraySize = 0)
-        : TypeType(type)
-        , IsArray(isArray)
-        , TypeName(typeName)
-        , ArraySize(arraySize) {
-        Pos.LineNumber = line;
-        Pos.ColumnNumber = column;
-    }
+    AstTypeNode(AstNodeType type, const std::string &typeName, int line, int column, bool isArray = false,
+        demi_int arraySize = 0);
     llvm::Type *GetLLVMType(CodeGenerator *codegen);
-    PossiblePosition getPos() const { return Pos; }
-    AstNodeType getTypeType() const { return TypeType; }
-    bool getIsArray() const { return IsArray; }
-    demi_int getArraySize() const { return ArraySize; }
-    std::string getTypeName() const { return TypeName; }
+    PossiblePosition getPos() const;
+    AstNodeType getTypeType() const;
+    bool getIsArray() const;
+    demi_int getArraySize() const;
+    std::string getTypeName() const;
 };
 
 #endif

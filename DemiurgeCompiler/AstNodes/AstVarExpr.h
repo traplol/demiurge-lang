@@ -11,20 +11,12 @@ class AstVarExpr : public IAstExpression {
     IAstExpression *AssignmentExpression;
 public:
     AstVarExpr(const std::string &name, IAstExpression *assignmentExpression, AstTypeNode *inferredType,
-        int line, int column)
-        : Name(name)
-        , AssignmentExpression(assignmentExpression)
-        , InferredType(inferredType) {
-        setNodeType(node_var);
-        setPos(PossiblePosition{ line, column });
-    }
-    ~AstVarExpr() {
-        delete InferredType, AssignmentExpression;
-    }
+        int line, int column);
+    ~AstVarExpr();
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
-    const std::string &getName() const { return Name; }
-    AstTypeNode *getInferredType() const { return InferredType; }
-    IAstExpression *getAssignmentExpression() const { return AssignmentExpression; }
+    const std::string &getName() const;
+    AstTypeNode *getInferredType() const;
+    IAstExpression *getAssignmentExpression() const;
 };
 
 #endif

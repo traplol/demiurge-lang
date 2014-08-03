@@ -8,6 +8,19 @@
 
 using namespace llvm;
 
+AstBinaryOperatorExpr::AstBinaryOperatorExpr(const std::string &operStr, TokenType oper, IAstExpression *lhs,
+    IAstExpression *rhs, int line, int column)
+    : OperatorString(operStr)
+    , Operator(oper)
+    , LHS(lhs)
+    , RHS(rhs) {
+    setNodeType(node_binary_operation);
+    setPos(PossiblePosition{ line, column });
+}
+AstBinaryOperatorExpr::~AstBinaryOperatorExpr() {
+    delete this->LHS, this->RHS;
+}
+
 Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     if (this->LHS == nullptr) 
         return nullptr;

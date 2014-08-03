@@ -4,6 +4,32 @@
 #include "../CodeGenerator/CodeGeneratorHelpers.h"
 
 using namespace llvm;
+
+AstTypeNode::AstTypeNode(AstNodeType type, const std::string &typeName, int line, int column, bool isArray,
+    demi_int arraySize)
+    : TypeType(type)
+    , IsArray(isArray)
+    , TypeName(typeName)
+    , ArraySize(arraySize) {
+    Pos.LineNumber = line;
+    Pos.ColumnNumber = column;
+}
+PossiblePosition AstTypeNode::getPos() const {
+    return Pos; 
+}
+AstNodeType AstTypeNode::getTypeType() const {
+    return TypeType; 
+}
+bool AstTypeNode::getIsArray() const {
+    return IsArray; 
+}
+demi_int AstTypeNode::getArraySize() const {
+    return ArraySize; 
+}
+std::string AstTypeNode::getTypeName() const {
+    return TypeName; 
+}
+
 Type *AstTypeNode::GetLLVMType(CodeGenerator *codegen) {
     Type *type;
     switch (this->TypeType) {

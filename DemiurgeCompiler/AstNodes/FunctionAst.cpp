@@ -10,6 +10,23 @@
 
 using namespace llvm;
 
+FunctionAst::FunctionAst(PrototypeAst *prototype, const std::vector<IAstExpression*> &functionBody, int line, int column)
+    : Prototype(prototype)
+    , FunctionBody(functionBody) {
+    Pos.LineNumber = line;
+    Pos.ColumnNumber = column;
+}
+FunctionAst::~FunctionAst() {
+    delete Prototype;
+    while (!FunctionBody.empty()) delete FunctionBody.back(), FunctionBody.pop_back();
+}
+PossiblePosition FunctionAst::getPos() const { 
+    return Pos; 
+}
+PrototypeAst *FunctionAst::getPrototype() const { 
+    return Prototype; 
+}
+
 Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     codegen->clearNamedValues();
     Function *func = this->Prototype->Codegen(codegen);

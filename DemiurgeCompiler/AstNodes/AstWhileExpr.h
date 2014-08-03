@@ -9,16 +9,8 @@ class AstWhileExpr : public IAstExpression {
     std::vector<IAstExpression*> WhileBody;
 public:
     AstWhileExpr(IAstExpression *condition, const std::vector<IAstExpression*> &whileBody,
-        int line, int column)
-        : Condition(condition)
-        , WhileBody(whileBody) {
-        setNodeType(node_while);
-        setPos(PossiblePosition{ line, column });
-    }
-    ~AstWhileExpr() {
-        delete Condition;
-        while (!WhileBody.empty()) delete WhileBody.back(), WhileBody.pop_back();
-    }
+        int line, int column);
+    ~AstWhileExpr();
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
 };
 

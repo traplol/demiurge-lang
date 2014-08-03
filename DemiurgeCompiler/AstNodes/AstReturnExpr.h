@@ -6,14 +6,8 @@
 class AstReturnExpr : public IAstExpression {
     IAstExpression *Expr;
 public:
-    AstReturnExpr(IAstExpression *expr, int line, int column)
-        : Expr(expr) {
-        setNodeType(node_return);
-        setPos(PossiblePosition{ line, column });
-    }
-    ~AstReturnExpr() {
-        delete Expr;
-    }
+    AstReturnExpr(IAstExpression *expr, int line, int column);
+    ~AstReturnExpr();
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
 };
 

@@ -7,6 +7,21 @@
 
 
 using namespace llvm;
+
+AstCallExpression::AstCallExpression(const std::string &name, const std::vector<IAstExpression*> &args, int line, int column)
+    : Name(name)
+    , Args(args) {
+    setNodeType(node_call);
+    setPos(PossiblePosition{ line, column });
+}
+AstCallExpression::~AstCallExpression() {
+    while (!Args.empty()) delete Args.back(), Args.pop_back();
+}
+
+const std::string &AstCallExpression::getName() const {
+    return Name; 
+}
+
 Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     // Lookup the name in the global module table.
     Function *CalleeF = codegen->getTheModule()->getFunction(this->Name);

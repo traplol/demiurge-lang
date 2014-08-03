@@ -5,6 +5,18 @@
 
 using namespace llvm;
 
+AstWhileExpr::AstWhileExpr(IAstExpression *condition, const std::vector<IAstExpression*> &whileBody,
+    int line, int column)
+    : Condition(condition)
+    , WhileBody(whileBody) {
+    setNodeType(node_while);
+    setPos(PossiblePosition{ line, column });
+}
+AstWhileExpr::~AstWhileExpr() {
+    delete Condition;
+    while (!WhileBody.empty()) delete WhileBody.back(), WhileBody.pop_back();
+}
+
 Value *AstWhileExpr::Codegen(CodeGenerator *codegen) {
     Value *cond = this->Condition->Codegen(codegen);
     if (cond == nullptr)

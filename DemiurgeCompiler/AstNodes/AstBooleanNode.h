@@ -6,13 +6,9 @@
 class AstBooleanNode : public IAstExpression {
     bool Val;
 public:
-    AstBooleanNode(bool value, int line, int column)
-        : Val(value) {
-        setNodeType(node_boolean);
-        setPos(PossiblePosition{ line, column });
-    }
+    AstBooleanNode(bool value, int line, int column);
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
-    bool getValue() const { return Val; }
+    bool getValue() const;
 };
 
 #endif

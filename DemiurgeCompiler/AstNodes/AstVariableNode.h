@@ -7,13 +7,9 @@
 class AstVariableNode : public IAstExpression {
     std::string Name;
 public:
-    AstVariableNode(const std::string &name, int line, int column)
-        : Name(name) {
-        setNodeType(node_variable);
-        setPos(PossiblePosition{ line, column });
-    }
+    AstVariableNode(const std::string &name, int line, int column);
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
-    const std::string &getName() const { return Name; }
+    const std::string &getName() const;
 };
 
 #endif

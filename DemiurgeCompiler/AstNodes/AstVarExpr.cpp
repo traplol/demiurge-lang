@@ -5,6 +5,28 @@
 
 using namespace llvm;
 
+AstVarExpr::AstVarExpr(const std::string &name, IAstExpression *assignmentExpression, AstTypeNode *inferredType,
+    int line, int column)
+    : Name(name)
+    , AssignmentExpression(assignmentExpression)
+    , InferredType(inferredType) {
+    setNodeType(node_var);
+    setPos(PossiblePosition{ line, column });
+}
+AstVarExpr::~AstVarExpr() {
+    delete InferredType, AssignmentExpression;
+}
+
+const std::string &AstVarExpr::getName() const { 
+    return Name; 
+}
+AstTypeNode *AstVarExpr::getInferredType() const { 
+    return InferredType; 
+}
+IAstExpression *AstVarExpr::getAssignmentExpression() const { 
+    return AssignmentExpression; 
+}
+
 Value *AstVarExpr::Codegen(CodeGenerator *codegen) {
     codegen->incrementVarCount();
 

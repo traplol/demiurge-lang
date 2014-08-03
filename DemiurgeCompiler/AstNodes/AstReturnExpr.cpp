@@ -5,6 +5,16 @@
 #include "../DEFINES.h"
 
 using namespace llvm;
+
+AstReturnExpr::AstReturnExpr(IAstExpression *expr, int line, int column)
+    : Expr(expr) {
+    setNodeType(node_return);
+    setPos(PossiblePosition{ line, column });
+}
+AstReturnExpr::~AstReturnExpr() {
+    delete Expr;
+}
+
 Value *AstReturnExpr::Codegen(CodeGenerator *codegen) {
     Type *returnType = codegen->getBuilder().getCurrentFunctionReturnType();
     if (this->Expr == nullptr) // void return.

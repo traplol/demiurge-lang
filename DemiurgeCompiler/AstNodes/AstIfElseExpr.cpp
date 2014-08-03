@@ -4,6 +4,21 @@
 #include "../CodeGenerator/CodeGeneratorHelpers.h"
 
 using namespace llvm;
+
+AstIfElseExpr::AstIfElseExpr(IAstExpression *condition, const std::vector<IAstExpression*> &ifBody,
+    const std::vector<IAstExpression*> &elseBody, int line, int column)
+    : Condition(condition)
+    , IfBody(ifBody)
+    , ElseBody(elseBody) {
+    setNodeType(node_ifelse);
+    setPos(PossiblePosition{ line, column });
+}
+AstIfElseExpr::~AstIfElseExpr() {
+    delete Condition;
+    while (!IfBody.empty()) delete IfBody.back(), IfBody.pop_back();
+    while (!ElseBody.empty()) delete ElseBody.back(), ElseBody.pop_back();
+}
+
 Value *AstIfElseExpr::Codegen(CodeGenerator *codegen) {
     Value *cond = this->Condition->Codegen(codegen);
     if (cond == nullptr)
