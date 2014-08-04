@@ -1,14 +1,9 @@
-extern func printf(fmt: string, ...) : void;
-
-func main() : void {
-    var x = voidType(); // void return is automatically generated.
-    printf("%s, %d", "Hello guy", x);
+func voidRet(): void {
+    return; // void return
 }
 
-func voidType() : int { // function order does not matter
-    return 42; // return from function early.
-    printf("Hello world"); // this prompts a warning for unreachable code.
-    
+func main(): void {
+    voidRet(); // call the void return func
+    // a void return will automatically be generated here
 }
-
 

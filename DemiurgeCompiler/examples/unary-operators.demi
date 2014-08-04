@@ -1,0 +1,15 @@
+extern func printf(string,...):void;
+
+func array(arr: int[]) : int[] {
+    arr[2] = 42;
+    return arr;
+}
+
+func main(): void {
+    var x : int[5];
+    var idx = 2;
+    array(x);
+    printf("0x%016llX\n", x[idx]);
+    array(x)[idx] = 5;
+    printf("0x%016llX\n", x[idx]);
+}

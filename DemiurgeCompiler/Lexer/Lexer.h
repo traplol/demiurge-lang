@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-
+#include "TokenTypes.h"
 class Token;
 
 class Lexer {
@@ -21,7 +21,7 @@ private:
     bool _fromStdIn;
     int _line;
     int _column;
-    int  _lastChar;
+    int _lastChar;
     
     std::string _builderWord;
 
@@ -31,6 +31,8 @@ private:
     int peekChar(int ahead = 0);
     int getNextChar();
     void replaceInBuilderWord(std::string find, std::string replace);
+
+    bool isUnaryOperator(TokenType type);
 
     Token *getNextToken();
 

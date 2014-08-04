@@ -2,6 +2,7 @@
 //#include "llvm/IR/Value.h"
 
 #include "AstBinaryOperatorExpr.h"
+#include "AstUnaryOperatorExpr.h"
 #include "AstVariableNode.h"
 #include "../CodeGenerator/CodeGenerator.h"
 #include "../CodeGenerator/CodeGeneratorHelpers.h"
@@ -24,6 +25,10 @@ AstBinaryOperatorExpr::~AstBinaryOperatorExpr() {
 Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     if (this->LHS == nullptr) 
         return nullptr;
+
+    if (AstUnaryOperatorExpr *arrayAss = dynamic_cast<AstUnaryOperatorExpr*>(this->LHS))
+        return arrayAss->ArrayAssignment(codegen, this->RHS); // Array assignment.
+
     AstVariableNode *lhse = dynamic_cast<AstVariableNode*>(this->LHS);
     if (lhse == nullptr) // left side of assign operator isn't a variable.
         return Helpers::Error(this->LHS->getPos(), "Destination of assignment operator must be variable.");
@@ -39,7 +44,7 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
 
     // Implicit casting to destination type when assigning to variables.
     Type *varType = variable->getType()->getContainedType(0);
-    val = Helpers::CreateCastTo(codegen, val, varType);
+    val = Helpers::CreateImplicitCast(codegen, val, varType);
 
     codegen->getBuilder().CreateStore(val, variable);
     return val;

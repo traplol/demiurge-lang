@@ -314,7 +314,7 @@ namespace Helpers {
     AllocaInst *CreateEntryBlockAlloca(CodeGenerator *codegen, Function *function, const std::string &varName, Type *type) {
         BasicBlock *prevInsertPoint = codegen->getBuilder().GetInsertBlock();
         codegen->getBuilder().SetInsertPoint(&function->getEntryBlock(), function->getEntryBlock().begin());
-        AllocaInst *Alloca = codegen->getBuilder().CreateAlloca(type, 0, varName.c_str());
+        AllocaInst *Alloca = codegen->getBuilder().CreateAlloca(type, nullptr, varName.c_str());
         codegen->getBuilder().SetInsertPoint(prevInsertPoint);
         return Alloca;
     }
@@ -368,12 +368,17 @@ namespace Helpers {
 
     // Returns true if the value is a pointer to a pointer
     bool IsPtrToPtr(llvm::Value *val) {
-        return val->getType()->getContainedType(0)->getTypeID() == Type::TypeID::PointerTyID;
+        return val->getType()->isPointerTy() && val->getType()->getContainedType(0)->getTypeID() == Type::TypeID::PointerTyID;
     }
 
     // Returns true if the value is a pointer to an array
     bool IsPtrToArray(llvm::Value *val) {
-        return val->getType()->getContainedType(0)->isArrayTy();
+        return val->getType()->isPointerTy() && val->getType()->getContainedType(0)->isArrayTy();
+    }
+
+    // Returns whether a value is a number.
+    bool IsNumberType(llvm::Value *val) {
+        return val->getType()->isIntegerTy() || val->getType()->isFloatingPointTy();
     }
 
     // Returns a string representation of the passed llvm type.
@@ -399,6 +404,13 @@ namespace Helpers {
         //case Type::TypeID::PPC_FP128TyID: return "float128_ppc";        //  6: 128-bit floating point type (two 64-bits: PowerPC)
         //case Type::TypeID::X86_MMXTyID: return "mmx_vector_64_x86";     //  9: MMX vectors (64 bits: X86 specific)
         }
+    }
+
+    // Returns the pointer to the first element of an array.
+    Value *CreateArrayDecay(CodeGenerator *codegen, Value *val) {
+        Value *zero = GetZero_64(codegen);
+        Value *arrayref[] = { zero, zero };
+        return codegen->getBuilder().CreateGEP(val, arrayref, "arraydecay");
     }
 
     // Will attempt to cast one value to another type and sets 'castSuccessful' to true if a cast happened, otherwise false.
@@ -429,7 +441,14 @@ namespace Helpers {
                 *castSuccessful = true;
             return codegen->getBuilder().CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
         }
-        return val;
+        return val; // if we hit this fast, we failed to cast so just return what was passed.
+    }
+
+    // Used to implicitly cast numbers such as integers and doubles but not pointers.
+    Value *CreateImplicitCast(CodeGenerator *codegen, Value *val, Type *castToType, bool *castSuccessful) {
+        if (IsNumberType(val)) // only implicityly cast number.
+            return CreateCastTo(codegen, val, castToType, castSuccessful);
+        return nullptr;
     }
 
     Value *GetDefaultValue(CodeGenerator *codegen, AstTypeNode *typeNode) {

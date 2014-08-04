@@ -6,6 +6,7 @@
 #include "../Lexer/TokenTypes.h"
 
 #include "../AstNodes/AstBinaryOperatorExpr.h"
+#include "../AstNodes/AstUnaryOperatorExpr.h"
 #include "../AstNodes/AstBooleanNode.h"
 #include "../AstNodes/AstCallExpr.h"
 #include "../AstNodes/AstDoubleNode.h"
@@ -26,34 +27,42 @@
 Parser::Parser() {
     
     // 1 is the lowest operator precedence.
-    _operatorPrecedence['='] = 30;              // '='
-    _operatorPrecedence[tok_plusequals] = 30;   // '+='
-    _operatorPrecedence[tok_minusequals] = 30;  // '-='
-    _operatorPrecedence[tok_multequals] = 30;   // '*='
-    _operatorPrecedence[tok_divequals] = 30;    // '/='
-    _operatorPrecedence[tok_modequals] = 30;    // '%='
+    _operatorPrecedence['='] = 30;                  // '='
+    _operatorPrecedence[tok_leftshiftequal] = 30;   // '<<='
+    _operatorPrecedence[tok_rightshiftequal] = 30;  // '>>='
+    _operatorPrecedence[tok_andequals] = 30;        // '&='
+    _operatorPrecedence[tok_orequals] = 30;         // '|='
+    _operatorPrecedence[tok_xorequals] = 30;        // '^='
+    _operatorPrecedence[tok_plusequals] = 30;       // '+='
+    _operatorPrecedence[tok_minusequals] = 30;      // '-='
+    _operatorPrecedence[tok_multequals] = 30;       // '*='
+    _operatorPrecedence[tok_divequals] = 30;        // '/='
+    _operatorPrecedence[tok_modequals] = 30;        // '%='
 
-    _operatorPrecedence[tok_booleanor] = 40;    // '||'
-    _operatorPrecedence[tok_booleanand] = 41;   // '&&'
+    _operatorPrecedence[tok_booleanor] = 40;        // '||'
+    _operatorPrecedence[tok_booleanand] = 41;       // '&&'
 
-    _operatorPrecedence['|'] = 45;              // '|'
-    _operatorPrecedence['^'] = 46;              // '^'
-    _operatorPrecedence['&'] = 47;              // '&'
+    _operatorPrecedence['|'] = 45;                  // '|'
+    _operatorPrecedence['^'] = 46;                  // '^'
+    _operatorPrecedence['&'] = 47;                  // '&'
 
-    _operatorPrecedence[tok_notequal] = 50;     // '!='
-    _operatorPrecedence[tok_equalequal] = 50;   // '=='
-    _operatorPrecedence['<'] = 60;              // '<'
-    _operatorPrecedence[tok_lessequal] = 60;    // '<='
-    _operatorPrecedence['>'] = 60;              // '>'
-    _operatorPrecedence[tok_greatequal] = 60;   // '>=
+    _operatorPrecedence[tok_notequal] = 50;         // '!='
+    _operatorPrecedence[tok_equalequal] = 50;       // '=='
+    _operatorPrecedence['<'] = 60;                  // '<'
+    _operatorPrecedence[tok_lessequal] = 60;        // '<='
+    _operatorPrecedence['>'] = 60;                  // '>'
+    _operatorPrecedence[tok_greatequal] = 60;       // '>=
     
-    _operatorPrecedence[tok_leftshift] = 75;    // '<<'
-    _operatorPrecedence[tok_rightshift] = 75;   // '>>'
-    _operatorPrecedence['+'] = 80;              // '+'
-    _operatorPrecedence['-'] = 80;              // '-'
-    _operatorPrecedence['%'] = 100;             // '%'
-    _operatorPrecedence['/'] = 100;             // '/'
-    _operatorPrecedence['*'] = 100;             // '*'
+    _operatorPrecedence[tok_leftshift] = 75;        // '<<'
+    _operatorPrecedence[tok_rightshift] = 75;       // '>>'
+    _operatorPrecedence['+'] = 80;                  // '+'
+    _operatorPrecedence['-'] = 80;                  // '-'
+    _operatorPrecedence['%'] = 100;                 // '%'
+    _operatorPrecedence['/'] = 100;                 // '/'
+    _operatorPrecedence['*'] = 100;                 // '*'
+    
+    _operatorPrecedence['['] = 120;                 // '['
+    _operatorPrecedence['.'] = 120;                 // '.'
 }
 
 
@@ -142,31 +151,50 @@ IAstExpression *Parser::parseTopLevelExpression() {
     return parseExpression();
 }
 
-// <expression>         ::= <primary> <binoprhs>
-IAstExpression *Parser::parseExpression() {
-    IAstExpression *primary = parsePrimary();
-    if (_curTokenType == ';') next();
-    if (primary != nullptr) {
-        IAstExpression *expr = parseBinOpRhs(0, primary);
-        if (_curTokenType == ';') next();
-        if (expr != nullptr) return expr;
-    } // if we fail to parse an operation, we'll try to assume it's a control flow statement
-    return primary;
+// <blockexpr>          ::= <expression>
+//                      |   <controlflow>
+IAstExpression *Parser::parseBlockExpression() {
+    IAstExpression *retExpr = parseExpression();
+    if (retExpr == nullptr)
+        retExpr = parseControlFlow();
+
+    if (_curTokenType == ';') next(); // eat optional ';'
+    return retExpr;
 }
 
-// <flowcontrol>        ::= <ifelseexpr>
+// <expression>         ::= <primary> <binoprhs>
+//                      |   <unaryop> <primary>
+//                      |   <primary> <unaryop>
+IAstExpression *Parser::parseExpression() {
+    IAstExpression *unaryPre = parsePrefixUnaryExpr();
+    if (unaryPre != nullptr) { // if we parsed a unary expression, see if it's used in a binary operation
+        return parseBinOpRhs(0, unaryPre);
+    }
+
+    IAstExpression *primary = parsePrimary();
+    if (primary != nullptr) {
+        IAstExpression *unaryPost = parsePostfixUnaryExpr(primary); 
+        if (unaryPost != nullptr) // if we parsed a unary expression, see if it's used in a binary operation
+            return parseBinOpRhs(0, unaryPost);
+        return parseBinOpRhs(0, primary); // otherwise just keep parsing the binop
+    }
+    return nullptr;
+}
+
+// <controlflow>        ::= <ifelseexpr>
 //                      |   <whileexpr>
 //                      |   <forexpr>
-
 //                      |   <varexpr>
+//                      |   <returnexpr>
 IAstExpression *Parser::parseControlFlow() {
     switch (_curTokenType) {
-    default: return Error("Unexpected token.");
+    default: return nullptr;
     case ';': next(); return parseExpression();
     case tok_if: return parseIfElseExpression();
     case tok_while: return parseWhileExpression();
     case tok_for: return parseForExpression();
     case tok_var: return parseVarExpression();
+    case tok_return: return parseReturnExpression();
     }
 }
 
@@ -175,25 +203,67 @@ IAstExpression *Parser::parseControlFlow() {
 //                      |   <string>
 //                      |   <bool>
 //                      |   <number>
-//                      |   <returnexpr>
 IAstExpression *Parser::parsePrimary() {
+    if (_curToken->IsUnaryOperator())
+    {
+        IAstExpression *unary = parsePrefixUnaryExpr();
+        if (unary != nullptr) return unary;
+    }
     switch (_curTokenType) {
-    default: return nullptr;/* Error("Unexpected token.");*/
+    default: return nullptr;
     case '(': return parseParenExpression();
     case ';': next(); return parseExpression();
     case tok_identifier: return parseIdentifierExpression();
     case tok_string: return parseStringExpression();
     case tok_bool: return parseBooleanExpression();
     case tok_number: return parseNumberExpression();
-    case tok_return: return parseReturnExpression();
     }
 }
 
-// <binoprhs>           ::= ( operator <primary>)*
+// <prefixunary>        ::= unaryoper <primary>
+IAstExpression *Parser::parsePrefixUnaryExpr() {
+    if (!_curToken->IsUnaryOperator()) // short curcuit if not an operator.
+        return nullptr;
+
+    std::string oper = _curToken->Value();
+    int tokenType = _curTokenType;
+
+    next(); // eat unaryoper
+    IAstExpression *primary = parsePrimary();
+    if (primary == nullptr) 
+        return nullptr;
+    return new AstUnaryOperatorExpr(oper, (TokenType)tokenType, primary, false, nullptr, _curToken->Line(), _curToken->Column());
+}
+
+// <prefixunary>        ::= <primary> unaryoper 
+IAstExpression *Parser::parsePostfixUnaryExpr(IAstExpression *operand) {
+    if (!_curToken->IsUnaryOperator() || operand == nullptr) // short curcuit if not an operator.
+        return nullptr;
+
+    // the only 'postfix' operators should be '++', '--' and '[<expression>]'
+    if (_curTokenType != tok_plusplus && _curTokenType != tok_minusminus && _curTokenType != '[')
+        return nullptr;
+
+    std::string oper = _curToken->Value();
+    int tokenType = _curTokenType; 
+    if (_curTokenType == tok_plusplus || _curTokenType == tok_minusminus) { // '++' or '--'
+        next(); // eat unaryoper
+        return new AstUnaryOperatorExpr(oper, (TokenType)tokenType, operand, true, nullptr, _curToken->Line(), _curToken->Column());
+    }
+    // otherwise should be an index operator, '[' <expression> ']'
+    IAstExpression *indexExpr = parseArraySubscript();
+    return new AstUnaryOperatorExpr(oper, (TokenType)tokenType, operand, true, indexExpr, _curToken->Line(), _curToken->Column());
+}
+
+// <binoprhs>           ::= ( operator <expression>)*
 IAstExpression *Parser::parseBinOpRhs(int precedence, IAstExpression *lhs) {
     while (true) {
         if (_curTokenType == ';') {
             return lhs;
+        }
+
+        if (_curTokenType == '[') {
+            lhs = parsePostfixUnaryExpr(lhs);
         }
 
         int tokPrec = getTokenPrecedence();
@@ -241,7 +311,7 @@ IAstExpression *Parser::parseVarExpression() {
         AstTypeNode *type = tryInferType(expression);
         return new AstVarExpr(identifier, expression, type, _curToken->Line(), _curToken->Column());
     }
-    else return Error("Expected expression or type declaration when defining a variable.");
+    else return Error("Expected assignment expression or type declaration when defining a variable.");
 }
 
 // <parenexpr>          ::= '(' <expression> ')'
@@ -264,7 +334,7 @@ IAstExpression *Parser::parseIdentifierExpression() {
         return Error("Expected identifier.");
     std::string identifier = _curToken->Value();
     next(); // eat identifier
-    if (_curTokenType != '(' && _curTokenType != '.' && _curTokenType != '[') // standard identifier reference
+    if (_curTokenType != '(') // standard identifier reference
         return new AstVariableNode(identifier, _curToken->Line(), _curToken->Column());
 
     // otherwise it's a call.
@@ -321,15 +391,7 @@ IAstExpression *Parser::parseReturnExpression() {
     if (_curTokenType != tok_return)
         return Error("Expected 'return'.");
     next(); // eat 'return'
-
-    if (_curTokenType == ';') { // void return
-        //next(); // eat ';'
-        return new AstReturnExpr(nullptr, _curToken->Line(), _curToken->Column());
-    }
-
-    IAstExpression *expr = parseExpression();
-    if (expr == nullptr) return nullptr;
-
+    IAstExpression *expr = parseExpression(); // void return will automatically be handled.
     return new AstReturnExpr(expr, _curToken->Line(), _curToken->Column());
 }
 
@@ -346,12 +408,12 @@ IAstExpression *Parser::parseIfElseExpression() {
 
     std::vector<IAstExpression*> ifBody;
     if (_curTokenType != '{') { // single statement
-        ifBody.push_back(parseExpression());
+        ifBody.push_back(parseBlockExpression());
     }
     else { // potential multi-statement.
         next(); // eat '{'
         while (_curTokenType != '}') {
-            ifBody.push_back(parseExpression());
+            ifBody.push_back(parseBlockExpression());
         }
         next(); // eat '}'
         if (ifBody.size() == 0)
@@ -365,12 +427,12 @@ IAstExpression *Parser::parseIfElseExpression() {
     next(); // eat 'else
     // same as the if body.
     if (_curTokenType != '{') { // single statement
-        elseBody.push_back(parseExpression());
+        elseBody.push_back(parseBlockExpression());
     }
     else { // potential multi-statement.
         next(); // eat '{'
         while (_curTokenType != '}') {
-            elseBody.push_back(parseExpression());
+            elseBody.push_back(parseBlockExpression());
         }
         next(); // eat '}'
         if (elseBody.size() == 0)
@@ -390,12 +452,12 @@ IAstExpression *Parser::parseWhileExpression() {
 
     std::vector<IAstExpression*> whileBody;
     if (_curTokenType != '{') { // single statement
-        whileBody.push_back(parseExpression());
+        whileBody.push_back(parseBlockExpression());
     }
     else { // potential multi-statement.
         next(); // eat '{'
         while (_curTokenType != '}') {
-            whileBody.push_back(parseExpression());
+            whileBody.push_back(parseBlockExpression());
         }
         next(); // eat '}'
         if (whileBody.size() == 0)
@@ -476,10 +538,9 @@ FunctionAst *Parser::parseFunctionDefinition() {
 
     std::vector<IAstExpression*> functionBody;
     while (_curTokenType != '}') {
-        IAstExpression *expr = parseExpression();
-        if (expr == nullptr) expr = parseControlFlow();
-        if (expr == nullptr) return nullptr;
-        functionBody.push_back(expr);
+        IAstExpression *blockExpr = parseBlockExpression();
+        if (blockExpr == nullptr) return Error("Unexpected token.");
+        functionBody.push_back(blockExpr);
     }
     next(); // eat '}'
 
@@ -596,10 +657,6 @@ PrototypeAst *Parser::parseExternDeclaration() {
     AstTypeNode *returnType = parseTypeNode();
     if (returnType == nullptr)
         return Error("Expected function return type.");
-
-    //if (_curTokenType != ';')
-    //    return Error("Expected ';'");
-    //next(); // eat ';'
 
     return new PrototypeAst(functionIdentifier, returnType, args, isVarArgs, _curToken->Line(), _curToken->Column());
 }

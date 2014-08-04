@@ -6,6 +6,8 @@ typedef enum tag_AstNodeType {
     node_function,
     node_prototype,
     node_binary_operation,
+    node_unary_operation_pre,
+    node_unary_operation_post,
     node_call,
     node_variable,
     node_var,

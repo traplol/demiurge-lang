@@ -30,8 +30,8 @@ Value *AstReturnExpr::Codegen(CodeGenerator *codegen) {
 
     if (valType->getTypeID() != returnType->getTypeID()) {
         bool castSuccess;
-        val = Helpers::CreateCastTo(codegen, val, returnType, &castSuccess);
-        if (val == nullptr)
+        val = Helpers::CreateImplicitCast(codegen, val, returnType, &castSuccess);
+        if (val == nullptr || !castSuccess)
             return Helpers::Error(this->Expr->getPos(), "Could not cast return statement to function return type.");
         if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
             Helpers::Warning(this->Expr->getPos(), "Casting from %s to %s, possible loss of data.",

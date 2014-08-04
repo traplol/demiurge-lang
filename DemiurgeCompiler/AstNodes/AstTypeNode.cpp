@@ -41,9 +41,9 @@ Type *AstTypeNode::GetLLVMType(CodeGenerator *codegen) {
     case node_void: type = Type::getVoidTy(codegen->getContext()); break;
     }
     if (this->IsArray && this->ArraySize > 0)
-        return ArrayType::get(type, this->ArraySize);
+        return ArrayType::get(type, this->ArraySize); // note this is array type
     if (this->IsArray && this->ArraySize == 0) {
-        return PointerType::get(type, 0);
+        return PointerType::get(type, 0); // note this is ptr type
     }
     return type;
 }

@@ -1,6 +1,5 @@
 #include "Lexer.h"
 #include "Token.h"
-#include "TokenTypes.h"
 
 Lexer::Lexer() {
 }
@@ -42,7 +41,7 @@ Token *Lexer::getNextToken() {
 
     if (_lastChar == EOF)
         return new Token(EOF, "EOF", _line, _column);
-    // Checking for two char operators.
+    // Checking for multi-char operators.
     if (Token *tok = tryFourCharOper(thisChar))
         return tok;
     if (Token *tok = tryThreeCharOper(thisChar))
@@ -50,7 +49,20 @@ Token *Lexer::getNextToken() {
     if (Token *tok = tryTwoCharOper(thisChar))
         return tok;
     
-    return new Token(thisChar, _builderWord, _line, _column); // test should have succeeded if we hit this.
+    return new Token(thisChar, _builderWord, _line, _column, isUnaryOperator((TokenType)thisChar)); // single char operator
+}
+
+bool Lexer::isUnaryOperator(TokenType type) {
+    switch (type) {
+    default: return false;
+    case '+':
+    case '-':
+    case '!':
+    case '~':
+    case tok_plusplus:
+    case tok_minusminus:
+    case '[': return true;
+    }
 }
 
 Token *Lexer::tryTwoCharOper(int thisChar) {
@@ -77,7 +89,7 @@ Token *Lexer::tryTwoCharOper(int thisChar) {
     else if (operTest == "[]") tokType = tok_LRSqBrackets;
     else return nullptr;
     _lastChar = getNextChar(); // eat the second
-    return new Token(tokType, operTest, _line, _column);
+    return new Token(tokType, operTest, _line, _column, isUnaryOperator(tokType));
 }
 Token *Lexer::tryThreeCharOper(int thisChar) {
     TokenType tokType;
@@ -93,7 +105,7 @@ Token *Lexer::tryThreeCharOper(int thisChar) {
 
     getNextChar(); // eat the second
     _lastChar = getNextChar(); // eat the third
-    return new Token(tokType, operTest, _line, _column);
+    return new Token(tokType, operTest, _line, _column, isUnaryOperator(tokType));
 }
 Token *Lexer::tryFourCharOper(int thisChar) {
     //TokenType tokType;

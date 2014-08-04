@@ -30,6 +30,7 @@ private:
     int getTokenPrecedence();
 
     IAstExpression *parseTopLevelExpression();
+    IAstExpression *parseBlockExpression();
     IAstExpression *parseExpression();
     IAstExpression *parseControlFlow();
     IAstExpression *parsePrimary();
@@ -45,6 +46,8 @@ private:
     IAstExpression *parseForExpression();
     IAstExpression *parseArraySubscript();
     IAstExpression *parseBinOpRhs(int precedence, IAstExpression *lhs);
+    IAstExpression *parsePrefixUnaryExpr();
+    IAstExpression *parsePostfixUnaryExpr(IAstExpression *operand);
     AstTypeNode *parseTypeNode();
     AstTypeNode *tryInferType(IAstExpression *expr);
     FunctionAst *parseFunctionDefinition();

@@ -129,9 +129,18 @@ namespace Helpers {
 
     // Returns true if the value is a pointer to an array
     bool IsPtrToArray(llvm::Value *val);
+
+    // Returns whether a value is a number.
+    bool IsNumberType(llvm::Value *val);
   
+    // Returns the pointer to the first element of an array.
+    llvm::Value *CreateArrayDecay(CodeGenerator *codegen, llvm::Value *val);
+
     // Will attempt to cast one llvm::Value to another type and sets 'castSuccessful' to true if a cast happened, otherwise false.
     llvm::Value *CreateCastTo(CodeGenerator *codegen, llvm::Value *val, llvm::Type *castToType, bool *castSuccessful = nullptr);
+
+    // Used to implicitly cast numbers such as integers and doubles but not pointers.
+    llvm::Value *CreateImplicitCast(CodeGenerator *codegen, llvm::Value *val, llvm::Type *castToType, bool *castSuccessful = nullptr);
   
     // Creates a default value for a given type, returns nullptr if default value isn't known.
     llvm::Value *GetDefaultValue(CodeGenerator *codegen, AstTypeNode *typeNode);

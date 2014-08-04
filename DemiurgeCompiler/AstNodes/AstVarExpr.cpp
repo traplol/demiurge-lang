@@ -30,7 +30,6 @@ IAstExpression *AstVarExpr::getAssignmentExpression() const {
 Value *AstVarExpr::Codegen(CodeGenerator *codegen) {
     codegen->incrementVarCount();
 
-    std::vector<AllocaInst*> oldBindings;
     Function *func = codegen->getBuilder().GetInsertBlock()->getParent();
     IAstExpression *expr = this->getAssignmentExpression();
     Value *initialVal = nullptr;

@@ -35,18 +35,25 @@ Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     auto calleeArg = CalleeF->arg_begin();
     for (unsigned i = 0, len = this->Args.size(); i < len; ++i, ++calleeArg){
         Value *val = this->Args[i]->Codegen(codegen);
-        if (val == nullptr)
+        if (val == nullptr) {
             return Helpers::Error(this->Args[i]->getPos(), "Function argument could not be evaulated.");
+        }
         bool castSuccess = false;
-        if (!CalleeF->isVarArg()) // don't try to cast varargs.
-            val = Helpers::CreateCastTo(codegen, val, calleeArg->getType(), &castSuccess);
-        if (val == nullptr)
+        if (!CalleeF->isVarArg() && Helpers::IsNumberType(val)) { // don't try to cast varargs or anything not a number.
+            val = Helpers::CreateImplicitCast(codegen, val, calleeArg->getType(), &castSuccess);
+        }
+        if (Helpers::IsPtrToArray(val)) { // if the argument is a pointer to an array
+            val = Helpers::CreateArrayDecay(codegen, val); // converts the argument to a pointer to the first element in the array
+        }
+        if (val == nullptr) {
             return Helpers::Error(this->Args[i]->getPos(), "Function argument not valid type, failed to cast to destination type.");
-        if (castSuccess) // warn that we automatically casted and that there might be a loss of data.
+        }
+        if (castSuccess) { // warn that we automatically casted and that there might be a loss of data.
             Helpers::Warning(this->Args[i]->getPos(), "Casting from %s to %s, possible loss of data.",
-            Helpers::GetLLVMTypeName(val->getType()).c_str(), Helpers::GetLLVMTypeName(calleeArg->getType()).c_str());
+                Helpers::GetLLVMTypeName(val->getType()).c_str(), Helpers::GetLLVMTypeName(calleeArg->getType()).c_str());
+        }
         argsvals.push_back(val);
     }
     bool isVoidReturn = CalleeF->getReturnType()->isVoidTy();
-    return codegen->getBuilder().CreateCall(CalleeF, argsvals, isVoidReturn ? "" : "calltmp");
+    return codegen->getBuilder().CreateCall(CalleeF, argsvals, isVoidReturn ? "" : "call");
 }
