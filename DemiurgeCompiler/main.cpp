@@ -24,7 +24,25 @@ int main(int argc, char **argv) {
 #ifdef _DEBUG
     args.push_back(argv[0]); // program name.
     args.push_back("-c");
-    args.push_back("examples/unary-operators.demi");
+    //args.push_back("examples/add.demi");
+    args.push_back("examples/arrays.demi");
+    //args.push_back("examples/fibR.demi");
+    //args.push_back("examples/fizzbuzz.demi");
+    //args.push_back("examples/gcd.demi");
+    //args.push_back("examples/ifelse.demi");
+    //args.push_back("examples/nesting.demi");
+    //args.push_back("examples/new-bool.demi");
+    //args.push_back("examples/scope.demi");
+    //args.push_back("examples/strings.demi");
+    //args.push_back("examples/unary-operators.demi");
+    //args.push_back("examples/variables.demi");
+    //args.push_back("examples/void-return.demi");
+    //args.push_back("examples/whileloops.demi");
+    //args.push_back("examples/tests/arithmetic.demi");
+    //args.push_back("examples/tests/bitwise.demi");
+    //args.push_back("examples/tests/complex-boolean.demi");
+    //args.push_back("examples/tests/simple-boolean.demi");
+
 #else
     args.assign(argv, argv + argc);
 #endif

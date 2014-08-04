@@ -448,7 +448,7 @@ namespace Helpers {
     Value *CreateImplicitCast(CodeGenerator *codegen, Value *val, Type *castToType, bool *castSuccessful) {
         if (IsNumberType(val)) // only implicityly cast number.
             return CreateCastTo(codegen, val, castToType, castSuccessful);
-        return nullptr;
+        return val;
     }
 
     Value *GetDefaultValue(CodeGenerator *codegen, AstTypeNode *typeNode) {

@@ -19,4 +19,6 @@ func main() : void {
     var arr = array(x);     // type inference.
     arr[2] = -5;            // 'arr' still points to the original array
     printf("%d\n", x[2]);
+    
+    printf("%c\n", "Hello world"[2]); // prints the letter 'l'
 }
