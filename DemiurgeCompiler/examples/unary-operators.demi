@@ -1,15 +1,16 @@
 extern func printf(string,...):void;
-
-func array(arr: int[]) : int[] {
-    arr[2] = 42;
-    return arr;
+func print(num:int): void {
+    printf("%d\n",num);
 }
-
 func main(): void {
-    var x : int[5];
-    var idx = 2;
-    array(x);
-    printf("0x%016llX\n", x[idx]);
-    array(x)[idx] = 5;
-    printf("0x%016llX\n", x[idx]);
+    // unary operators can be in the middle of an expression.
+    var x = 5 + 5 * ~5 + 10; // evals to -15
+    print(x);
+    x = (5 + 5) * ~5 + 10; // evals to -50
+    print(x);
+    print(-x); // evals to 50
+    print(+x); // evals to -50
+    print(!true); // evals to 0 or false
+    printf("%u\n", !(true & false)); // evals to 1 or true
+
 }

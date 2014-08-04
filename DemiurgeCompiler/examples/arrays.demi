@@ -1,10 +1,22 @@
+extern func printf(string, ...):void;
 
-func test(x : int[] ) : void {
-    x[1] = 125;
+func test(arr: int[] ) : void {
+    arr[1] = 125;
+}
+
+func array(arr: int[]) : int[] {
+    return arr; // returning the array back
 }
 
 func main() : void {
     
-    var x : int[5];
-    test(x);
+    var idx = 2;
+    var x : int[5];         // make an array of 5 integers
+    test(x);                // arrays are pass by reference
+    printf("%d\n", x[1]);
+    array(x)[idx] = 5;      // 'array(x)' returns the original array reference
+    printf("%d\n", x[idx]); // accessing array element through a variable
+    var arr = array(x);     // type inference.
+    arr[2] = -5;            // 'arr' still points to the original array
+    printf("%d\n", x[2]);
 }
