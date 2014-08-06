@@ -16,9 +16,17 @@ typedef enum tag_TokenType {
     tok_while,              // 'while'
     tok_for,                // 'for'
     
-    tok_typeint,            // 'int'
+    tok_typeint8,           // 'char', 'int8'
+    tok_typeint16,          // 'short', 'int16'
+    tok_typeint32,          // 'int', 'int32'
+    tok_typeint64,          // 'long', 'int64'
+    tok_typeuint8,          // 'uchar', 'uint8'
+    tok_typeuint16,         // 'ushort', 'int16'
+    tok_typeuint32,         // 'uint', 'uint32'
+    tok_typeuint64,         // 'ulong', 'uint64'
     tok_typestring,         // 'string'
     tok_typedouble,         // 'double'
+    tok_typefloat,          // 'float'
     tok_typebool,           // 'bool'
     tok_typevoid,           // 'void'
 

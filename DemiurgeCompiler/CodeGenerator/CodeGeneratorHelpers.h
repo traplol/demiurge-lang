@@ -91,33 +91,79 @@ namespace Helpers {
     // Creates a LLVM::Value* of double type from the llvm::Value passed.
     llvm::Value *GetDouble(CodeGenerator *codegen, double val);
     
-    // Creates a LLVM::Value* of integer type with specified width from the value passed.
+    // Creates a LLVM::Value* of float type from the llvm::Value passed.
+    llvm::Value *GetFloat(CodeGenerator *codegen, double val);
+
+    // Creates a LLVM::Value* of signed integer type with specified width from the value passed.
     llvm::Value *GetInt(CodeGenerator *codegen, demi_int val, int bitwidth);
-    
-    // Creates a LLVM::Value* of integer64 type with a value of zero.
-    llvm::Value *GetZero_64(CodeGenerator *codegen);
-    
-    // Creates a LLVM::Value* of integer64 type with a value of one.
-    llvm::Value *GetOne_64(CodeGenerator *codegen);
-    
-    // Creates a LLVM::Value* of integer64 type with a value of two.
-    llvm::Value *GetTwo_64(CodeGenerator *codegen);
 
-    // Creates a LLVM::Value* of integer8 type with a value of zero.
-    llvm::Value *GetZero_8(CodeGenerator *codegen);
-
-    // Creates a LLVM::Value* of integer8 type with a value of one.
-    llvm::Value *GetOne_8(CodeGenerator *codegen);
-
-    // Creates a LLVM::Value* of integer8 type with a value of two.
-    llvm::Value *GetTwo_8(CodeGenerator *codegen);
+    // Creates a LLVM::Value* of unsigned integer type with specified width from the value passed.
+    llvm::Value *GetUInt(CodeGenerator *codegen, demi_int val, int bitwidth);
     
     // Creates a LLVM::Value* of integer1 type from the llvm::Value passed.
     llvm::Value *GetBoolean(CodeGenerator *codegen, bool val);
    
-    // Creates a LLVM::Value* of integer64 type from the value passed.
+    // Creates a LLVM::Value* of signed integer64 type from the value passed.
     llvm::Value *GetInt64(CodeGenerator *codegen, demi_int val);
+
+    // Creates a LLVM::Value* of signed integer32 type from the value passed.
+    llvm::Value *GetInt32(CodeGenerator *codegen, demi_int val);
+
+    // Creates a LLVM::Value* of signed integer16 type from the value passed.
+    llvm::Value *GetInt16(CodeGenerator *codegen, demi_int val);
+
+    // Creates a LLVM::Value* of signed integer8 type from the value passed.
+    llvm::Value *GetInt8(CodeGenerator *codegen, demi_int val);
+
+    // Creates a LLVM::Value* of unsigned integer64 type from the value passed.
+    llvm::Value *GetUInt64(CodeGenerator *codegen, demi_int val);
+
+    // Creates a LLVM::Value* of unsigned integer32 type from the value passed.
+    llvm::Value *GetUInt32(CodeGenerator *codegen, demi_int val);
+
+    // Creates a LLVM::Value* of unsigned integer16 type from the value passed.
+    llvm::Value *GetUInt16(CodeGenerator *codegen, demi_int val);
+
+    // Creates a LLVM::Value* of unsigned integer8 type from the value passed.
+    llvm::Value *GetUInt8(CodeGenerator *codegen, demi_int val);
    
+    // Creates a LLVM::Value* of signed integer64 type with a value of zero.
+    llvm::Value *GetZero_64(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer64 type with a value of one.
+    llvm::Value *GetOne_64(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer64 type with a value of two.
+    llvm::Value *GetTwo_64(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer32 type with a value of zero.
+    llvm::Value *GetZero_32(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer32 type with a value of one.
+    llvm::Value *GetOne_32(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer32 type with a value of two.
+    llvm::Value *GetTwo_32(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer16 type with a value of zero.
+    llvm::Value *GetZero_16(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer16 type with a value of one.
+    llvm::Value *GetOne_16(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer16 type with a value of two.
+    llvm::Value *GetTwo_16(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer8 type with a value of zero.
+    llvm::Value *GetZero_8(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer8 type with a value of one.
+    llvm::Value *GetOne_8(CodeGenerator *codegen);
+
+    // Creates a LLVM::Value* of signed integer8 type with a value of two.
+    llvm::Value *GetTwo_8(CodeGenerator *codegen);
+
+
     // Creates a LLVM::Value* of integer8* type from the llvm::Value passed.
     llvm::Value *GetString(CodeGenerator *codegen, std::string val);
 

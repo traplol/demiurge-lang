@@ -482,7 +482,7 @@ IAstExpression *Parser::parseArraySubscript() {
     return expr;
 }
 
-// <type>               ::= ( identifier | 'double' | 'int' | 'bool' | 'string' ) ( '[' <numberexpr>? ']' )?
+// <type>               ::= ( identifier | <reserved type> ) ( '[' <numberexpr>? ']' )?
 AstTypeNode *Parser::parseTypeNode() {
     int curTokType = _curTokenType;
     std::string typeName = _curToken->Value();
@@ -507,9 +507,21 @@ AstTypeNode *Parser::parseTypeNode() {
     default: return nullptr;
     case tok_identifier: nodeType = node_struct; break;
     case tok_typevoid: nodeType = node_void; break;
-    case tok_typebool: nodeType = node_boolean; break;
+    
+    case tok_typefloat: nodeType = node_float; break;
     case tok_typedouble: nodeType = node_double; break;
-    case tok_typeint: nodeType = node_integer; break;
+
+    case tok_typebool: nodeType = node_boolean; break;
+    case tok_typeint8: nodeType = node_signed_integer8; break;
+    case tok_typeint16: nodeType = node_signed_integer16; break;
+    case tok_typeint32: nodeType = node_signed_integer32; break;
+    case tok_typeint64: nodeType = node_signed_integer64; break;
+
+    case tok_typeuint8: nodeType = node_unsigned_integer8; break;
+    case tok_typeuint16: nodeType = node_unsigned_integer16; break;
+    case tok_typeuint32: nodeType = node_unsigned_integer32; break;
+    case tok_typeuint64: nodeType = node_unsigned_integer64; break;
+
     case tok_typestring: nodeType = node_string; break;
     }
     return new AstTypeNode(nodeType, typeName,_curToken->Line(), _curToken->Column(), isArray, arraySize);
@@ -522,7 +534,18 @@ AstTypeNode *Parser::tryInferType(IAstExpression *expr) {
     case node_void: return new AstTypeNode(node_void, "void", _curToken->Line(), _curToken->Column());
     case node_boolean: return new AstTypeNode(node_boolean, "bool", _curToken->Line(), _curToken->Column());
     case node_double: return new AstTypeNode(node_double, "double", _curToken->Line(), _curToken->Column());
-    case node_integer: return new AstTypeNode(node_integer, "int", _curToken->Line(), _curToken->Column());
+    case node_float: return new AstTypeNode(node_float, "float", _curToken->Line(), _curToken->Column());
+    
+    case node_signed_integer8: return new AstTypeNode(node_signed_integer8, "int8", _curToken->Line(), _curToken->Column());
+    case node_signed_integer16: return new AstTypeNode(node_signed_integer16, "int16", _curToken->Line(), _curToken->Column());
+    case node_signed_integer32: return new AstTypeNode(node_signed_integer32, "int32", _curToken->Line(), _curToken->Column());
+    case node_signed_integer64: return new AstTypeNode(node_signed_integer64, "int64", _curToken->Line(), _curToken->Column());
+              
+    case node_unsigned_integer8: return new AstTypeNode(node_unsigned_integer8, "uint8", _curToken->Line(), _curToken->Column());
+    case node_unsigned_integer16: return new AstTypeNode(node_unsigned_integer16, "uint16", _curToken->Line(), _curToken->Column());
+    case node_unsigned_integer32: return new AstTypeNode(node_unsigned_integer32, "uint32", _curToken->Line(), _curToken->Column());
+    case node_unsigned_integer64: return new AstTypeNode(node_unsigned_integer64, "uint64", _curToken->Line(), _curToken->Column());
+
     case node_string: return new AstTypeNode(node_string, "string", _curToken->Line(), _curToken->Column());
     }
 }

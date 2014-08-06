@@ -26,7 +26,7 @@ Token *Lexer::getNextToken() {
         return trimWhiteSpace();
     if (_lastChar == '"') // Build a string literal
         return buildStringLiteral();
-    if (isalpha(_lastChar)) // Build an identifier or reserved word
+    if (isalpha(_lastChar) || _lastChar == '_') // Build an identifier or reserved word
         return buildWord();
     if (isdigit(_lastChar)) // Build a number
         return buildNumber();
@@ -189,7 +189,7 @@ Token *Lexer::buildNumber() {
 Token *Lexer::buildWord() {
     _builderWord = _lastChar; // first char of word
     _lastChar = getNextChar();
-    while (isalnum(_lastChar)) { // build word
+    while (isalnum(_lastChar) || _lastChar == '_') { // build word
         _builderWord += _lastChar;
         _lastChar = getNextChar();
     }
@@ -206,11 +206,34 @@ Token *Lexer::buildWord() {
     else if (_builderWord == "while") tokType = tok_while;
     else if (_builderWord == "for") tokType = tok_for;
     else if (_builderWord == "void") tokType = tok_typevoid;
-    else if (_builderWord == "int") tokType = tok_typeint;
-    else if (_builderWord == "string") tokType = tok_typestring;
-    else if (_builderWord == "double") tokType = tok_typedouble;
+    
     else if (_builderWord == "bool") tokType = tok_typebool;
+    else if (_builderWord == "char") tokType = tok_typeint8;
+    else if (_builderWord == "int8") tokType = tok_typeint8;
+    else if (_builderWord == "short") tokType = tok_typeint16;
+    else if (_builderWord == "int16") tokType = tok_typeint16;
+    else if (_builderWord == "int") tokType = tok_typeint32;
+    else if (_builderWord == "int32") tokType = tok_typeint32;
+    else if (_builderWord == "long") tokType = tok_typeint64;
+    else if (_builderWord == "int64") tokType = tok_typeint64;
+
+    else if (_builderWord == "uchar") tokType = tok_typeuint8;
+    else if (_builderWord == "uint8") tokType = tok_typeuint8;
+    else if (_builderWord == "ushort") tokType = tok_typeuint16;
+    else if (_builderWord == "uint16") tokType = tok_typeuint16;
+    else if (_builderWord == "uint") tokType = tok_typeuint32;
+    else if (_builderWord == "uint32") tokType = tok_typeuint32;
+    else if (_builderWord == "ulong") tokType = tok_typeuint64;
+    else if (_builderWord == "uint64") tokType = tok_typeuint64;
+
+    else if (_builderWord == "double") tokType = tok_typedouble;
+    else if (_builderWord == "float") tokType = tok_typefloat;
+    
+    else if (_builderWord == "string") tokType = tok_typestring;
+
+
     else tokType = tok_identifier;
+
 
     return new Token(tokType, _builderWord, _line, _column);
 }

@@ -321,7 +321,11 @@ namespace Helpers {
 
     // Creates a LLVM::Value* of double type from the value passed.
     Value *GetDouble(CodeGenerator *codegen, double val) {
-        return ConstantFP::get(codegen->getContext(), APFloat(val));
+        return ConstantFP::get(Type::getDoubleTy(codegen->getContext()), val);
+    }
+    // Creates a LLVM::Value* of float type from the llvm::Value passed.
+    llvm::Value *GetFloat(CodeGenerator *codegen, float val) {
+        return ConstantFP::get(Type::getFloatTy(codegen->getContext()), val);
     }
     // Creates a LLVM::Value* of integer64 type with a value of zero.
     Value *GetZero_64(CodeGenerator *codegen) {
@@ -335,30 +339,85 @@ namespace Helpers {
     Value *GetTwo_64(CodeGenerator *codegen) {
         return GetInt64(codegen, 2);
     }
+    // Creates a LLVM::Value* of integer32 type with a value of zero.
+    llvm::Value *GetZero_32(CodeGenerator *codegen) {
+        return GetInt32(codegen, 0);
+    }
+    // Creates a LLVM::Value* of integer32 type with a value of one.
+    llvm::Value *GetOne_32(CodeGenerator *codegen) {
+        return GetInt32(codegen, 1);
+    }
+    // Creates a LLVM::Value* of integer32 type with a value of two.
+    llvm::Value *GetTwo_32(CodeGenerator *codegen) {
+        return GetInt32(codegen, 2);
+    }
+    // Creates a LLVM::Value* of integer16 type with a value of zero.
+    llvm::Value *GetZero_16(CodeGenerator *codegen) {
+        return GetInt16(codegen, 2);
+    }
+    // Creates a LLVM::Value* of integer16 type with a value of one.
+    llvm::Value *GetOne_16(CodeGenerator *codegen) {
+        return GetInt16(codegen, 2);
+    }
+    // Creates a LLVM::Value* of integer16 type with a value of two.
+    llvm::Value *GetTwo_16(CodeGenerator *codegen){
+        return GetInt16(codegen, 2);
+    }
     // Creates a LLVM::Value* of integer8 type with a value of zero.
     llvm::Value *GetZero_8(CodeGenerator *codegen) {
-        return GetInt(codegen, 0, 0);
+        return GetInt8(codegen, 0);
     }
     // Creates a LLVM::Value* of integer8 type with a value of one.
     llvm::Value *GetOne_8(CodeGenerator *codegen) {
-        return GetInt(codegen, 1, 8);
+        return GetInt8(codegen, 1);
     }
     // Creates a LLVM::Value* of integer8 type with a value of two.
     llvm::Value *GetTwo_8(CodeGenerator *codegen) {
-        return GetInt(codegen, 2, 8);
+        return GetInt8(codegen, 2);
     }
-
     // Creates a LLVM::Value* of integer type with specified width from the value passed.
     Value *GetInt(CodeGenerator *codegen, demi_int val, int bitwidth) {
-        return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val));
+        return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val, true));
+    }
+    // Creates a LLVM::Value* of integer type with specified width from the value passed.
+    Value *GetUInt(CodeGenerator *codegen, demi_int val, int bitwidth) {
+        return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val, false));
     }
     // Creates a LLVM::Value* of integer1 type from the value passed.
     Value *GetBoolean(CodeGenerator *codegen, int val) {
         return ConstantInt::get(Type::getInt1Ty(codegen->getContext()), APInt(1, val));
     }
-    // Creates a LLVM::Value* of integer64 type from the value passed.
-    Value *GetInt64(CodeGenerator *codegen, demi_int val) {
+    // Creates a LLVM::Value* of signed integer64 type from the value passed.
+    llvm::Value *GetInt64(CodeGenerator *codegen, demi_int val) {
         return GetInt(codegen, val, 64);
+    }
+    // Creates a LLVM::Value* of signed integer32 type from the value passed.
+    llvm::Value *GetInt32(CodeGenerator *codegen, demi_int val) {
+        return GetInt(codegen, val, 32);
+    }
+    // Creates a LLVM::Value* of signed integer16 type from the value passed.
+    llvm::Value *GetInt16(CodeGenerator *codegen, demi_int val) {
+        return GetInt(codegen, val, 16);
+    }
+    // Creates a LLVM::Value* of signed integer8 type from the value passed.
+    llvm::Value *GetInt8(CodeGenerator *codegen, demi_int val) {
+        return GetInt(codegen, val, 8);
+    }
+    // Creates a LLVM::Value* of unsigned integer64 type from the value passed.
+    llvm::Value *GetUInt64(CodeGenerator *codegen, demi_int val) {
+        return GetUInt(codegen, val, 64);
+    }
+    // Creates a LLVM::Value* of unsigned integer32 type from the value passed.
+    llvm::Value *GetUInt32(CodeGenerator *codegen, demi_int val) {
+        return GetUInt(codegen, val, 32);
+    }
+    // Creates a LLVM::Value* of unsigned integer16 type from the value passed.
+    llvm::Value *GetUInt16(CodeGenerator *codegen, demi_int val) {
+        return GetUInt(codegen, val, 16);
+    }
+    // Creates a LLVM::Value* of unsigned integer8 type from the value passed.
+    llvm::Value *GetUInt8(CodeGenerator *codegen, demi_int val) {
+        return GetUInt(codegen, val, 8);
     }
     // Creates a LLVM::Value* of integer8* type from the value passed.
     Value *GetString(CodeGenerator *codegen, std::string val) {
@@ -385,8 +444,8 @@ namespace Helpers {
     std::string GetLLVMTypeName(Type *Ty) {
         switch (Ty->getTypeID()) {
         case Type::TypeID::VoidTyID: return "void";                     //  0: type with no size
-        case Type::TypeID::FloatTyID: return "float32";                 //  2: 32-bit floating point type
-        case Type::TypeID::DoubleTyID: return "float64";                //  3: 64-bit floating point type
+        case Type::TypeID::FloatTyID: return "float";                 //  2: 32-bit floating point type
+        case Type::TypeID::DoubleTyID: return "double";                //  3: 64-bit floating point type
 
         case Type::TypeID::IntegerTyID: return "integer";               // 10: Arbitrary bit width integers
         case Type::TypeID::FunctionTyID: return "function";             // 11: Functions
@@ -455,8 +514,19 @@ namespace Helpers {
         switch (typeNode->getTypeType()) {
         default: return nullptr;
         case node_boolean: return codegen->getBuilder().getFalse();
+        case node_float: return GetFloat(codegen, 0.0f);
         case node_double: return GetDouble(codegen, 0.0);
-        case node_integer: return GetInt64(codegen, 0);
+
+        case node_signed_integer8: return GetInt8(codegen, 0);
+        case node_signed_integer16: return GetInt16(codegen, 0);
+        case node_signed_integer32: return GetInt32(codegen, 0);
+        case node_signed_integer64: return GetInt64(codegen, 0);
+
+        case node_unsigned_integer8: return GetUInt8(codegen, 0);
+        case node_unsigned_integer16: return GetUInt16(codegen, 0);
+        case node_unsigned_integer32: return GetUInt32(codegen, 0);
+        case node_unsigned_integer64: return GetUInt64(codegen, 0);
+
         case node_string: return GetString(codegen, "");
         }
     }
@@ -466,7 +536,8 @@ namespace Helpers {
         default: return nullptr;
         case Type::PointerTyID: return ConstantPointerNull::get(0);
         case Type::DoubleTyID: return GetDouble(codegen, 0.0);
-        case Type::IntegerTyID: return GetInt64(codegen, 0);
+        case Type::FloatTyID: return GetFloat(codegen, 0.0f);
+        case Type::IntegerTyID: return GetUInt32(codegen, 0);
         }
     }
 

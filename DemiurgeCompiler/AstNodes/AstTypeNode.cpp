@@ -34,9 +34,21 @@ Type *AstTypeNode::GetLLVMType(CodeGenerator *codegen) {
     Type *type;
     switch (this->TypeType) {
     default: return Helpers::Error(this->getPos(), "Unknown type.");
-    case node_boolean: type = Type::getInt1Ty(codegen->getContext()); break;
+    
     case node_double: type = Type::getDoubleTy(codegen->getContext()); break;
-    case node_integer: type = Type::getInt64Ty(codegen->getContext()); break;
+    case node_float: type = Type::getFloatTy(codegen->getContext()); break;
+    
+    case node_boolean: type = Type::getInt1Ty(codegen->getContext()); break;
+    case node_signed_integer8: type = Type::getInt8Ty(codegen->getContext()); break;
+    case node_signed_integer16: type = Type::getInt16Ty(codegen->getContext()); break;
+    case node_signed_integer32: type = Type::getInt32Ty(codegen->getContext()); break;
+    case node_signed_integer64: type = Type::getInt64Ty(codegen->getContext()); break;
+
+    case node_unsigned_integer8: type = Type::getInt8Ty(codegen->getContext()); break;
+    case node_unsigned_integer16: type = Type::getInt16Ty(codegen->getContext()); break;
+    case node_unsigned_integer32: type = Type::getInt32Ty(codegen->getContext()); break;
+    case node_unsigned_integer64: type = Type::getInt64Ty(codegen->getContext()); break;
+
     case node_string: type = Type::getInt8PtrTy(codegen->getContext()); break;
     case node_void: type = Type::getVoidTy(codegen->getContext()); break;
     }

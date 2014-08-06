@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     args.push_back(argv[0]); // program name.
     args.push_back("-c");
     //args.push_back("examples/add.demi");
-    args.push_back("examples/arrays.demi");
+    //args.push_back("examples/arrays.demi");
     //args.push_back("examples/fibR.demi");
     //args.push_back("examples/fizzbuzz.demi");
     //args.push_back("examples/gcd.demi");
@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
     //args.push_back("examples/tests/bitwise.demi");
     //args.push_back("examples/tests/complex-boolean.demi");
     //args.push_back("examples/tests/simple-boolean.demi");
+    args.push_back("examples/all-number-types.demi");
 
 #else
     args.assign(argv, argv + argc);
