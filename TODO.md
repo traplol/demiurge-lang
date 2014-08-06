@@ -1,17 +1,17 @@
 ### Refactor
-  - Refactor a directory structure
-  - AstNodes need dedicated files or categories
+  - ~~Refactor a directory structure~~
+  - ~~AstNodes need dedicated files or categories~~
   - Namespacing
 
 ### Arrays
-  - Lexical Parsing
+  - ~~Lexical Parsing~~
   - Array instantiation 
     + Static and Dynamic
-  - Subscript operator
+  - ~~Subscript operator~~
     + Compile time bound checking for unsafe static arrays
         - Warn, don't error
-    + Array access
-    + Array modification
+    + ~~Array access~~
+    + ~~Array modification~~
 
 ### Garbage collection
   - Compile time GC
@@ -26,14 +26,14 @@
     + Vectors
 
 ### Operators
-  - Unary operators
+  - ~~Unary operators~~
   - User defined operators and operator overloading
   - '++' - inc, pre and post
   - '--' - dec, pre and post
   - '..' - range operator
   - '+=' and the other assignment operators
 
-### Scope
+### ~~Scope~~
 
 ### Control Flow
   - For loop
