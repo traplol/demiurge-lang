@@ -1,0 +1,66 @@
+// Initializes all of these variables to the default value 0
+
+func nums():void{
+    var _int8: int8;
+    var _char: char;
+    
+    var _int16: int16;
+    var _short: short;
+    
+    var _int: int;
+    var _int32: int32;
+    
+    var _long: long;
+    var _int64: int64;
+    
+    var _uint8: uint8;
+    var _uchar: uchar;
+    
+    var _uint16: uint16;
+    var _ushort: ushort;
+    
+    var _uint: uint;
+    var _uint32: uint32;
+    
+    var _ulong: ulong;
+    var _uint64: uint64;
+    
+    var _float: float;
+    var _double: double;
+}
+
+func arrs():void{
+    var _int8: int8[5];
+    var _char: char[5];
+    
+    var _int16: int16[5];
+    var _short: short[5];
+    
+    var _int: int[5];
+    var _int32: int32[5];
+    
+    var _long: long[5];
+    var _int64: int64[5];
+    
+    var _uint8: uint8[5];
+    var _uchar: uchar[5];
+    
+    var _uint16: uint16[5];
+    var _ushort: ushort[5];
+    
+    var _uint: uint[5];
+    var _uint32: uint32[5];
+    
+    var _ulong: ulong[5];
+    var _uint64: uint64[5];
+    
+    var _float: float[5];
+    var _double: double[5];
+}
+
+func main():void {
+    nums();
+    arrs();
+    
+
+}
