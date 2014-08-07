@@ -31,17 +31,23 @@ namespace Helpers {
         llvm::Value *intintAdd(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintSub(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintMul(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
-        llvm::Value *intintDiv(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
-        llvm::Value *intintMod(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSDiv(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSMod(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintUDiv(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintUMod(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintAnd(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintOr(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintXor(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintSHL(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintSHR(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
-        llvm::Value *intintLT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
-        llvm::Value *intintGT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
-        llvm::Value *intintLE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
-        llvm::Value *intintGE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSLT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSGT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSLE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintSGE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintULT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintUGT(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintULE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *intintUGE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintEQ(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *intintNE(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
 
@@ -93,6 +99,9 @@ namespace Helpers {
     
     // Creates a LLVM::Value* of float type from the llvm::Value passed.
     llvm::Value *GetFloat(CodeGenerator *codegen, double val);
+
+    // Normalizes integer bitwidths, basically just casts up to the larger.
+    void NormalizeIntegerWidths(CodeGenerator *codegen, llvm::Value *lhs, llvm::Value *rhs);
 
     // Creates a LLVM::Value* of signed integer type with specified width from the value passed.
     llvm::Value *GetInt(CodeGenerator *codegen, demi_int val, int bitwidth);

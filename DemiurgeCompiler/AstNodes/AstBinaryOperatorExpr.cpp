@@ -58,6 +58,9 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     if (l == nullptr || r == nullptr) return Helpers::Error(this->getPos(), "Could not evaluate expression!");
     Type *lType = l->getType();
     Type *rType = r->getType();
+    if (lType->isIntegerTy() && rType->isIntegerTy()) {
+        Helpers::NormalizeIntegerWidths(codegen, l, r);
+    }
     auto funcPtr = Helpers::GetBinopCodeGenFuncPointer(this->Operator, lType, rType);
     if (funcPtr == nullptr) {
         return Helpers::Error(this->getPos(), "Operator '%s' does not exist for '%s' and '%s'",

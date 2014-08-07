@@ -46,11 +46,17 @@ namespace Helpers {
         Value *intintMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateMul(lhs, rhs, "intintMul");
         }
-        Value *intintDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+        Value *intintSDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateSDiv(lhs, rhs, "intintDiv");
         }
-        Value *intintMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+        Value *intintSMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateSRem(lhs, rhs, "intintMod");
+        }
+        Value *intintUDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateUDiv(lhs, rhs, "intintDiv");
+        }
+        Value *intintUMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateURem(lhs, rhs, "intintMod");
         }
         Value *intintAnd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateAnd(lhs, rhs, "intintAnd");
@@ -67,17 +73,29 @@ namespace Helpers {
         Value *intintSHR(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateLShr(lhs, rhs, "intintRSH");
         }
-        Value *intintLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+        Value *intintSLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateICmpSLT(lhs, rhs, "intintLT");
         }
-        Value *intintGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+        Value *intintSGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateICmpSGT(lhs, rhs, "intintGT");
         }
-        Value *intintLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+        Value *intintSLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateICmpSLE(lhs, rhs, "intintLE");
         }
-        Value *intintGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+        Value *intintSGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateICmpSGE(lhs, rhs, "intintGE");
+        }
+        Value *intintULT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateICmpULT(lhs, rhs, "intintLT");
+        }
+        Value *intintUGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateICmpUGT(lhs, rhs, "intintGT");
+        }
+        Value *intintULE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateICmpULE(lhs, rhs, "intintLE");
+        }
+        Value *intintUGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+            return codegen->getBuilder().CreateICmpUGE(lhs, rhs, "intintGE");
         }
         Value *intintEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
             return codegen->getBuilder().CreateICmpEQ(lhs, rhs, "intintEQ");
@@ -86,23 +104,25 @@ namespace Helpers {
             return codegen->getBuilder().CreateICmpNE(lhs, rhs, "intintNE");
         }
 
-        BinOpCodeGenFuncPtr getIntIntFuncPtr(TokenType type) {
-            switch (type) {
+
+
+        BinOpCodeGenFuncPtr getIntIntFuncPtr(TokenType oper) {
+            switch (oper) {
             default: return FailedLookupFunc;
             case '+': return intintAdd;
             case '-': return intintSub;
             case '*': return intintMul;
-            case '/': return intintDiv;
-            case '%': return intintMod;
-            case '<': return intintLT;
-            case '>': return intintGT;
+            case '/': return intintSDiv;
+            case '%': return intintSMod;
+            case '<': return intintSLT;
+            case '>': return intintSGT;
             case '&': return intintAnd;
             case '|': return intintOr;
             case '^': return intintXor;
             case tok_leftshift: return intintSHL;
             case tok_rightshift: return intintSHR;
-            case tok_lessequal: return intintLE;
-            case tok_greatequal: return intintGE;
+            case tok_lessequal: return intintSLE;
+            case tok_greatequal: return intintSGE;
             case tok_equalequal: return intintEQ;
             case tok_notequal: return intintNE;
             }
@@ -194,8 +214,8 @@ namespace Helpers {
             return codegen->getBuilder().CreateFCmpONE(lhs, rhs, "intdoubleNE");
         }
 
-        BinOpCodeGenFuncPtr getIntDoubleFuncPtr(TokenType type) {
-            switch (type) {
+        BinOpCodeGenFuncPtr getIntDoubleFuncPtr(TokenType oper) {
+            switch (oper) {
             default: return FailedLookupFunc;
             case '+': return intdoubleAdd;
             case '-': return intdoubleSub;
@@ -246,8 +266,8 @@ namespace Helpers {
             return codegen->getBuilder().CreateFCmpONE(lhs, rhs, "doubledoubleNE");
         }
 
-        BinOpCodeGenFuncPtr getDoubleDoubleFuncPtr(TokenType type) {
-            switch (type) {
+        BinOpCodeGenFuncPtr getDoubleDoubleFuncPtr(TokenType oper) {
+            switch (oper) {
             default: return FailedLookupFunc;
             case '+': return doubledoubleAdd;
             case '-': return doubledoubleSub;
@@ -375,6 +395,23 @@ namespace Helpers {
     llvm::Value *GetTwo_8(CodeGenerator *codegen) {
         return GetInt8(codegen, 2);
     }
+    // Normalizes integer bitwidths, basically just casts up to the larger.
+    void NormalizeIntegerWidths(CodeGenerator *codegen, Value *lhs, Value *rhs) {
+        Type *lType = lhs->getType();
+        Type *rType = rhs->getType();
+        // If either type is not an integer or they are already the same size, return with no change.
+        if (!lType->isIntegerTy() || !rType->isIntegerTy() || lType->getIntegerBitWidth() == rType->getIntegerBitWidth())
+            return;
+
+        if (lType->getIntegerBitWidth() > rType->getIntegerBitWidth()) { // lhs has higher bit width, cast rhs to lhs size.
+            rhs = CreateCastTo(codegen, rhs, lType);
+            //rhs = codegen->getBuilder().CreateIntCast(rhs, lType,)
+        }
+        else { // rhs has higher bit width, cast lhs to rhs size.
+            lhs = CreateCastTo(codegen, lhs, rType);
+        }
+    }
+
     // Creates a LLVM::Value* of integer type with specified width from the value passed.
     Value *GetInt(CodeGenerator *codegen, demi_int val, int bitwidth) {
         return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val, true));

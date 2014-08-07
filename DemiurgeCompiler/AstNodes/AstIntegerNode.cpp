@@ -14,5 +14,5 @@ demi_int AstIntegerNode::getValue() const {
 }
 
 Value *AstIntegerNode::Codegen(CodeGenerator *codegen) {
-    return ConstantInt::get(Type::getInt64Ty(codegen->getContext()), this->Val, true);
+    return ConstantInt::get(Type::getInt32Ty(codegen->getContext()), this->Val, true);
 }

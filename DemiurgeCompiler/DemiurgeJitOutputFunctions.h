@@ -14,6 +14,7 @@ typedef unsigned long long int uint64;
 extern "C" {
 
     EXPORT int printf(const char *fmt, ...);
+    EXPORT uint64 clock();
 
     EXPORT int print(const char *string) {
         printf(string);

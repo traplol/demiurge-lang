@@ -1,0 +1,34 @@
+extern func clock():uint64;
+extern func printf(string,...):void;
+
+
+func fib(n: int): int {
+    if (n < 2) {
+        return n;
+    }
+    else {
+    var prevPrev = 0;
+    var prev = 1;
+    var result = 0;
+    
+    var i = 0;
+    while (i <= n) {
+    
+        result = prev + prevPrev;
+        prevPrev = prev;
+        prev = result;
+    
+        i = i + 1;
+    }
+    
+    return result;
+    }
+}
+
+func main() : int {
+    var start = clock();
+    var f = fib(500000000);
+    var stop = clock();
+    printf("%d in %fms\n", f, 1000.0 * (stop-start) / 1000);
+    return 0;
+}
