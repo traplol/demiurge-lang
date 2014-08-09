@@ -33,7 +33,7 @@ Value *AstForExpr::Codegen(CodeGenerator *codegen) {
     for (unsigned i = 0, size = this->Init.size(); i < size; ++i) {
         IAstExpression *expr = this->Init[i];
         if (expr == nullptr || expr->Codegen(codegen) == nullptr) {
-            return Helpers::Error(expr->getPos(), "Could not initialize 'for' loop.");
+            return Helpers::Error(this->getPos(), "Could not initialize 'for' loop.");
         }
     }
     unsigned varCountAfterInit = codegen->getVarCount();

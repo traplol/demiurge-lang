@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     std::vector<std::string> args;
 #ifdef _DEBUG
     args.push_back(argv[0]); // program name.
-    //args.push_back("--stderr-dump");
+    args.push_back("--stderr-dump");
     args.push_back("-c");
     //args.push_back("examples/test.demi");
     //args.push_back("examples/add.demi");
@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
     //args.push_back("examples/tests/complex-boolean.demi");
     //args.push_back("examples/tests/simple-boolean.demi");
     //args.push_back("examples/benchmarks/demi/fib.demi");
-    args.push_back("examples/benchmarks/demi/small-func.demi");
-    
+    //args.push_back("examples/benchmarks/demi/small-func.demi");
+    args.push_back("examples/benchmarks/demi/big-array.demi");
 
 #else
     args.assign(argv, argv + argc);

@@ -15,6 +15,7 @@ typedef enum tag_TokenType {
     tok_else,               // 'else'
     tok_while,              // 'while'
     tok_for,                // 'for'
+    tok_new,                // 'new'
     
     tok_typeint8,           // 'char', 'int8'
     tok_typeint16,          // 'short', 'int16'
