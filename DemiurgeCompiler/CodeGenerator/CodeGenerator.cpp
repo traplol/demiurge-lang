@@ -91,10 +91,14 @@ void CodeGenerator::initJitOutputFunctions() {
 
 bool CodeGenerator::declareFunctions(TreeContainer *trees) {
     for (int i = 0, e = trees->ExternalDeclarations.size(); i < e; ++i) { // declare external declarations
-        if (trees->ExternalDeclarations[i]->Codegen(this) == nullptr) return false;
+        if (trees->ExternalDeclarations[i]->Codegen(this) == nullptr) {
+            return false;
+        }
     }
     for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // declare user functions
-        if (trees->FunctionDefinitions[i]->getPrototype()->Codegen(this) == nullptr) return false;
+        if (trees->FunctionDefinitions[i]->getPrototype()->Codegen(this) == nullptr) {
+            return false;
+        }
     }
 }
 
@@ -103,12 +107,16 @@ bool CodeGenerator::GenerateCode(TreeContainer *trees) {
     if (!declareFunctions(trees)) return false; // declare functions
     
     for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // define the functions
-        if (trees->FunctionDefinitions[i]->Codegen(this) == nullptr) return false;
+        if (trees->FunctionDefinitions[i]->Codegen(this) == nullptr) {
+            return false;
+        }
     }
 
     // TODO: Top level variables and declare/define them before function declarations.
     for (int i = 0, e = trees->TopLevelExpressions.size(); i < e; ++i) {
-        if (trees->TopLevelExpressions[i]->Codegen(this) == nullptr) return false;
+        if (trees->TopLevelExpressions[i]->Codegen(this) == nullptr) {
+            return false;
+        }
     }
     return true;
 }
@@ -206,8 +214,9 @@ void CodeGenerator::setCurrentFunction(llvm::Function* func) {
 void CodeGenerator::clearNamedValues() { NamedValues.clear(); }
 // Returns the AllocaInst at a given key
 AllocaInst *CodeGenerator::getNamedValue(const std::string &key) const {
-    if (NamedValues.count(key))
-        return NamedValues.at(key); 
+    if (NamedValues.count(key)) {
+        return NamedValues.at(key);
+    }
     return nullptr;
 }
 // Pushes the key to the Scope Stack and sets the AllocaInst at a given key 

@@ -75,6 +75,7 @@
     <ClCompile Include="AstNodes\AstBooleanNode.cpp" />
     <ClCompile Include="AstNodes\AstCallExpr.cpp" />
     <ClCompile Include="AstNodes\AstDoubleNode.cpp" />
+    <ClCompile Include="AstNodes\AstForExpr.cpp" />
     <ClCompile Include="AstNodes\AstIfElseExpr.cpp" />
     <ClCompile Include="AstNodes\AstIntegerNode.cpp" />
     <ClCompile Include="AstNodes\AstReturnExpr.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="AstNodes\AstBooleanNode.h" />
     <ClInclude Include="AstNodes\AstCallExpr.h" />
     <ClInclude Include="AstNodes\AstDoubleNode.h" />
+    <ClInclude Include="AstNodes\AstForExpr.h" />
     <ClInclude Include="AstNodes\AstIfElseExpr.h" />
     <ClInclude Include="AstNodes\AstIntegerNode.h" />
     <ClInclude Include="AstNodes\AstNodeTypes.h" />

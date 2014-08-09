@@ -47,30 +47,35 @@ llvm::Value *AstUnaryOperatorExpr::Codegen(CodeGenerator *codegen) {
 
 Value *AstUnaryOperatorExpr::positive(CodeGenerator *codegen) {
     Value *v = this->Operand->Codegen(codegen);
-    if (!Helpers::IsNumberType(v)) // cannot make a non-number positive
+    if (!Helpers::IsNumberType(v)) {// cannot make a non-number positive
         return Helpers::Error(this->getPos(), "Value is not a number type.");
+    }
     return v; // unary positive does not change the sign.
 }
 Value *AstUnaryOperatorExpr::negative(CodeGenerator *codegen) {
     Value *v = this->Operand->Codegen(codegen);
     
-    if (v->getType()->isFloatingPointTy())
+    if (v->getType()->isFloatingPointTy()) {
         return codegen->getBuilder().CreateFNeg(v, "fneg");
-    if (v->getType()->isIntegerTy())
+    }
+    if (v->getType()->isIntegerTy()) {
         return codegen->getBuilder().CreateNeg(v, "neg");
+    }
 
     return Helpers::Error(this->getPos(), "Value is not a number type."); // cannot make a non-number negative.
 }
 Value *AstUnaryOperatorExpr::logicNegate(CodeGenerator *codegen) {
     Value *v = this->Operand->Codegen(codegen);
-    if (!v->getType()->isIntegerTy(1)) // not int1 (bool)
+    if (!v->getType()->isIntegerTy(1)) { // not int1 (bool)
         return Helpers::Error(this->getPos(), "Value is not bool type.");
+    }
     return codegen->getBuilder().CreateNot(v, "negate");
 }
 Value *AstUnaryOperatorExpr::onesComplement(CodeGenerator *codegen) {
     Value *v = this->Operand->Codegen(codegen);
-    if (!v->getType()->isIntegerTy()) // not integer
+    if (!v->getType()->isIntegerTy()) { // not integer
         return Helpers::Error(this->getPos(), "Value is not integer type.");
+    }
     return codegen->getBuilder().CreateNot(v, "negate");
 }
 Value *AstUnaryOperatorExpr::increment(CodeGenerator *codegen) {
@@ -85,9 +90,12 @@ Value *AstUnaryOperatorExpr::accessElement(CodeGenerator *codegen) {
     Value *gepzero = Helpers::GetZero_64(codegen);
     Value *gepaddr;
     Value *arrayRef[] = { gepzero, idx };
-    if (Helpers::IsPtrToArray(operand))
+    if (Helpers::IsPtrToArray(operand)) {
         gepaddr = codegen->getBuilder().CreateGEP(operand, arrayRef, "arrayidx");
-    else gepaddr = codegen->getBuilder().CreateGEP(operand, idx, "arrayidx");
+    }
+    else {
+        gepaddr = codegen->getBuilder().CreateGEP(operand, idx, "arrayidx");
+    }
     return codegen->getBuilder().CreateLoad(gepaddr);
 }
 
@@ -98,8 +106,11 @@ llvm::Value *AstUnaryOperatorExpr::ArrayAssignment(CodeGenerator *codegen, IAstE
     Value *gepzero = Helpers::GetZero_64(codegen);
     Value *gepaddr;
     Value *arrayRef[] = { gepzero, idx };
-    if (Helpers::IsPtrToArray(operand))
+    if (Helpers::IsPtrToArray(operand)) {
         gepaddr = codegen->getBuilder().CreateGEP(operand, arrayRef, "arrayidx");
-    else gepaddr = codegen->getBuilder().CreateGEP(operand, idx, "arrayidx");
+    }
+    else {
+        gepaddr = codegen->getBuilder().CreateGEP(operand, idx, "arrayidx");
+    }
     return codegen->getBuilder().CreateStore(val, gepaddr);
 }

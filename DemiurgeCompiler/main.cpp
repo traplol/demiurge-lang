@@ -50,8 +50,9 @@ int main(int argc, char **argv) {
 #else
     args.assign(argv, argv + argc);
 #endif
-    if (compiler.UseArgs(args))
+    if (compiler.UseArgs(args)) {
         compiler.Run();
+    }
 #if defined(_WIN32) && defined(_DEBUG)
     system("PAUSE");
 #endif

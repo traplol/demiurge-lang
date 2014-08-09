@@ -31,7 +31,9 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     codegen->clearNamedValues();
     Function *func = this->Prototype->Codegen(codegen);
     codegen->setCurrentFunction(func);
-    if (func == nullptr) return Helpers::Error(this->Prototype->getPos(), "Failed to create function!");
+    if (func == nullptr) {
+        return Helpers::Error(this->Prototype->getPos(), "Failed to create function!");
+    }
 
     // Create our entry block
     BasicBlock *entryBB = BasicBlock::Create(codegen->getContext(), "entry", func); // head of the function

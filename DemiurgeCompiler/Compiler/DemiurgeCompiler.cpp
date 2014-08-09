@@ -34,8 +34,9 @@ bool DemiurgeCompiler::UseArgs(const std::vector<std::string> &args) {
 }
 
 void DemiurgeCompiler::Run() {
-    if (!_canRun)
+    if (!_canRun) {
         return;
+    }
 
     if (!_isInInteractiveMode) {
         auto iter = _sourceFiles.begin();
@@ -44,17 +45,22 @@ void DemiurgeCompiler::Run() {
         for (; iter != end; ++iter) {
             std::vector<Token*> tokens = _lexer->Tokenize(iter->first, iter->second);
             TreeContainer *trees = _parser->ParseTrees(tokens);
-            if (trees == nullptr) return;
+            if (trees == nullptr) {
+                return;
+            }
 
             success = success && _codeGenerator->GenerateCode(trees);
-            if (!success) break;
+            if (!success) {
+                break;
+            }
             //_codeGenerator->DumpLastModule();
             //_codeGenerator->CacheLastModule();
         }
         
         _codeGenerator->DumpMainModule();
-        if (success)
+        if (success) {
             _codeGenerator->RunMain();
+        }
     }
     else {
         // TODO: Interactive mode setup

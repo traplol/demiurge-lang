@@ -25,12 +25,14 @@ const std::string &AstCallExpression::getName() const {
 Value *AstCallExpression::Codegen(CodeGenerator *codegen) {
     // Lookup the name in the global module table.
     Function *CalleeF = codegen->getTheModule()->getFunction(this->Name);
-    if (CalleeF == nullptr)
+    if (CalleeF == nullptr) {
         return Helpers::Error(this->getPos(), "Unknown function, '%s', referenced.", this->Name.c_str());
+    }
 
     // If argument count is mismatched
-    if (CalleeF->arg_size() != Args.size() && !CalleeF->isVarArg())
+    if (CalleeF->arg_size() != Args.size() && !CalleeF->isVarArg()) {
         return Helpers::Error(this->getPos(), "Incorrect number of arguments passed to function '%s'", this->Name.c_str());
+    }
     std::vector<Value*> argsvals;
     auto calleeArg = CalleeF->arg_begin();
     for (unsigned i = 0, len = this->Args.size(); i < len; ++i, ++calleeArg){

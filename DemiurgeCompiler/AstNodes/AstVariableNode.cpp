@@ -17,8 +17,9 @@ const std::string &AstVariableNode::getName() const {
 
 Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
     Value *v = codegen->getNamedValue(this->Name);
-    if (v == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name.");
-
+    if (v == nullptr) {
+        return Helpers::Error(this->getPos(), "Unknown variable name.");
+    }
     if (Helpers::IsPtrToPtr(v)) {
         // TODO:
     }

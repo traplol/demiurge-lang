@@ -14,7 +14,8 @@ bool AstBooleanNode::getValue() const {
 
 
 Value *AstBooleanNode::Codegen(CodeGenerator *codegen) {
-    if (this->Val == true)
+    if (this->Val == true) {
         return codegen->getBuilder().getTrue();
+    }
     return codegen->getBuilder().getFalse();
 }

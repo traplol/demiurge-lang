@@ -38,8 +38,9 @@ Function *PrototypeAst::Codegen(CodeGenerator *codegen) {
     std::vector<Type *> argTypes;
     for (auto itr = this->Args.begin(); itr != this->Args.end(); ++itr) {
         Type *type = itr->second->GetLLVMType(codegen);
-        if (type->isVoidTy()) // void is not a valid function parameter type.
+        if (type->isVoidTy()) {// void is not a valid function parameter type.
             return Helpers::Error(itr->second->getPos(), "'void' not valid function parameter type.");
+        }
         argTypes.push_back(type);
     }
     FunctionType *funcType = FunctionType::get(this->ReturnType->GetLLVMType(codegen), argTypes, this->IsVarArgs);

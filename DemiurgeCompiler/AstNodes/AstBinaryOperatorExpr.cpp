@@ -23,24 +23,31 @@ AstBinaryOperatorExpr::~AstBinaryOperatorExpr() {
 }
 
 Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
-    if (this->LHS == nullptr) 
+    if (this->LHS == nullptr) {
         return nullptr;
+    }
 
-    if (AstUnaryOperatorExpr *arrayAss = dynamic_cast<AstUnaryOperatorExpr*>(this->LHS))
+    if (AstUnaryOperatorExpr *arrayAss = dynamic_cast<AstUnaryOperatorExpr*>(this->LHS)) {
         return arrayAss->ArrayAssignment(codegen, this->RHS); // Array assignment.
+    }
 
     AstVariableNode *lhse = dynamic_cast<AstVariableNode*>(this->LHS);
-    if (lhse == nullptr) // left side of assign operator isn't a variable.
+    if (lhse == nullptr) { // left side of assign operator isn't a variable.
         return Helpers::Error(this->LHS->getPos(), "Destination of assignment operator must be variable.");
+    }
 
     // Codegen to evaluate the expression to store within the variable.
     Value *val = this->RHS->Codegen(codegen);
-    if (val == nullptr) return Helpers::Error(this->RHS->getPos(), "Right operand could not be evaluated.");
+    if (val == nullptr) {
+        return Helpers::Error(this->RHS->getPos(), "Right operand could not be evaluated.");
+    }
 
     // Lookup the name of the variable
     
     Value *variable = codegen->getNamedValue(lhse->getName());
-    if (variable == nullptr) return Helpers::Error(this->getPos(), "Unknown variable name '%s'", lhse->getName().c_str());
+    if (variable == nullptr) {
+        return Helpers::Error(this->getPos(), "Unknown variable name '%s'", lhse->getName().c_str());
+    }
 
     // Implicit casting to destination type when assigning to variables.
     Type *varType = variable->getType()->getContainedType(0);
@@ -55,7 +62,9 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     }
     Value *l = this->LHS->Codegen(codegen);
     Value *r = this->RHS->Codegen(codegen);
-    if (l == nullptr || r == nullptr) return Helpers::Error(this->getPos(), "Could not evaluate expression!");
+    if (l == nullptr || r == nullptr) {
+        return Helpers::Error(this->getPos(), "Could not evaluate expression!");
+    }
     Type *lType = l->getType();
     Type *rType = r->getType();
     if (lType->isIntegerTy() && rType->isIntegerTy()) {

@@ -81,6 +81,9 @@
     <ClCompile Include="AstNodes\AstUnaryOperatorExpr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AstNodes\AstForExpr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LibComments.h">
@@ -177,6 +180,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AstNodes\AstUnaryOperatorExpr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AstNodes\AstForExpr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

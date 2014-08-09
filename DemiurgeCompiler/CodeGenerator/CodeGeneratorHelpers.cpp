@@ -133,83 +133,116 @@ namespace Helpers {
             return codegen->getBuilder().CreateSIToFP(intValue, Type::getDoubleTy(codegen->getContext()), "uintToFp");
         }
         Value *doubleToInt(CodeGenerator *codegen, Value *doubleValue) {
-            return codegen->getBuilder().CreateSIToFP(doubleValue, Type::getInt64Ty(codegen->getContext()), "fpToUint");
+            return codegen->getBuilder().CreateSIToFP(doubleValue, Type::getInt32Ty(codegen->getContext()), "fpToUint");
         }
 
         Value *intdoubleAdd(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFAdd(lhs, rhs, "intdoubleAdd");
         }
         Value *intdoubleSub(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFSub(lhs, rhs, "intdoubleSub");
         }
         Value *intdoubleMul(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFMul(lhs, rhs, "intdoubleMul");
         }
         Value *intdoubleDiv(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFDiv(lhs, rhs, "intdoubleDiv");
         }
         Value *intdoubleMod(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFRem(lhs, rhs, "intdoubleMod");
         }
         Value *intdoubleLT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFCmpULT(lhs, rhs, "intdoubleLT");
         }
         Value *intdoubleGT(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFCmpUGT(lhs, rhs, "intdoubleGT");
         }
         Value *intdoubleLE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFCmpULE(lhs, rhs, "intdoubleLE");
         }
         Value *intdoubleGE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFCmpUGE(lhs, rhs, "intdoubleGE");
         }
         Value *intdoubleEQ(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->isIntegerTy())
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFCmpOEQ(lhs, rhs, "intdoubleEQ");
         }
         Value *intdoubleNE(CodeGenerator *codegen, Value *lhs, Value *rhs) {
-            if (lhs->getType()->getTypeID() == Type::TypeID::IntegerTyID)
+            if (lhs->getType()->isIntegerTy()) {
                 lhs = intToDouble(codegen, lhs);
-            else rhs = intToDouble(codegen, rhs);
+            }
+            else {
+                rhs = intToDouble(codegen, rhs);
+            }
 
             return codegen->getBuilder().CreateFCmpONE(lhs, rhs, "intdoubleNE");
         }
@@ -295,7 +328,9 @@ namespace Helpers {
     // Returns a pointer to a function which will generate the proper LLVM code to handle the operator and types passed.
     BinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType) {
         auto func = BinOperations::getBinOpLookupTable()[lType->getTypeID()][rType->getTypeID()];
-        if (func == nullptr) return nullptr;
+        if (func == nullptr) {
+            return nullptr;
+        }
         return func(Operator);
     }
 
@@ -307,7 +342,6 @@ namespace Helpers {
         std::vector<Value*> vals;
         for (unsigned i = 0, size = block.size(); i < size; ++i) {
             IAstExpression *expr = block[i];
-            if (expr->getNodeType() == node_var)
             if (codegen->getBuilder().GetInsertBlock()->getTerminator() != nullptr) // stops multiple terminators per block.
             {
                 Warning(expr->getPos(), "Unreachable code.");
@@ -418,8 +452,9 @@ namespace Helpers {
         Type *lType = lhs->getType();
         Type *rType = rhs->getType();
         // If either type is not an integer or they are already the same size, return with no change.
-        if (!lType->isIntegerTy() || !rType->isIntegerTy() || lType->getIntegerBitWidth() == rType->getIntegerBitWidth())
+        if (!lType->isIntegerTy() || !rType->isIntegerTy() || lType->getIntegerBitWidth() == rType->getIntegerBitWidth()) {
             return;
+        }
 
         if (lType->getIntegerBitWidth() > rType->getIntegerBitWidth()) { // lhs has higher bit width, cast rhs to lhs size.
             rhs = CreateCastTo(codegen, rhs, lType);
@@ -529,30 +564,35 @@ namespace Helpers {
 
     // Will attempt to cast one value to another type and sets 'castSuccessful' to true if a cast happened, otherwise false.
     Value *CreateCastTo(CodeGenerator *codegen, Value *val, Type *castToType, bool *castSuccessful) {
-        if (castSuccessful != nullptr)
+        if (castSuccessful != nullptr) {
             *castSuccessful = false;
+        }
         Type *valType = val->getType();
         if (valType->isIntegerTy() && castToType->isIntegerTy()) {
             unsigned int fromWidth = val->getType()->getIntegerBitWidth();
             unsigned int toWidth = castToType->getIntegerBitWidth();
             if (fromWidth != toWidth) { // resize the width of the the val
-                if (castSuccessful != nullptr)
+                if (castSuccessful != nullptr) {
                     *castSuccessful = true;
+                }
                 return codegen->getBuilder().CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
             }
         }
         auto valTypeId = valType->getTypeID();
         auto castTypeId = castToType->getTypeID();
-        if (valTypeId == castTypeId) // already same type, just return what was sent
+        if (valTypeId == castTypeId) {// already same type, just return what was sent
             return val;
+        }
         if (valType->canLosslesslyBitCastTo(castToType)) { // bitcasting
-            if (castSuccessful != nullptr)
+            if (castSuccessful != nullptr) {
                 *castSuccessful = true;
+            }
             return codegen->getBuilder().CreateBitCast(val, castToType, "bitcasted");
         }
         if (CastInst::isCastable(valType, castToType)) { // typical cast to type
-            if (castSuccessful != nullptr)
+            if (castSuccessful != nullptr) {
                 *castSuccessful = true;
+            }
             return codegen->getBuilder().CreateCast(CastInst::getCastOpcode(val, true, castToType, true), val, castToType, "castto");
         }
         return val; // if we hit this fast, we failed to cast so just return what was passed.
@@ -560,8 +600,9 @@ namespace Helpers {
 
     // Used to implicitly cast numbers such as integers and doubles but not pointers.
     Value *CreateImplicitCast(CodeGenerator *codegen, Value *val, Type *castToType, bool *castSuccessful) {
-        if (IsNumberType(val)) // only implicityly cast number.
+        if (IsNumberType(val)) { // only implicityly cast number.
             return CreateCastTo(codegen, val, castToType, castSuccessful);
+        }
         return val;
     }
 

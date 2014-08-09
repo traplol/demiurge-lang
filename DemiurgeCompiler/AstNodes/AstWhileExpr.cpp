@@ -19,10 +19,12 @@ AstWhileExpr::~AstWhileExpr() {
 
 Value *AstWhileExpr::Codegen(CodeGenerator *codegen) {
     Value *cond = this->Condition->Codegen(codegen);
-    if (cond == nullptr)
+    if (cond == nullptr) {
         return Helpers::Error(this->Condition->getPos(), "Could not evaluate 'while' condition.");
-    if (!cond->getType()->isIntegerTy()) // all booleans are integers, so check if the condition is not one and error out.
+    }
+    if (!cond->getType()->isIntegerTy()) {// all booleans are integers, so check if the condition is not one and error out.
         return Helpers::Error(this->Condition->getPos(), "'while' condition not boolean type.");
+    }
 
     Value *tobool = Helpers::ToBoolean(codegen, cond);
 
