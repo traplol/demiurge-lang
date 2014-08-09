@@ -183,7 +183,7 @@ Token *Lexer::buildNumber() {
     _lastChar = getNextChar();
     int decimalCounter = 0; // don't want to have more than 1 decimal in our number
     while (isdigit(_lastChar) || _lastChar == '.') {
-        if (decimalCounter > 1 && _lastChar == '.') { 
+        if (decimalCounter >= 1 && _lastChar == '.') { 
             break;
         }
         if (_lastChar == '.') { // start counting our decimals
