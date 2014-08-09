@@ -36,7 +36,7 @@
 ### ~~Scope~~
 
 ### Control Flow
-  - ~~For loop
+  - ~~For loop~~
     + ~~for (var i = 0; i < 10; ++i) {}   - Standard for loop.~~
     + for (i = 0 in 0..10;){}  - essentially the same as the line above
   - Switch case
