@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     //args.push_back("examples/add.demi");
     //args.push_back("examples/arrays.demi");
     //args.push_back("examples/fibR.demi");
-    args.push_back("examples/fib.demi");
+    //args.push_back("examples/fib.demi");
     //args.push_back("examples/fizzbuzz.demi");
     //args.push_back("examples/gcd.demi");
     //args.push_back("examples/ifelse.demi");
@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
     //args.push_back("examples/variables.demi");
     //args.push_back("examples/void-return.demi");
     //args.push_back("examples/whileloops.demi");
+    args.push_back("examples/for-loops.demi");
     //args.push_back("examples/tests/arithmetic.demi");
     //args.push_back("examples/tests/bitwise.demi");
     //args.push_back("examples/tests/complex-boolean.demi");

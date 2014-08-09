@@ -20,6 +20,7 @@
 #include "../AstNodes/AstVarExpr.h"
 #include "../AstNodes/AstVariableNode.h"
 #include "../AstNodes/AstWhileExpr.h"
+#include "../AstNodes/AstForExpr.h"
 #include "../AstNodes/FunctionAst.h"
 #include "../AstNodes/PrototypeAst.h"
 #include "../AstNodes/IAstExpression.h"
@@ -509,9 +510,74 @@ IAstExpression *Parser::parseWhileExpression() {
 //                          <expression> ';'                        -- Condition
 //                          <expression> (',' <expression>)*        -- Afterthought
 //                          ')'         
-//                          '{' <expression>* '}'                       -- Body
+//                          '{' <expression>* '}'                   -- Body
 IAstExpression *Parser::parseForExpression() {
-    return nullptr;
+    if (_curTokenType != tok_for) {
+        return Error("Expected 'for'");
+    }
+    next(); // eat 'for'
+
+    if (_curTokenType != '(') {
+        return Error("Expected '('");
+    }
+    next(); // eat '('
+
+    std::vector<IAstExpression*> init;
+    IAstExpression* condition;
+    std::vector<IAstExpression*> afterthough;
+    
+    // Parse the for loop initialization.
+    while (_curTokenType != ';') {
+        IAstExpression *expr = parseExpression();
+        if (expr == nullptr) {
+            expr = parseVarExpression();
+        }
+        init.push_back(expr);
+        if (_curTokenType != ',') {
+            break;
+        }
+        next(); // eat ','
+    }
+    if (_curTokenType != ';') {
+        return Error("Expected ';'.");
+    }
+    next(); // eat ';'
+
+    // Parse the for loop condition.
+    condition = parseExpression();
+    if (condition == nullptr) {
+        return Error("Failed to parse 'for' condition.");
+    }
+    if (_curTokenType != ';') {
+        return Error("Expected ';'.");
+    }
+    next(); // eat ';'
+    // Parse the for loop afterthought
+    while (_curTokenType != ')') {
+        afterthough.push_back(parseExpression());
+        if (_curTokenType != ',') {
+            break;
+        }
+        next(); // eat ','
+    }
+    if (_curTokenType != ')') {
+        return Error("Expected ')'.");
+    }
+    next(); // eat ')'
+
+    // Parse the for loop body.
+    std::vector<IAstExpression*> body;
+    if (_curTokenType != '{') { // Assume single statement for loop.
+        body.push_back(parseExpression());
+    }
+    else { // has '{'
+        next(); // eat '{'
+        while (_curTokenType != '}') {
+            body.push_back(parseBlockExpression());
+        }
+        next(); // eat '}'
+    }
+    return new AstForExpr(init, condition, afterthough, body, _curToken->Line(), _curToken->Column());
 }
 
 // <arraysubscript>     ::= '[' <expression> ']'
