@@ -76,7 +76,9 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         codegen->getOutsideBlock()->removeFromParent();
     }
     if (verifyFunction(*func, &errs())) { // more branch cleanup
-        func->dump();
+        if (codegen->getDumpOnFail()) {
+            func->dump();
+        }
         func->eraseFromParent();
         return Helpers::Error(this->Pos, "Error creating function body.");
     }

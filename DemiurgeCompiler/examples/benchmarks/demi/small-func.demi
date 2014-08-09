@@ -1,0 +1,19 @@
+extern func clock():uint64;
+extern func printf(string,...):void;
+
+
+func smallFunc(x: int): int {
+    return x;
+}
+
+func main() : int {
+    var start = clock();
+    var iters = 500000000;
+    var last: int;
+    for (var x = 1; x <= iters; x = x + 1) {
+        last = smallFunc(x);
+    }
+    var stop = clock();
+    printf("%d calls in %dms\n",last , stop-start);
+    return 0;
+}

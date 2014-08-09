@@ -57,7 +57,9 @@ void DemiurgeCompiler::Run() {
             //_codeGenerator->CacheLastModule();
         }
         
-        _codeGenerator->DumpMainModule();
+        if (this->_stderrDump) {
+            _codeGenerator->DumpMainModule();
+        }
         if (success) {
             _codeGenerator->RunMain();
         }
@@ -97,6 +99,9 @@ bool DemiurgeCompiler::setStateVars() {
         else if (str == "--help" || str == "-h") {
             printHelpMessage();
             return false;
+        }
+        else if (str == "--stderr-dump") {
+            _stderrDump = true;
         }
         else {
             fprintf(stderr, "Unknown argument '%s' used, try -h or --help for usage.\n", str.c_str());

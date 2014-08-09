@@ -23,7 +23,7 @@ public:
     CodeGenerator();
     ~CodeGenerator();
     // Runs the code generator on the ASTs passed
-    bool GenerateCode(TreeContainer *trees);
+    bool GenerateCode(TreeContainer *trees, bool dumpOnFail = false);
     
     // Dumps the main module
     void DumpMainModule();
@@ -90,22 +90,28 @@ public:
     unsigned getVarCount() const;
     // Returns the function currently being created.
     llvm::Function *getCurrentFunction() const;
+    // Sets the currently being generated function.
     void setCurrentFunction(llvm::Function* func);
+    // Returns whether the codegenerator can dump on fail or not.
+    bool getDumpOnFail() const;
 private:
-    llvm::LLVMContext &Context;
-    llvm::IRBuilder<> Builder;
-    llvm::Module *TheModule;
-    llvm::FunctionPassManager *TheFPM;
-    llvm::ExecutionEngine *TheExecutionEngine;
-    llvm::BasicBlock *OutsideBlock;
-    llvm::BasicBlock *ReturnBlock;
-    std::map<std::string, llvm::AllocaInst*> NamedValues;
+    llvm::LLVMContext &_context;
+    llvm::IRBuilder<> _builder;
+    llvm::Module *_theModule;
+    llvm::FunctionPassManager *_theFPM;
+    llvm::ExecutionEngine *_theExecutionEngine;
+    llvm::BasicBlock *_outsideBlock;
+    llvm::BasicBlock *_returnBlock;
+    std::map<std::string, llvm::AllocaInst*> _namedValues;
+    
+    std::vector<std::string> _scopeStack;
+    llvm::Function *_currentFunction;
+    unsigned _varCount;
+    unsigned _nestDepth;
+    bool _dumpOnFail;
+
     void initJitOutputFunctions();
     bool declareFunctions(TreeContainer *trees);
-    std::vector<std::string> ScopeStack;
-    unsigned VarCount = 0;
-    unsigned NestDepth = 0;
-    llvm::Function *CurrentFunction;
 };
 
 #endif

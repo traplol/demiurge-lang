@@ -14,15 +14,15 @@
 
 using namespace llvm;
 CodeGenerator::CodeGenerator() 
-    : Context(getGlobalContext())
-    , Builder(getGlobalContext()) {
+    : _context(getGlobalContext())
+    , _builder(getGlobalContext()) {
     InitializeNativeTarget();
-    TheModule = new Module("Test Module", Context);
+    _theModule = new Module("Test Module", _context);
 
     // Create the JIT.  This takes ownership of the module.
     std::string ErrStr;
-    TheExecutionEngine = EngineBuilder(TheModule).setErrorStr(&ErrStr).create();
-    if (!TheExecutionEngine) {
+    _theExecutionEngine = EngineBuilder(_theModule).setErrorStr(&ErrStr).create();
+    if (!_theExecutionEngine) {
         fprintf(stderr, "Could not create ExecutionEngine: %s\n", ErrStr.c_str());
 #ifdef _WIN32
         system("PAUSE");
@@ -30,26 +30,26 @@ CodeGenerator::CodeGenerator()
         exit(1);
     }
     
-    TheFPM = new FunctionPassManager(TheModule);
+    _theFPM = new FunctionPassManager(_theModule);
 
     // Set up the optimizer pipeline.  Start with registering info about how the
     // target lays out data structures.
-    TheModule->setDataLayout(TheExecutionEngine->getDataLayout());
-    TheFPM->add(new DataLayoutPass(TheModule));
+    _theModule->setDataLayout(_theExecutionEngine->getDataLayout());
+    _theFPM->add(new DataLayoutPass(_theModule));
     // Provide basic AliasAnalysis support for GVN.
-    TheFPM->add(createBasicAliasAnalysisPass());
+    _theFPM->add(createBasicAliasAnalysisPass());
     // Promote allocas to registers.
-    TheFPM->add(createPromoteMemoryToRegisterPass());
+    _theFPM->add(createPromoteMemoryToRegisterPass());
     // Do simple "peephole" optimizations and bit-twiddling optzns.
-    TheFPM->add(createInstructionCombiningPass());
+    _theFPM->add(createInstructionCombiningPass());
     // Reassociate expressions.
-    TheFPM->add(createReassociatePass());
+    _theFPM->add(createReassociatePass());
     // Eliminate Common SubExpressions.
-    TheFPM->add(createGVNPass());
+    _theFPM->add(createGVNPass());
     // Simplify the control flow graph (deleting unreachable blocks, etc).
-    TheFPM->add(createCFGSimplificationPass());
+    _theFPM->add(createCFGSimplificationPass());
 
-    TheFPM->doInitialization();
+    _theFPM->doInitialization();
     initJitOutputFunctions();
 }
 
@@ -102,7 +102,9 @@ bool CodeGenerator::declareFunctions(TreeContainer *trees) {
     }
 }
 
-bool CodeGenerator::GenerateCode(TreeContainer *trees) {
+bool CodeGenerator::GenerateCode(TreeContainer *trees, bool dumpOnFail) {
+
+    this->_dumpOnFail = dumpOnFail;
 
     if (!declareFunctions(trees)) return false; // declare functions
     
@@ -128,19 +130,19 @@ void CodeGenerator::DumpLastModule() {
 }
 
 void CodeGenerator::DumpMainModule() {
-    auto moduleName = TheModule->getModuleIdentifier().c_str();
+    auto moduleName = _theModule->getModuleIdentifier().c_str();
     fprintf(stderr, "\n\n============ BEGIN DUMPING MODULE '%s' ============\n\n", moduleName);
-    TheModule->dump();
+    _theModule->dump();
     fprintf(stderr, "\n\n============ END DUMPING MODULE '%s' ============\n\n", moduleName);
 }
 
 void CodeGenerator::RunMain() {
-    Function *mainFunc = TheModule->getFunction("main");
+    Function *mainFunc = _theModule->getFunction("main");
     if (mainFunc == nullptr) {
         Helpers::Error(PossiblePosition{ -1, -1 }, "No main function found!");
         return;
     }
-    void *mainFnPtr = TheExecutionEngine->getPointerToFunction(mainFunc);
+    void *mainFnPtr = _theExecutionEngine->getPointerToFunction(mainFunc);
 
     int(*FP)() = (int(*)())mainFnPtr;
     FP();
@@ -148,102 +150,110 @@ void CodeGenerator::RunMain() {
 
 // Returns the context
 LLVMContext &CodeGenerator::getContext() const { 
-    return Context; 
+    return _context; 
 }
 
 // Returns the module 
 Module *CodeGenerator::getTheModule() const { 
-    return TheModule; 
+    return _theModule; 
 }
 
 // Returns the function pass manager
 FunctionPassManager *CodeGenerator::getTheFPM() const { 
-    return TheFPM; 
+    return _theFPM; 
 }
 
 // Returns the execution engine
 ExecutionEngine *CodeGenerator::getTheExecutionEngine() const { 
-    return TheExecutionEngine; 
+    return _theExecutionEngine; 
 }
 
 // Returns the instruction builder
 IRBuilder<> &CodeGenerator::getBuilder() { 
-    return Builder; 
+    return _builder; 
 }
 
 // Returns the block to merge to after scope goes away.
 BasicBlock *CodeGenerator::getOutsideBlock() const {
-    return OutsideBlock;
+    return _outsideBlock;
 }
 // Sets the merge block/
 void CodeGenerator::setOutsideBlock(BasicBlock *outsideBlock) {
-    this->OutsideBlock = outsideBlock;
+    this->_outsideBlock = outsideBlock;
 }
 
 // Returns the functions return block
 BasicBlock *CodeGenerator::getReturnBlock() const { 
-    return ReturnBlock; 
+    return _returnBlock; 
 }
 // Sets the functions return block
 void CodeGenerator::setReturnBlock(BasicBlock *returnBlock) { 
-    this->ReturnBlock = returnBlock; 
+    this->_returnBlock = returnBlock; 
 }
 
 // Increments the nest/scope depth
 void CodeGenerator::incrementNestDepth() {
-    this->NestDepth++;
+    this->_nestDepth++;
 }
 // Increments the nest/scope depth
 void CodeGenerator::decrementNestDepth() {
-    this->NestDepth--;
+    this->_nestDepth--;
 }
 // Increments the nest/scope depth
 unsigned CodeGenerator::getNestDepth() const {
-    return this->NestDepth;
+    return this->_nestDepth;
 }
 
 Function *CodeGenerator::getCurrentFunction() const {
-    return this->CurrentFunction;
+    return this->_currentFunction;
 }
 
 void CodeGenerator::setCurrentFunction(llvm::Function* func) {
-    this->CurrentFunction = func;
+    this->_currentFunction = func;
 }
 
 // Clears the named values
-void CodeGenerator::clearNamedValues() { NamedValues.clear(); }
+void CodeGenerator::clearNamedValues() { 
+    _namedValues.clear(); 
+}
 // Returns the AllocaInst at a given key
 AllocaInst *CodeGenerator::getNamedValue(const std::string &key) const {
-    if (NamedValues.count(key)) {
-        return NamedValues.at(key);
+    if (_namedValues.count(key)) {
+        return _namedValues.at(key);
     }
     return nullptr;
 }
 // Pushes the key to the Scope Stack and sets the AllocaInst at a given key 
 // if it does not exist yet, and returns a <itr, bool> pair
 std::pair<std::map<std::string, AllocaInst*>::iterator, bool> CodeGenerator::setNamedValue(std::string key, AllocaInst *val) {
-    auto success = NamedValues.insert({ key, val });
+    auto success = _namedValues.insert({ key, val });
     if (success.second) { // if the variable was successfully created, push it onto the stack.
-        ScopeStack.push_back(key);
+        _scopeStack.push_back(key);
     }
     return success;
 }
 // Erases an AllocaInst from the map.
 void CodeGenerator::eraseNamedValue(const std::string &key) { 
-    NamedValues.erase(key); 
+    _namedValues.erase(key);
 }
 
 // Clears the Scope Stack for the local scope and removes them from the NamedValues set.
 void CodeGenerator::popFromScopeStack(unsigned howMany) {
-    while (!ScopeStack.empty() && howMany-- && VarCount--) {
-        eraseNamedValue(ScopeStack.back());
-        ScopeStack.pop_back();
+    while (!_scopeStack.empty() && howMany-- && _varCount--) {
+        eraseNamedValue(_scopeStack.back());
+        _scopeStack.pop_back();
     }
 }
+// Increments the variable count
 void CodeGenerator::incrementVarCount() { 
-    VarCount++; 
+    _varCount++;
 }
 
+// Returns the Variable count.
 unsigned int CodeGenerator::getVarCount() const { 
-    return VarCount; 
+    return _varCount;
+}
+
+bool CodeGenerator::getDumpOnFail() const {
+    return _dumpOnFail;
 }
