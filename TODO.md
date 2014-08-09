@@ -6,7 +6,7 @@
 ### Arrays
   - ~~Lexical Parsing~~
   - Array instantiation 
-    + Static and Dynamic
+    + ~~Static~~ and Dynamic
   - ~~Subscript operator~~
     + Compile time bound checking for unsafe static arrays
         - Warn, don't error
@@ -36,8 +36,8 @@
 ### ~~Scope~~
 
 ### Control Flow
-  - For loop
-    + for (var i = 0; i < 10; ++i) {}   - Standard for loop.
+  - ~~For loop
+    + ~~for (var i = 0; i < 10; ++i) {}   - Standard for loop.~~
     + for (i = 0 in 0..10;){}  - essentially the same as the line above
   - Switch case
   - continue keyword
