@@ -30,7 +30,7 @@ IAstExpression *AstVarExpr::getAssignmentExpression() const {
 Value *AstVarExpr::Codegen(CodeGenerator *codegen) {
     codegen->incrementVarCount();
 
-    Function *func = codegen->getBuilder().GetInsertBlock()->getParent();
+    Function *func = codegen->getCurrentFunction();
     IAstExpression *expr = this->getAssignmentExpression();
     Value *initialVal = nullptr;
     AllocaInst *Alloca = nullptr;

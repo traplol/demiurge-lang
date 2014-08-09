@@ -26,36 +26,34 @@ Value *AstWhileExpr::Codegen(CodeGenerator *codegen) {
 
     Value *tobool = Helpers::ToBoolean(codegen, cond);
 
-    Function *func = codegen->getBuilder().GetInsertBlock()->getParent();
+    Function *func = codegen->getCurrentFunction();
 
-    BasicBlock *outsideNestBB = codegen->getMergeBlock(); // save the outside to branch to at end of loop.
+    BasicBlock *outsideNestBB = codegen->getOutsideBlock(); // save the outside to branch to at end of loop.
     BasicBlock *whileEndBB = BasicBlock::Create(codegen->getContext(), "while_end", func, outsideNestBB); // end of while loop jumps here
-    codegen->setMergeBlock(whileEndBB); // set the outside merge block for any nested blocks
+    
     BasicBlock *whileBodyBB = BasicBlock::Create(codegen->getContext(), "while_body", func, whileEndBB);
 
+    codegen->setOutsideBlock(whileEndBB);
+
     // evaluate the condition and branch accordingly, 
-    // e.g while (false) {...} should be skipped. 
     codegen->getBuilder().CreateCondBr(tobool, whileBodyBB, whileEndBB);
 
     // emit the body
     codegen->getBuilder().SetInsertPoint(whileBodyBB);
-    bool whileHitReturn = false;
-    Helpers::EmitBlock(codegen, this->WhileBody, true, &whileHitReturn); // emit the while block
-
-
-    if (whileBodyBB->getTerminator() == nullptr)
-        codegen->getBuilder().CreateBr(whileEndBB);
-
-    if (whileEndBB->getTerminator() == nullptr) {
-        // re-evaluate the condition
-        codegen->getBuilder().SetInsertPoint(whileEndBB);
+    Helpers::EmitScopeBlock(codegen, this->WhileBody, true); // emit the while block
+    if (whileBodyBB->getTerminator() == nullptr) {
+        // Check our condition
         cond = this->Condition->Codegen(codegen);
         tobool = Helpers::ToBoolean(codegen, cond);
-        codegen->getBuilder().CreateCondBr(tobool, whileBodyBB, outsideNestBB); // evaluate the condition and branch accordingly
+        codegen->getBuilder().CreateCondBr(cond, whileBodyBB, whileEndBB);
     }
+
+
+    codegen->getBuilder().SetInsertPoint(whileEndBB);
 
     whileBodyBB = codegen->getBuilder().GetInsertBlock();
     whileEndBB = codegen->getBuilder().GetInsertBlock();
-    codegen->getBuilder().SetInsertPoint(outsideNestBB);
-    return whileEndBB;// Helpers::Error(this->getPos(), "While loop not yet implemented");
+    codegen->setOutsideBlock(outsideNestBB);
+    
+    return whileEndBB;
 }

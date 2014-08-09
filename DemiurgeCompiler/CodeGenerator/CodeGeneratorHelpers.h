@@ -84,16 +84,18 @@ namespace Helpers {
     // Returns a pointer to a function which will generate the proper LLVM code to handle the operator and types passed.
     BinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, llvm::Type *lType, llvm::Type *rType);
 
-    // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
+    // EmitScopeBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
-    std::vector<llvm::Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, 
+    std::vector<llvm::Value*> EmitScopeBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, 
         bool stopAtFirstReturn = false, bool *stopped = nullptr);
   
-    // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
-    // the function.  This is used for mutable variables etc.
+    // Create an alloca instruction in the entry block of the function.  This is used for mutable variables etc.
     llvm::AllocaInst *CreateEntryBlockAlloca(CodeGenerator *codegen, llvm::Function *function, const std::string &varName, 
         llvm::Type *type);
-  
+    
+    // Links blocks without a terminator to the next block
+    void LinkBlocksWithoutTerminator(CodeGenerator *codegen, llvm::Function *function);
+
     // Creates a LLVM::Value* of double type from the llvm::Value passed.
     llvm::Value *GetDouble(CodeGenerator *codegen, double val);
     
@@ -172,7 +174,6 @@ namespace Helpers {
     // Creates a LLVM::Value* of signed integer8 type with a value of two.
     llvm::Value *GetTwo_8(CodeGenerator *codegen);
 
-
     // Creates a LLVM::Value* of integer8* type from the llvm::Value passed.
     llvm::Value *GetString(CodeGenerator *codegen, std::string val);
 
@@ -200,12 +201,12 @@ namespace Helpers {
     // Creates a default value for a given type, returns nullptr if default value isn't known.
     llvm::Value *GetDefaultValue(CodeGenerator *codegen, AstTypeNode *typeNode);
     llvm::Value *GetDefaultValue(CodeGenerator *codegen, llvm::Type *type);
-
-    // Returns the current llvm::Function*
-    llvm::Function *GetCurrentFunction(CodeGenerator *codegen);
     
     // Converts a Value* to a boolean.
     llvm::Value *ToBoolean(CodeGenerator *codegen, llvm::Value *num);
+
+    // Creates an ID to append to a label for easier nesting readability
+    std::string MakeLabelId();
 }
 
 #endif

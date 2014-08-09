@@ -53,9 +53,9 @@ public:
     llvm::IRBuilder<> &getBuilder();
 
     // Returns the block to merge to after scope goes away.
-    llvm::BasicBlock *getMergeBlock() const;
+    llvm::BasicBlock *getOutsideBlock() const;
     // Sets the merge block/
-    void setMergeBlock(llvm::BasicBlock *mergeBlock);
+    void setOutsideBlock(llvm::BasicBlock *mergeBlock);
     
     // Returns the functions return block
     llvm::BasicBlock *getReturnBlock() const;
@@ -80,22 +80,32 @@ public:
 
     // Increment the variable count
     void incrementVarCount();
-
+    // Increment the nest/scope depth
+    void incrementNestDepth();
+    // Decrement the nest/scope depth
+    void decrementNestDepth();
+    // Returns the nest/scope depth
+    unsigned getNestDepth() const;
     // Returns the variable count.
-    unsigned int getVarCount() const;
+    unsigned getVarCount() const;
+    // Returns the function currently being created.
+    llvm::Function *getCurrentFunction() const;
+    void setCurrentFunction(llvm::Function* func);
 private:
     llvm::LLVMContext &Context;
     llvm::IRBuilder<> Builder;
     llvm::Module *TheModule;
     llvm::FunctionPassManager *TheFPM;
     llvm::ExecutionEngine *TheExecutionEngine;
-    llvm::BasicBlock *MergeBlock;
+    llvm::BasicBlock *OutsideBlock;
     llvm::BasicBlock *ReturnBlock;
     std::map<std::string, llvm::AllocaInst*> NamedValues;
     void initJitOutputFunctions();
     bool declareFunctions(TreeContainer *trees);
     std::vector<std::string> ScopeStack;
     unsigned VarCount = 0;
+    unsigned NestDepth = 0;
+    llvm::Function *CurrentFunction;
 };
 
 #endif

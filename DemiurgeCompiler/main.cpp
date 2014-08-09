@@ -7,6 +7,7 @@ int platform_not_supported[0];
 
 #include "Compiler/DemiurgeCompiler.h"
 #include <csignal>
+#include <ctime>
 
 DemiurgeCompiler *compilerptr;
 
@@ -15,7 +16,7 @@ void abortCallback(int x) {
 }
 
 int main(int argc, char **argv) {
-
+    srand(time(0));
     signal(SIGABRT, abortCallback);
 
     DemiurgeCompiler compiler;
@@ -24,6 +25,7 @@ int main(int argc, char **argv) {
 #ifdef _DEBUG
     args.push_back(argv[0]); // program name.
     args.push_back("-c");
+    //args.push_back("examples/test.demi");
     //args.push_back("examples/add.demi");
     //args.push_back("examples/arrays.demi");
     //args.push_back("examples/fibR.demi");

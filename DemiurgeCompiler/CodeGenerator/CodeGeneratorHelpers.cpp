@@ -299,10 +299,11 @@ namespace Helpers {
         return func(Operator);
     }
 
-    // EmitBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
+    // EmitScopeBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
-    std::vector<Value*> EmitBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, bool stopAtFirstReturn, bool *stopped) {
+    std::vector<Value*> EmitScopeBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, bool stopAtFirstReturn, bool *stopped) {
         unsigned varCount = codegen->getVarCount();
+        codegen->incrementNestDepth();
         std::vector<Value*> vals;
         for (unsigned i = 0, size = block.size(); i < size; ++i) {
             IAstExpression *expr = block[i];
@@ -315,28 +316,45 @@ namespace Helpers {
             Value *val = expr->Codegen(codegen);
             if (val == nullptr) {
                 vals.clear();
-                codegen->popFromScopeStack(codegen->getVarCount() - varCount);
-                return vals;
+                goto RETURN;
             }
             vals.push_back(val);
             if (stopAtFirstReturn && expr->getNodeType() == AstNodeType::node_return) {
                 if (stopped != nullptr) { *stopped = true; }
-                codegen->popFromScopeStack(codegen->getVarCount() - varCount);
-                return vals;
+                goto RETURN;
             }
         }
         if (stopped != nullptr) { *stopped = false; }
+    RETURN:
+        // Pops all variables declared within this scope
         codegen->popFromScopeStack(codegen->getVarCount() - varCount);
+        codegen->decrementNestDepth();
         return vals;
     }
-    // CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
-    // the function.  This is used for mutable variables etc.
+    // Create an alloca instruction in the entry block of the function.  This is used for mutable variables etc.
     AllocaInst *CreateEntryBlockAlloca(CodeGenerator *codegen, Function *function, const std::string &varName, Type *type) {
         BasicBlock *prevInsertPoint = codegen->getBuilder().GetInsertBlock();
         codegen->getBuilder().SetInsertPoint(&function->getEntryBlock(), function->getEntryBlock().begin());
         AllocaInst *Alloca = codegen->getBuilder().CreateAlloca(type, nullptr, varName.c_str());
         codegen->getBuilder().SetInsertPoint(prevInsertPoint);
         return Alloca;
+    }
+
+    // Links blocks without a terminator to the next block
+    void LinkBlocksWithoutTerminator(CodeGenerator *codegen, Function *function) {
+        auto bb = function->getBasicBlockList().begin();
+        auto next = bb;
+        auto end = function->getBasicBlockList().end();
+        // Save the current insert block
+        BasicBlock *restorePoint = codegen->getBuilder().GetInsertBlock();
+        for (; bb != end && ++next != end; ++bb) {
+            if (bb->getTerminator() == nullptr) {
+                codegen->getBuilder().SetInsertPoint(bb);
+                codegen->getBuilder().CreateBr(next);
+            }
+        }
+        // Restore the insert point position.
+        codegen->getBuilder().SetInsertPoint(restorePoint);
     }
 
     // Creates a LLVM::Value* of double type from the value passed.
@@ -578,12 +596,17 @@ namespace Helpers {
         }
     }
 
-    // Returns the current llvm::Function*
-    Function *GetCurrentFunction(CodeGenerator *codegen) {
-        return codegen->getBuilder().GetInsertBlock()->getParent();
-    }
-
     Value *ToBoolean(CodeGenerator *codegen, Value *num) {
         return codegen->getBuilder().CreateICmpNE(num, codegen->getBuilder().getFalse(), "tobool");
+    }
+
+    // Creates an ID to append to a label for easier nesting readability
+    std::string MakeLabelId() {
+        std::string labelId;
+        
+        for (char i = 0; i < 5; ++i) {
+            labelId += (char)((rand() % 26) + 65);
+        }
+        return labelId;
     }
 }

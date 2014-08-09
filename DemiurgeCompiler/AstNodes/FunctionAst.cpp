@@ -30,13 +30,13 @@ PrototypeAst *FunctionAst::getPrototype() const {
 Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     codegen->clearNamedValues();
     Function *func = this->Prototype->Codegen(codegen);
+    codegen->setCurrentFunction(func);
     if (func == nullptr) return Helpers::Error(this->Prototype->getPos(), "Failed to create function!");
 
     // Create our entry block
     BasicBlock *entryBB = BasicBlock::Create(codegen->getContext(), "entry", func); // head of the function
-    BasicBlock *mergeBB = BasicBlock::Create(codegen->getContext(), "merge", func); // where everything merges
-    BasicBlock *retBB = BasicBlock::Create(codegen->getContext(), "return", func); // where a return will be branched to on void return type.
-    codegen->setReturnBlock(retBB); // save our return block to jump to.
+    
+    //codegen->setReturnBlock(retBB); // save our return block to jump to.
     codegen->getBuilder().SetInsertPoint(entryBB);
     this->Prototype->CreateArgumentAllocas(codegen, func);
     Type *returnType = this->Prototype->getReturnType()->GetLLVMType(codegen);
@@ -45,9 +45,12 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         retVal = Helpers::CreateEntryBlockAlloca(codegen, func, COMPILER_RETURN_VALUE_STRING, returnType);
         codegen->setNamedValue(COMPILER_RETURN_VALUE_STRING, retVal);
     }
-    codegen->setMergeBlock(mergeBB);
-    Helpers::EmitBlock(codegen, this->FunctionBody, false);
-
+    codegen->setOutsideBlock(nullptr); // if the merge block is a nullptr we will know we are at depth 0
+    Helpers::EmitScopeBlock(codegen, this->FunctionBody);
+    // Go back and look for any blocks without a terminator and branch it to the next block
+    // this is typically used to jump back after a scope finishes.
+    Helpers::LinkBlocksWithoutTerminator(codegen, func);
+    BasicBlock *retBB = BasicBlock::Create(codegen->getContext(), "return", func); // where a return will be branched to on void return type.
     if (codegen->getBuilder().GetInsertBlock()->getTerminator() == nullptr) { // missing a terminator, try to branch to default return block.
         codegen->getBuilder().CreateBr(retBB);
         // Switch to the return block
@@ -67,8 +70,8 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         retBB->removeFromParent();
     }
 
-    if (mergeBB->getTerminator() == nullptr) { // do some branch cleanup
-        mergeBB->removeFromParent();
+    if (codegen->getOutsideBlock() != nullptr && codegen->getOutsideBlock()->getTerminator() == nullptr) { // do some branch cleanup
+        codegen->getOutsideBlock()->removeFromParent();
     }
     if (verifyFunction(*func, &errs())) { // more branch cleanup
         func->dump();
@@ -78,5 +81,6 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
     else { // try to optimize the function by running the function pass manager
         codegen->getTheFPM()->run(*func);
     }
+    codegen->setCurrentFunction(nullptr);
     return func; // might as well return the generated function for potential closure support later.
 }

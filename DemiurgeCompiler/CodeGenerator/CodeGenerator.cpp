@@ -164,12 +164,12 @@ IRBuilder<> &CodeGenerator::getBuilder() {
 }
 
 // Returns the block to merge to after scope goes away.
-BasicBlock *CodeGenerator::getMergeBlock() const { 
-    return MergeBlock; 
+BasicBlock *CodeGenerator::getOutsideBlock() const {
+    return OutsideBlock;
 }
 // Sets the merge block/
-void CodeGenerator::setMergeBlock(BasicBlock *mergeBlock) { 
-    this->MergeBlock = mergeBlock; 
+void CodeGenerator::setOutsideBlock(BasicBlock *outsideBlock) {
+    this->OutsideBlock = outsideBlock;
 }
 
 // Returns the functions return block
@@ -179,6 +179,27 @@ BasicBlock *CodeGenerator::getReturnBlock() const {
 // Sets the functions return block
 void CodeGenerator::setReturnBlock(BasicBlock *returnBlock) { 
     this->ReturnBlock = returnBlock; 
+}
+
+// Increments the nest/scope depth
+void CodeGenerator::incrementNestDepth() {
+    this->NestDepth++;
+}
+// Increments the nest/scope depth
+void CodeGenerator::decrementNestDepth() {
+    this->NestDepth--;
+}
+// Increments the nest/scope depth
+unsigned CodeGenerator::getNestDepth() const {
+    return this->NestDepth;
+}
+
+Function *CodeGenerator::getCurrentFunction() const {
+    return this->CurrentFunction;
+}
+
+void CodeGenerator::setCurrentFunction(llvm::Function* func) {
+    this->CurrentFunction = func;
 }
 
 // Clears the named values
