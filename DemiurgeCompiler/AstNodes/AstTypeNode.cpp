@@ -5,15 +5,28 @@
 
 using namespace llvm;
 
-AstTypeNode::AstTypeNode(AstNodeType type, const std::string &typeName, int line, int column, bool isArray,
-    demi_int arraySize)
-    : TypeType(type)
-    , IsArray(isArray)
-    , TypeName(typeName)
-    , ArraySize(arraySize) {
+AstTypeNode::AstTypeNode(AstNodeType type, const std::string &typeName, int line, int column) {
+    init(type, typeName, false, 0, nullptr, line, column);
+}
+
+AstTypeNode::AstTypeNode(AstNodeType type, const std::string &typeName, bool isArray, IAstExpression *subscript, int line, int column) {
+    init(type, typeName, true, 0, subscript, line, column);
+}
+
+AstTypeNode::AstTypeNode(AstNodeType type, const std::string &typeName, bool isArray, demi_int arraySize, int line, int column) {
+    init(type, typeName, true, arraySize, nullptr, line, column);
+}
+
+void AstTypeNode::init(AstNodeType type, const std::string &typeName, bool isArray, demi_int arraySize, IAstExpression *subscript, int line, int column) {
     Pos.LineNumber = line;
     Pos.ColumnNumber = column;
+    TypeType = type;
+    IsArray = isArray;
+    TypeName = typeName;
+    ArraySize = arraySize;
+    Subscript = subscript;
 }
+
 PossiblePosition AstTypeNode::getPos() const {
     return Pos; 
 }
@@ -24,7 +37,10 @@ bool AstTypeNode::getIsArray() const {
     return IsArray; 
 }
 demi_int AstTypeNode::getArraySize() const {
-    return ArraySize; 
+    return ArraySize;
+}
+IAstExpression *AstTypeNode::getArraySubscript() const {
+    return Subscript;
 }
 std::string AstTypeNode::getTypeName() const {
     return TypeName; 

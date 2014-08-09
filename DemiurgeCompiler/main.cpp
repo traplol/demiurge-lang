@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     args.push_back("-c");
     //args.push_back("examples/test.demi");
     //args.push_back("examples/add.demi");
-    //args.push_back("examples/arrays.demi");
+    args.push_back("examples/arrays.demi");
     //args.push_back("examples/fibR.demi");
     //args.push_back("examples/all-number-types.demi");
     //args.push_back("examples/fizzbuzz.demi");
@@ -43,13 +43,18 @@ int main(int argc, char **argv) {
     //args.push_back("examples/void-return.demi");
     //args.push_back("examples/whileloops.demi");
     //args.push_back("examples/for-loops.demi");
+    //args.push_back("examples/dynamic-array.demi");
+
+
     //args.push_back("examples/tests/arithmetic.demi");
     //args.push_back("examples/tests/bitwise.demi");
     //args.push_back("examples/tests/complex-boolean.demi");
     //args.push_back("examples/tests/simple-boolean.demi");
+    
+    
     //args.push_back("examples/benchmarks/demi/fib.demi");
     //args.push_back("examples/benchmarks/demi/small-func.demi");
-    args.push_back("examples/benchmarks/demi/big-array.demi");
+    //args.push_back("examples/benchmarks/demi/big-array.demi");
 
 #else
     args.assign(argv, argv + argc);

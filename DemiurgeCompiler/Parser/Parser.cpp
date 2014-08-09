@@ -229,19 +229,24 @@ IAstExpression *Parser::parsePrimary() {
 
 // <prefixunary>        ::= unaryoper <primary>
 IAstExpression *Parser::parsePrefixUnaryExpr() {
-    if (!_curToken->IsUnaryOperator()) { // short curcuit if not an operator.
+    if (!_curToken->IsUnaryOperator()) { // short curcuit if not an unary operator.
         return nullptr;
     }
 
     std::string oper = _curToken->Value();
     int tokenType = _curTokenType;
-
-    next(); // eat unaryoper
-    IAstExpression *primary = parsePrimary();
-    if (primary == nullptr) {
-        return nullptr;
+    IAstExpression *operand;
+    if (tokenType == tok_new) {
+        return parseNewMallocExpression();
     }
-    return new AstUnaryOperatorExpr(oper, (TokenType)tokenType, primary, false, nullptr, _curToken->Line(), _curToken->Column());
+    else {
+        next(); // eat unaryoper
+        operand = parsePrimary();
+        if (operand == nullptr) {
+            return nullptr;
+        }
+    }
+    return new AstUnaryOperatorExpr(oper, (TokenType)tokenType, operand, false, _curToken->Line(), _curToken->Column());
 }
 
 // <prefixunary>        ::= <primary> unaryoper 
@@ -259,7 +264,7 @@ IAstExpression *Parser::parsePostfixUnaryExpr(IAstExpression *operand) {
     int tokenType = _curTokenType; 
     if (_curTokenType == tok_plusplus || _curTokenType == tok_minusminus) { // '++' or '--'
         next(); // eat unaryoper
-        return new AstUnaryOperatorExpr(oper, (TokenType)tokenType, operand, true, nullptr, _curToken->Line(), _curToken->Column());
+        return new AstUnaryOperatorExpr(oper, (TokenType)tokenType, operand, true, _curToken->Line(), _curToken->Column());
     }
     // otherwise should be an index operator, '[' <expression> ']'
     IAstExpression *indexExpr = parseArraySubscript();
@@ -583,7 +588,7 @@ IAstExpression *Parser::parseForExpression() {
 // <arraysubscript>     ::= '[' <expression> ']'
 IAstExpression *Parser::parseArraySubscript() {
     if (_curTokenType != '[') {
-        return Error("Expected '['");
+        return Error("Expected '['.");
     }
     next(); // eat '['
     IAstExpression *expr = parseExpression();
@@ -591,30 +596,46 @@ IAstExpression *Parser::parseArraySubscript() {
     return expr;
 }
 
+IAstExpression *Parser::parseNewMallocExpression() {
+    if (_curTokenType != tok_new) {
+        return Error("Expected 'new'.");
+    }
+    next(); // eat 'new'
+    AstTypeNode *newType = parseTypeNode();
+    if (newType == nullptr) {
+        return Error("Expected type.");
+    }
+    return new AstUnaryOperatorExpr("new", tok_new, newType, false, _curToken->Line(), _curToken->Column());
+}
+
 // <type>               ::= ( identifier | <reserved type> ) ( '[' <numberexpr>? ']' )?
 AstTypeNode *Parser::parseTypeNode() {
-    int curTokType = _curTokenType;
+    int tokType = _curTokenType;
     std::string typeName = _curToken->Value();
     next(); // eat type
 
     AstNodeType nodeType;
+    IAstExpression *subscript = nullptr;
     demi_int arraySize = 0;
     bool isArray = _curTokenType == '[' || _curTokenType == tok_LRSqBrackets;
     
-    if (_curTokenType == tok_LRSqBrackets) next(); // eat or '[]'
+    if (_curTokenType == tok_LRSqBrackets) { 
+        next(); // eat '[]'
+    } 
     else if (_curTokenType == '[') {
-        next(); // eat '['
-        if (_curTokenType != tok_number || _curToken->Value().find('.') != std::string::npos) {
-            return Error("Expected integer constant in array size declaration.");
+        subscript = parseArraySubscript();
+        AstIntegerNode *size = dynamic_cast<AstIntegerNode*>(subscript);
+        if (size != nullptr) { // the subscript is a number, go ahead and assume this is a static array.
+            arraySize = size->getValue();
+            if (arraySize <= 0) {
+                return Error("Static array size must be greater than zero.");
+            }
         }
-        arraySize = _curToken->AsULong64();
-        next(); // eat number
-        if (_curTokenType != ']') {
-            return Error("Expected ']'");
+        else { // Otherwise 
+
         }
-        next(); // ']'
     }
-    switch (curTokType) {
+    switch (tokType) {
     default: return nullptr;
     case tok_identifier: nodeType = node_struct; break;
     case tok_typevoid: nodeType = node_void; break;
@@ -635,7 +656,14 @@ AstTypeNode *Parser::parseTypeNode() {
 
     case tok_typestring: nodeType = node_string; break;
     }
-    return new AstTypeNode(nodeType, typeName,_curToken->Line(), _curToken->Column(), isArray, arraySize);
+    if (isArray && arraySize > 0) { // static sized array.
+        return new AstTypeNode(nodeType, typeName, isArray, arraySize, _curToken->Line(), _curToken->Column());
+    }
+    if (isArray && arraySize == 0) { // 'new' array.
+        return new AstTypeNode(nodeType, typeName, isArray, subscript, _curToken->Line(), _curToken->Column());
+    }
+    // Some other type.
+    return new AstTypeNode(nodeType, typeName, _curToken->Line(), _curToken->Column());
 }
 
 // Attempts to generate an AstTypeNode from the expression's type.

@@ -34,6 +34,7 @@ private:
     IAstExpression *parseExpression();
     IAstExpression *parseControlFlow();
     IAstExpression *parsePrimary();
+    IAstExpression *parseNewMallocExpression();
     IAstExpression *parseVarExpression();
     IAstExpression *parseParenExpression();
     IAstExpression *parseIdentifierExpression();

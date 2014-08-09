@@ -3,20 +3,35 @@
 #include "../CodeGenerator/CodeGenerator.h"
 #include "../CodeGenerator/CodeGeneratorHelpers.h"
 
+#include "llvm/IR/Module.h"
+
 using namespace llvm;
 
+AstUnaryOperatorExpr::AstUnaryOperatorExpr(const std::string &operStr, TokenType oper, IAstExpression *operand, bool isPostfix, int line, int column) {
+    init(operStr, oper, operand, isPostfix, nullptr, line, column, nullptr);
+}
+
 AstUnaryOperatorExpr::AstUnaryOperatorExpr(const std::string &operStr, TokenType oper, IAstExpression *operand, bool isPostfix,
-    IAstExpression *index, int line, int column)
-    : OperatorString(operStr)
-    , Operator(oper)
-    , Operand(operand)
-    , IsPostfix(isPostfix) 
-    , IndexExpr(index) {
-    setNodeType(isPostfix ? node_unary_operation_post : node_unary_operation_pre);
-    setPos(PossiblePosition{ line, column });
+    IAstExpression *index, int line, int column) {
+    init(operStr, oper, operand, isPostfix, index, line, column, nullptr);
+}
+AstUnaryOperatorExpr::AstUnaryOperatorExpr(const std::string &operStr, TokenType oper, AstTypeNode *type, bool isPostfix, int line, int column) {
+    init(operStr, oper, nullptr, IsPostfix, nullptr, line, column, type);
 }
 AstUnaryOperatorExpr::~AstUnaryOperatorExpr() {
-    delete Operand;
+    delete Operand, IndexExpr, TypeNode;
+}
+
+void AstUnaryOperatorExpr::init(const std::string &operStr, TokenType oper, IAstExpression *operand, bool isPostfix,
+    IAstExpression *index, int line, int column, AstTypeNode *type) {
+    OperatorString = operStr;
+    Operator = oper;
+    Operand = operand;
+    IsPostfix = isPostfix;
+    IndexExpr = index;
+    TypeNode = type;
+    setNodeType(isPostfix ? node_unary_operation_post : node_unary_operation_pre);
+    setPos(PossiblePosition{ line, column });
 }
 
 bool AstUnaryOperatorExpr::getIsPostfix() const {
@@ -39,6 +54,7 @@ llvm::Value *AstUnaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     case '~': return onesComplement(codegen);
     case tok_plusplus: return increment(codegen);
     case tok_minusminus: return decrement(codegen);
+    case tok_new: return newMalloc(codegen);
     case '[': return accessElement(codegen);
     }
 }
@@ -99,7 +115,7 @@ Value *AstUnaryOperatorExpr::accessElement(CodeGenerator *codegen) {
     return codegen->getBuilder().CreateLoad(gepaddr);
 }
 
-llvm::Value *AstUnaryOperatorExpr::ArrayAssignment(CodeGenerator *codegen, IAstExpression *rhs) {
+Value *AstUnaryOperatorExpr::ArrayAssignment(CodeGenerator *codegen, IAstExpression *rhs) {
     Value *val = rhs->Codegen(codegen);
     Value *operand = this->Operand->Codegen(codegen);
     Value *idx = this->IndexExpr->Codegen(codegen);
@@ -113,4 +129,15 @@ llvm::Value *AstUnaryOperatorExpr::ArrayAssignment(CodeGenerator *codegen, IAstE
         gepaddr = codegen->getBuilder().CreateGEP(operand, idx, "arrayidx");
     }
     return codegen->getBuilder().CreateStore(val, gepaddr);
+}
+
+Value *AstUnaryOperatorExpr::newMalloc(CodeGenerator *codegen) {
+    Type *type = this->TypeNode->GetLLVMType(codegen);
+    size_t size = codegen->getTheModule()->getDataLayout()->getTypeAllocSize(type);
+
+    //codegen->getBuilder().Create
+
+    //malloc(size);
+
+    return nullptr;
 }

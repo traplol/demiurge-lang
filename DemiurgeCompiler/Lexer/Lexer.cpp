@@ -204,6 +204,7 @@ Token *Lexer::buildWord() {
     }
 
     tag_TokenType tokType;
+    bool isUnaryOperator = false;
     if (_builderWord == "var") { tokType = tok_var; }
     else if (_builderWord == "func") { tokType = tok_func; }
     else if (_builderWord == "return") { tokType = tok_return; }
@@ -214,6 +215,8 @@ Token *Lexer::buildWord() {
     else if (_builderWord == "false") { tokType = tok_bool; }
     else if (_builderWord == "while") { tokType = tok_while; }
     else if (_builderWord == "for") { tokType = tok_for; }
+    else if (_builderWord == "new") { tokType = tok_new;  isUnaryOperator = true; }
+
     else if (_builderWord == "void") { tokType = tok_typevoid; }
     
     else if (_builderWord == "bool") { tokType = tok_typebool; }
@@ -243,8 +246,7 @@ Token *Lexer::buildWord() {
 
     else { tokType = tok_identifier; }
 
-
-    return new Token(tokType, _builderWord, _line, _column);
+    return new Token(tokType, _builderWord, _line, _column, isUnaryOperator);
 }
 Token *Lexer::trimWhiteSpace() {
     while (isspace(_lastChar)) {

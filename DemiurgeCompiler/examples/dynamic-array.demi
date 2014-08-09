@@ -1,0 +1,4 @@
+func main():void {
+    var x = 42;
+    var arr = new int[x];
+}
