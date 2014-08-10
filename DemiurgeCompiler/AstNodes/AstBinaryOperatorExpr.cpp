@@ -56,6 +56,7 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     codegen->getBuilder().CreateStore(val, variable);
     return val;
 }
+
 Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     if (this->Operator == '=') {
         return this->VariableAssignment(codegen);
@@ -70,10 +71,13 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     if (lType->isIntegerTy() && rType->isIntegerTy()) {
         Helpers::NormalizeIntegerWidths(codegen, l, r);
     }
-    auto funcPtr = Helpers::GetBinopCodeGenFuncPointer(this->Operator, lType, rType);
+    bool isUnsigned = Helpers::IsUnsigned(this->LHS->getNodeType()) && Helpers::IsUnsigned(this->RHS->getNodeType());
+    auto funcPtr = Helpers::GetBinopCodeGenFuncPointer(this->Operator, lType, rType, isUnsigned);
     if (funcPtr == nullptr) {
         return Helpers::Error(this->getPos(), "Operator '%s' does not exist for '%s' and '%s'",
             this->OperatorString.c_str(), Helpers::GetLLVMTypeName(lType).c_str(), Helpers::GetLLVMTypeName(rType).c_str());
     }
     return funcPtr(codegen, l, r);
 }
+
+

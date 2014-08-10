@@ -104,27 +104,42 @@ namespace Helpers {
             return codegen->getBuilder().CreateICmpNE(lhs, rhs, "intintNE");
         }
 
-
-
         BinOpCodeGenFuncPtr getIntIntFuncPtr(TokenType oper) {
             switch (oper) {
             default: return FailedLookupFunc;
             case '+': return intintAdd;
             case '-': return intintSub;
             case '*': return intintMul;
-            case '/': return intintSDiv;
-            case '%': return intintSMod;
-            case '<': return intintSLT;
-            case '>': return intintSGT;
             case '&': return intintAnd;
             case '|': return intintOr;
             case '^': return intintXor;
             case tok_leftshift: return intintSHL;
             case tok_rightshift: return intintSHR;
-            case tok_lessequal: return intintSLE;
-            case tok_greatequal: return intintSGE;
             case tok_equalequal: return intintEQ;
             case tok_notequal: return intintNE;
+            }
+        }
+        BinOpCodeGenFuncPtr getIntIntSignedFuncPtr(TokenType oper) {
+            switch (oper) {
+            default: return getIntIntFuncPtr(oper);
+            case '/': return intintSDiv;
+            case '%': return intintSMod;
+            case '<': return intintSLT;
+            case '>': return intintSGT;
+            case tok_lessequal: return intintSLE;
+            case tok_greatequal: return intintSGE;
+            }
+        }
+
+        BinOpCodeGenFuncPtr getIntIntUnsignedFuncPtr(TokenType oper) {
+            switch (oper) {
+            default: return getIntIntFuncPtr(oper);
+            case '/': return intintUDiv;
+            case '%': return intintUMod;
+            case '<': return intintULT;
+            case '>': return intintUGT;
+            case tok_lessequal: return intintULE;
+            case tok_greatequal: return intintUGE;
             }
         }
 
@@ -316,9 +331,9 @@ namespace Helpers {
             }
         }
 
-        LookupTableMapMap getBinOpLookupTable() {
+        LookupTableMapMap getBinOpLookupTable(bool isUnsigned) {
             LookupTableMapMap lookupTable;
-            lookupTable[Type::IntegerTyID][Type::IntegerTyID] = getIntIntFuncPtr;
+            lookupTable[Type::IntegerTyID][Type::IntegerTyID] = isUnsigned ? getIntIntUnsignedFuncPtr : getIntIntSignedFuncPtr;
             lookupTable[Type::IntegerTyID][Type::DoubleTyID] = getIntDoubleFuncPtr;
             lookupTable[Type::DoubleTyID][Type::IntegerTyID] = getIntDoubleFuncPtr;
             lookupTable[Type::DoubleTyID][Type::DoubleTyID] = getDoubleDoubleFuncPtr;
@@ -326,8 +341,8 @@ namespace Helpers {
         }
     }
     // Returns a pointer to a function which will generate the proper LLVM code to handle the operator and types passed.
-    BinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType) {
-        auto func = BinOperations::getBinOpLookupTable()[lType->getTypeID()][rType->getTypeID()];
+    BinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, Type *lType, Type *rType, bool isUnsigned) {
+        auto func = BinOperations::getBinOpLookupTable(isUnsigned)[lType->getTypeID()][rType->getTypeID()];
         if (func == nullptr) {
             return nullptr;
         }
@@ -548,6 +563,18 @@ namespace Helpers {
     // Returns whether a value is a number that is not a boolean.
     bool IsNonBooleanNumberType(Value *val) {
         return val->getType()->isFloatingPointTy() || IsNonBooleanIntegerType(val);
+    }
+
+    // Returns whether a node type is unsigned.
+    bool IsUnsigned(AstNodeType type) {
+        switch (type) {
+        default: return false;
+        case node_unsigned_integer8:
+        case node_unsigned_integer16:
+        case node_unsigned_integer32:
+        case node_unsigned_integer64:
+            return true;
+        }
     }
 
     // Returns a string representation of the passed llvm type.

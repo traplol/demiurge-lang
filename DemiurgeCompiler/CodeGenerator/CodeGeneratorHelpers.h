@@ -82,7 +82,7 @@ namespace Helpers {
     }
 
     // Returns a pointer to a function which will generate the proper LLVM code to handle the operator and types passed.
-    BinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, llvm::Type *lType, llvm::Type *rType);
+    BinOperations::BinOpCodeGenFuncPtr GetBinopCodeGenFuncPointer(TokenType Operator, llvm::Type *lType, llvm::Type *rType, bool isUnsigned = false);
 
     // EmitScopeBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
     // in a std::vector<llvm::Value*>
@@ -201,6 +201,9 @@ namespace Helpers {
 
     // Returns whether a value is a number that is not a boolean.
     bool IsNonBooleanNumberType(llvm::Value *val);
+
+    // Returns whether a node type is unsigned.
+    bool IsUnsigned(AstNodeType type);
 
     // Returns the pointer to the first element of an array.
     llvm::Value *CreateArrayDecay(CodeGenerator *codegen, llvm::Value *val);
