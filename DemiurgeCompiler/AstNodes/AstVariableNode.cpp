@@ -24,8 +24,6 @@ Value *AstVariableNode::Codegen(CodeGenerator *codegen) {
         // TODO:
     }
     else if (Helpers::IsPtrToArray(v)) {
-        //Value *arr[] = { Helpers::GetZero_64(codegen), Helpers::GetZero_64(codegen) };
-        //return codegen->getBuilder().CreateGEP(v, arr, "arraydecay");
         return v;
     }
     auto type = Helpers::GetLLVMTypeName(v->getType());

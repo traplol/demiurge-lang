@@ -103,7 +103,7 @@ Value *AstUnaryOperatorExpr::decrement(CodeGenerator *codegen) {
 Value *AstUnaryOperatorExpr::accessElement(CodeGenerator *codegen) {
     Value *operand = this->Operand->Codegen(codegen);
     Value *idx = this->IndexExpr->Codegen(codegen);
-    Value *gepzero = Helpers::GetZero_64(codegen);
+    Value *gepzero = Helpers::GetDemiUInt(codegen, 0);
     Value *gepaddr;
     Value *arrayRef[] = { gepzero, idx };
     if (Helpers::IsPtrToArray(operand)) {
@@ -119,7 +119,7 @@ Value *AstUnaryOperatorExpr::ArrayAssignment(CodeGenerator *codegen, IAstExpress
     Value *val = rhs->Codegen(codegen);
     Value *operand = this->Operand->Codegen(codegen);
     Value *idx = this->IndexExpr->Codegen(codegen);
-    Value *gepzero = Helpers::GetZero_64(codegen);
+    Value *gepzero = Helpers::GetDemiUInt(codegen, 0);
     Value *gepaddr;
     Value *arrayRef[] = { gepzero, idx };
     if (Helpers::IsPtrToArray(operand)) {

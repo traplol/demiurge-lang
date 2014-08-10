@@ -111,6 +111,13 @@ namespace Helpers {
     // Creates a LLVM::Value* of unsigned integer type with specified width from the value passed.
     llvm::Value *GetUInt(CodeGenerator *codegen, demi_int val, int bitwidth);
     
+    // Creates a LLVM::Value* of the demiurge unsigned integer size.
+    // This should be used for any generic number type such as constants
+    llvm::Value *GetDemiUInt(CodeGenerator *codegen, demi_int val);
+    // Creates a LLVM::Value* of the demiurge unsigned integer size.
+    // This should be used for any generic number type such as constants
+    llvm::Value *GetDemiInt(CodeGenerator *codegen, demi_int val);
+
     // Creates a LLVM::Value* of integer1 type from the llvm::Value passed.
     llvm::Value *GetBoolean(CodeGenerator *codegen, bool val);
    
@@ -189,6 +196,12 @@ namespace Helpers {
     // Returns whether a value is a number.
     bool IsNumberType(llvm::Value *val);
   
+    // Returns whether a value is an integer but not a boolean, basically bitwidth > 1.
+    bool IsNonBooleanIntegerType(llvm::Value *val);
+
+    // Returns whether a value is a number that is not a boolean.
+    bool IsNonBooleanNumberType(llvm::Value *val);
+
     // Returns the pointer to the first element of an array.
     llvm::Value *CreateArrayDecay(CodeGenerator *codegen, llvm::Value *val);
 
@@ -207,6 +220,13 @@ namespace Helpers {
 
     // Creates an ID to append to a label for easier nesting readability
     std::string MakeLabelId();
+
+    // Creates a call to calloc
+    llvm::Value *CreateCallocCall(CodeGenerator *codegen, llvm::Type *type, llvm::Value *numOfItems);
+    // Creates a call to malloc
+    llvm::Value *CreateMallocCall(CodeGenerator *codegen, llvm::Value *size);
+    // Creates a call to free
+    llvm::Value *CreateFreeCall(CodeGenerator *codegen, llvm::Value *ptr);
 }
 
 #endif

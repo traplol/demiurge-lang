@@ -335,7 +335,7 @@ namespace Helpers {
     }
 
     // EmitScopeBlock - Emits a std::vector of ast::IAstExpr* expressions and returns their value
-    // in a std::vector<llvm::Value*>
+    // in a std::vector<Value*>
     std::vector<Value*> EmitScopeBlock(CodeGenerator *codegen, const std::vector<IAstExpression*> &block, bool stopAtFirstReturn, bool *stopped) {
         unsigned varCount = codegen->getVarCount();
         codegen->incrementNestDepth();
@@ -391,60 +391,60 @@ namespace Helpers {
         codegen->getBuilder().SetInsertPoint(restorePoint);
     }
 
-    // Creates a LLVM::Value* of double type from the value passed.
+    // Creates a Value* of double type from the value passed.
     Value *GetDouble(CodeGenerator *codegen, double val) {
         return ConstantFP::get(Type::getDoubleTy(codegen->getContext()), val);
     }
-    // Creates a LLVM::Value* of float type from the llvm::Value passed.
-    llvm::Value *GetFloat(CodeGenerator *codegen, float val) {
+    // Creates a Value* of float type from the Value passed.
+    Value *GetFloat(CodeGenerator *codegen, float val) {
         return ConstantFP::get(Type::getFloatTy(codegen->getContext()), val);
     }
-    // Creates a LLVM::Value* of integer64 type with a value of zero.
+    // Creates a Value* of integer64 type with a value of zero.
     Value *GetZero_64(CodeGenerator *codegen) {
         return GetInt64(codegen, 0);
     }
-    // Creates a LLVM::Value* of integer64 type with a value of one.
+    // Creates a Value* of integer64 type with a value of one.
     Value *GetOne_64(CodeGenerator *codegen) {
         return GetInt64(codegen, 1);
     }
-    // Creates a LLVM::Value* of integer64 type with a value of two.
+    // Creates a Value* of integer64 type with a value of two.
     Value *GetTwo_64(CodeGenerator *codegen) {
         return GetInt64(codegen, 2);
     }
-    // Creates a LLVM::Value* of integer32 type with a value of zero.
-    llvm::Value *GetZero_32(CodeGenerator *codegen) {
+    // Creates a Value* of integer32 type with a value of zero.
+    Value *GetZero_32(CodeGenerator *codegen) {
         return GetInt32(codegen, 0);
     }
-    // Creates a LLVM::Value* of integer32 type with a value of one.
-    llvm::Value *GetOne_32(CodeGenerator *codegen) {
+    // Creates a Value* of integer32 type with a value of one.
+    Value *GetOne_32(CodeGenerator *codegen) {
         return GetInt32(codegen, 1);
     }
-    // Creates a LLVM::Value* of integer32 type with a value of two.
-    llvm::Value *GetTwo_32(CodeGenerator *codegen) {
+    // Creates a Value* of integer32 type with a value of two.
+    Value *GetTwo_32(CodeGenerator *codegen) {
         return GetInt32(codegen, 2);
     }
-    // Creates a LLVM::Value* of integer16 type with a value of zero.
-    llvm::Value *GetZero_16(CodeGenerator *codegen) {
+    // Creates a Value* of integer16 type with a value of zero.
+    Value *GetZero_16(CodeGenerator *codegen) {
         return GetInt16(codegen, 2);
     }
-    // Creates a LLVM::Value* of integer16 type with a value of one.
-    llvm::Value *GetOne_16(CodeGenerator *codegen) {
+    // Creates a Value* of integer16 type with a value of one.
+    Value *GetOne_16(CodeGenerator *codegen) {
         return GetInt16(codegen, 2);
     }
-    // Creates a LLVM::Value* of integer16 type with a value of two.
-    llvm::Value *GetTwo_16(CodeGenerator *codegen){
+    // Creates a Value* of integer16 type with a value of two.
+    Value *GetTwo_16(CodeGenerator *codegen){
         return GetInt16(codegen, 2);
     }
-    // Creates a LLVM::Value* of integer8 type with a value of zero.
-    llvm::Value *GetZero_8(CodeGenerator *codegen) {
+    // Creates a Value* of integer8 type with a value of zero.
+    Value *GetZero_8(CodeGenerator *codegen) {
         return GetInt8(codegen, 0);
     }
-    // Creates a LLVM::Value* of integer8 type with a value of one.
-    llvm::Value *GetOne_8(CodeGenerator *codegen) {
+    // Creates a Value* of integer8 type with a value of one.
+    Value *GetOne_8(CodeGenerator *codegen) {
         return GetInt8(codegen, 1);
     }
-    // Creates a LLVM::Value* of integer8 type with a value of two.
-    llvm::Value *GetTwo_8(CodeGenerator *codegen) {
+    // Creates a Value* of integer8 type with a value of two.
+    Value *GetTwo_8(CodeGenerator *codegen) {
         return GetInt8(codegen, 2);
     }
     // Normalizes integer bitwidths, basically just casts up to the larger.
@@ -465,69 +465,89 @@ namespace Helpers {
         }
     }
 
-    // Creates a LLVM::Value* of integer type with specified width from the value passed.
+    // Creates a Value* of integer type with specified width from the value passed.
     Value *GetInt(CodeGenerator *codegen, demi_int val, int bitwidth) {
         return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val, true));
     }
-    // Creates a LLVM::Value* of integer type with specified width from the value passed.
+    // Creates a Value* of integer type with specified width from the value passed.
     Value *GetUInt(CodeGenerator *codegen, demi_int val, int bitwidth) {
         return ConstantInt::get(codegen->getContext(), APInt(bitwidth, val, false));
     }
-    // Creates a LLVM::Value* of integer1 type from the value passed.
+    // Creates a Value* of the demiurge unsigned integer size.
+    // This should be used for any generic number type such as constants
+    Value *GetDemiUInt(CodeGenerator *codegen, demi_int val) {
+        return GetUInt(codegen, val, 32);
+    }
+    // Creates a Value* of the demiurge unsigned integer size.
+    // This should be used for any generic number type such as constants
+    Value *GetDemiInt(CodeGenerator *codegen, demi_int val) {
+        return GetInt(codegen, val, 32);
+    }
+    // Creates a Value* of integer1 type from the value passed.
     Value *GetBoolean(CodeGenerator *codegen, int val) {
         return ConstantInt::get(Type::getInt1Ty(codegen->getContext()), APInt(1, val));
     }
-    // Creates a LLVM::Value* of signed integer64 type from the value passed.
-    llvm::Value *GetInt64(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of signed integer64 type from the value passed.
+    Value *GetInt64(CodeGenerator *codegen, demi_int val) {
         return GetInt(codegen, val, 64);
     }
-    // Creates a LLVM::Value* of signed integer32 type from the value passed.
-    llvm::Value *GetInt32(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of signed integer32 type from the value passed.
+    Value *GetInt32(CodeGenerator *codegen, demi_int val) {
         return GetInt(codegen, val, 32);
     }
-    // Creates a LLVM::Value* of signed integer16 type from the value passed.
-    llvm::Value *GetInt16(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of signed integer16 type from the value passed.
+    Value *GetInt16(CodeGenerator *codegen, demi_int val) {
         return GetInt(codegen, val, 16);
     }
-    // Creates a LLVM::Value* of signed integer8 type from the value passed.
-    llvm::Value *GetInt8(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of signed integer8 type from the value passed.
+    Value *GetInt8(CodeGenerator *codegen, demi_int val) {
         return GetInt(codegen, val, 8);
     }
-    // Creates a LLVM::Value* of unsigned integer64 type from the value passed.
-    llvm::Value *GetUInt64(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of unsigned integer64 type from the value passed.
+    Value *GetUInt64(CodeGenerator *codegen, demi_int val) {
         return GetUInt(codegen, val, 64);
     }
-    // Creates a LLVM::Value* of unsigned integer32 type from the value passed.
-    llvm::Value *GetUInt32(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of unsigned integer32 type from the value passed.
+    Value *GetUInt32(CodeGenerator *codegen, demi_int val) {
         return GetUInt(codegen, val, 32);
     }
-    // Creates a LLVM::Value* of unsigned integer16 type from the value passed.
-    llvm::Value *GetUInt16(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of unsigned integer16 type from the value passed.
+    Value *GetUInt16(CodeGenerator *codegen, demi_int val) {
         return GetUInt(codegen, val, 16);
     }
-    // Creates a LLVM::Value* of unsigned integer8 type from the value passed.
-    llvm::Value *GetUInt8(CodeGenerator *codegen, demi_int val) {
+    // Creates a Value* of unsigned integer8 type from the value passed.
+    Value *GetUInt8(CodeGenerator *codegen, demi_int val) {
         return GetUInt(codegen, val, 8);
     }
-    // Creates a LLVM::Value* of integer8* type from the value passed.
+    // Creates a Value* of integer8* type from the value passed.
     Value *GetString(CodeGenerator *codegen, std::string val) {
         return ConstantDataArray::getString(codegen->getContext(), val.c_str());
     }
 
 
     // Returns true if the value is a pointer to a pointer
-    bool IsPtrToPtr(llvm::Value *val) {
+    bool IsPtrToPtr(Value *val) {
         return val->getType()->isPointerTy() && val->getType()->getContainedType(0)->getTypeID() == Type::TypeID::PointerTyID;
     }
 
     // Returns true if the value is a pointer to an array
-    bool IsPtrToArray(llvm::Value *val) {
+    bool IsPtrToArray(Value *val) {
         return val->getType()->isPointerTy() && val->getType()->getContainedType(0)->isArrayTy();
     }
 
     // Returns whether a value is a number.
-    bool IsNumberType(llvm::Value *val) {
+    bool IsNumberType(Value *val) {
         return val->getType()->isIntegerTy() || val->getType()->isFloatingPointTy();
+    }
+
+    // Returns whether a value is an integer but not a boolean, basically bitwidth > 1.
+    bool IsNonBooleanIntegerType(Value *val) {
+        return val->getType()->isIntegerTy() && !val->getType()->isIntegerTy(1);
+    }
+
+    // Returns whether a value is a number that is not a boolean.
+    bool IsNonBooleanNumberType(Value *val) {
+        return val->getType()->isFloatingPointTy() || IsNonBooleanIntegerType(val);
     }
 
     // Returns a string representation of the passed llvm type.
@@ -557,7 +577,7 @@ namespace Helpers {
 
     // Returns the pointer to the first element of an array.
     Value *CreateArrayDecay(CodeGenerator *codegen, Value *val) {
-        Value *zero = GetZero_64(codegen);
+        Value *zero = GetDemiUInt(codegen, 0);
         Value *arrayref[] = { zero, zero };
         return codegen->getBuilder().CreateGEP(val, arrayref, "arraydecay");
     }
@@ -649,5 +669,20 @@ namespace Helpers {
             labelId += (char)((rand() % 26) + 65);
         }
         return labelId;
+    }
+
+    // Creates a call to calloc
+    Value *CreateCallocCall(CodeGenerator *codegen, Type *type, Value *numOfItems) {
+        return nullptr;
+    }
+    // Creates a call to malloc
+    Value *CreateMallocCall(CodeGenerator *codegen, Value *size) {
+        /*Function *Malloc= codegen->getTheModule()->getOrInsertFunction("malloc", FunctionType::get(;
+        codegen->getBuilder().CreateCall()*/
+        return nullptr;
+    }
+    // Creates a call to free
+    Value *CreateFreeCall(CodeGenerator *codegen, Value *ptr) {
+        return nullptr;
     }
 }
