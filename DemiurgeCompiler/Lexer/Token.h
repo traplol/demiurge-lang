@@ -10,7 +10,7 @@ public:
         , _columnNumber(column)
         , _value(value)
         , _isUnaryOperator(isUnaryOperator) {}
-    
+    ~Token(){}
     int Type() const { return _type; }
     int Line() const { return _lineNumber; }
     int Column() const { return _columnNumber; }

@@ -1,8 +1,8 @@
 #include <stdarg.h>
+#include "Parser.h"
 
 #include "../Compiler/TreeContainer.h"
 #include "../Lexer/Token.h"
-#include "Parser.h"
 #include "../Lexer/TokenTypes.h"
 
 #include "../AstNodes/AstBinaryOperatorExpr.h"
@@ -23,6 +23,7 @@
 #include "../AstNodes/AstForExpr.h"
 #include "../AstNodes/FunctionAst.h"
 #include "../AstNodes/PrototypeAst.h"
+#include "../AstNodes/ClassAst.h"
 #include "../AstNodes/IAstExpression.h"
 
 Parser::Parser() {
@@ -81,9 +82,18 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
         if (_curTokenType == ';') {
             next();
         }
+        else if (_curTokenType == tok_class) {
+            ClassAst *class_ = parseClassDefinition();
+            if (class_ == nullptr) {
+                delete trees;
+                return nullptr;
+            }
+            trees->ClassDefinitions.push_back(class_);
+        }
         else if (_curTokenType == tok_func) {
             FunctionAst *func = parseFunctionDefinition();
             if (func == nullptr) {
+                delete trees;
                 return nullptr;
             }
             trees->FunctionDefinitions.push_back(func);
@@ -91,6 +101,7 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
         else if (_curTokenType == tok_extern)  {
             PrototypeAst *declaration = parseExternDeclaration();
             if (declaration == nullptr) {
+                delete trees;
                 return nullptr;
             }
             trees->ExternalDeclarations.push_back(declaration);
@@ -98,6 +109,7 @@ TreeContainer *Parser::ParseTrees(const std::vector<Token*> &tokens) {
         else {
             IAstExpression *toplevel = parseTopLevelExpression();
             if (toplevel == nullptr) {
+                delete trees;
                 return nullptr;
             }
             trees->TopLevelExpressions.push_back(toplevel);
@@ -846,4 +858,63 @@ PrototypeAst *Parser::parseExternDeclaration() {
     }
 
     return new PrototypeAst(functionIdentifier, returnType, args, isVarArgs, _curToken->Line(), _curToken->Column());
+}
+
+ClassAst *Parser::parseClassDefinition() {
+    if (_curTokenType != tok_class) {
+        return Error("Expected 'class'.");
+    }
+    next(); // eat 'class'
+    ClassAst *classAst = new ClassAst();
+
+    if (_curTokenType != tok_identifier) {
+        delete classAst;
+        return Error("Expected class identifier.");
+    }
+    classAst->setName(_curToken->Value());
+    next(); // eat identifier
+
+    if (_curTokenType != '{') {
+        delete classAst;
+        return Error("Expected '{'.");
+    }
+    next(); // eat '{'
+
+    while (_curTokenType != '}') {
+        bool isPublic = _curTokenType == tok_public;
+        if (_curTokenType == tok_private || isPublic) {
+            next(); // eat 'public' or 'private'
+        }
+        if (_curTokenType == tok_func) { // Member function
+            FunctionAst *func = parseFunctionDefinition();
+            if (isPublic) { 
+                classAst->pushPublicFunction(func);
+            }
+            else { // Assume that the default member type is 'private' even when not stated.
+                classAst->pushPrivateFunction(func);
+            }
+        }
+        else if (_curTokenType == tok_var) { // Member field
+            AstVarExpr *varExpr = dynamic_cast<AstVarExpr*>(parseVarExpression());
+            if (isPublic) {
+                classAst->pushPublicField(varExpr);
+            }
+            else { // Assume that the default member type is 'private' even when not stated.
+                classAst->pushPrivateField(varExpr);
+            }
+        }
+        else if (_curTokenType == tok_identifier) { // Possibly a constructor.
+            if (_curToken->Value() != classAst->getName()) {
+                delete classAst;
+                return Error("Class constructor name must match the class name.");
+            }
+
+        }
+    }
+
+    if (_curTokenType != '}') {
+        delete classAst;
+        return Error("Expected '}'.");
+    }
+    return classAst;
 }

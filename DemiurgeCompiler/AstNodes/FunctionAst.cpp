@@ -83,7 +83,7 @@ Function *FunctionAst::Codegen(CodeGenerator *codegen) {
         return Helpers::Error(this->Pos, "Error creating function body.");
     }
     else { // try to optimize the function by running the function pass manager
-        //codegen->getTheFPM()->run(*func);
+        codegen->getTheFPM()->run(*func);
     }
     codegen->setCurrentFunction(nullptr);
     return func; // might as well return the generated function for potential closure support later.

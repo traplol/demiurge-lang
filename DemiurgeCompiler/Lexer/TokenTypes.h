@@ -9,6 +9,9 @@ typedef enum tag_TokenType {
 
     tok_var,                // 'var'
     tok_func,               // 'func'
+    tok_class,              // 'class'
+    tok_public,             // 'public'
+    tok_private,            // 'private'
     tok_return,             // 'return'
     tok_extern,             // 'extern'
     tok_if,                 // 'if'

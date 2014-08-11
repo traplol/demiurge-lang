@@ -8,6 +8,7 @@ struct TreeContainer;
 class Token;
 class IAstExpression;
 class AstTypeNode;
+class ClassAst;
 class FunctionAst;
 class PrototypeAst;
 
@@ -49,11 +50,13 @@ private:
     IAstExpression *parseBinOpRhs(int precedence, IAstExpression *lhs);
     IAstExpression *parsePrefixUnaryExpr();
     IAstExpression *parsePostfixUnaryExpr(IAstExpression *operand);
-    AstTypeNode *parseTypeNode();
-    AstTypeNode *tryInferType(IAstExpression *expr);
+    
     FunctionAst *parseFunctionDefinition();
     PrototypeAst *parsePrototype();
     PrototypeAst *parseExternDeclaration();
+    ClassAst *parseClassDefinition();
+    AstTypeNode *parseTypeNode();
+    AstTypeNode *tryInferType(IAstExpression *expr);
 
     nullptr_t Error(const char *fmt, ...);
     void Warning(const char *fmt, ...);

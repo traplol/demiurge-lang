@@ -11,6 +11,10 @@
 #include "../Compiler/TreeContainer.h"
 #include "../DEFINES.h"
 #include "../DemiurgeJitOutputFunctions.h"
+#include "../AstNodes/ClassAst.h"
+#include "../AstNodes/PrototypeAst.h"
+#include "../AstNodes/FunctionAst.h"
+#include "../AstNodes/IAstExpression.h"
 
 using namespace llvm;
 CodeGenerator::CodeGenerator() 

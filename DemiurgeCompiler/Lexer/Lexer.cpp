@@ -207,6 +207,9 @@ Token *Lexer::buildWord() {
     bool isUnaryOperator = false;
     if (_builderWord == "var") { tokType = tok_var; }
     else if (_builderWord == "func") { tokType = tok_func; }
+    else if (_builderWord == "class") { tokType = tok_class; }
+    else if (_builderWord == "public") { tokType = tok_public; }
+    else if (_builderWord == "private") { tokType = tok_private; }
     else if (_builderWord == "return") { tokType = tok_return; }
     else if (_builderWord == "extern") { tokType = tok_extern; }
     else if (_builderWord == "if") { tokType = tok_if; }

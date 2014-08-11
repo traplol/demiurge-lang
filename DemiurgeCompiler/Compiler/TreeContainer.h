@@ -2,14 +2,18 @@
 #define _TREE_CONTAINER_H
 
 #include <vector>
-#include "../AstNodes/PrototypeAst.h"
-#include "../AstNodes/FunctionAst.h"
-#include "../AstNodes/IAstExpression.h"
+
+class ClassAst;
+class PrototypeAst;
+class FunctionAst;
+class IAstExpression;
 
 struct TreeContainer {
+    ~TreeContainer();
     std::vector<PrototypeAst*> ExternalDeclarations;
     std::vector<IAstExpression*> TopLevelExpressions;
     std::vector<FunctionAst*> FunctionDefinitions;
+    std::vector<ClassAst*> ClassDefinitions;
 };
 
 #endif

@@ -52,6 +52,7 @@ public:
     bool _isInInteractiveMode;
     bool _outputLlvmAsm;
     bool _stderrDump;
+    bool _jitCompile;
     std::map<std::string, std::vector<char> > _sourceFiles;
 };
 

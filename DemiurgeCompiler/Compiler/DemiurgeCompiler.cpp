@@ -93,15 +93,18 @@ bool DemiurgeCompiler::setStateVars() {
             printCompilerInformationMessage();
             return false;
         }
-        else if (str == "--llvm-asm") {
+        else if (str == "-llvm-asm") {
             _outputLlvmAsm = true;
         }
         else if (str == "--help" || str == "-h") {
             printHelpMessage();
             return false;
         }
-        else if (str == "--stderr-dump") {
+        else if (str == "-stderr-dump") {
             _stderrDump = true;
+        }
+        else if (str == "-jit") {
+            _jitCompile = true;
         }
         else {
             fprintf(stderr, "Unknown argument '%s' used, try -h or --help for usage.\n", str.c_str());

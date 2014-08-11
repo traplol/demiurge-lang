@@ -86,11 +86,13 @@
     <ClCompile Include="AstNodes\AstVarExpr.cpp" />
     <ClCompile Include="AstNodes\AstVariableNode.cpp" />
     <ClCompile Include="AstNodes\AstWhileExpr.cpp" />
+    <ClCompile Include="AstNodes\ClassAst.cpp" />
     <ClCompile Include="AstNodes\FunctionAst.cpp" />
     <ClCompile Include="AstNodes\PrototypeAst.cpp" />
     <ClCompile Include="CodeGenerator\CodeGenerator.cpp" />
     <ClCompile Include="CodeGenerator\CodeGeneratorHelpers.cpp" />
     <ClCompile Include="Compiler\DemiurgeCompiler.cpp" />
+    <ClCompile Include="Compiler\TreeContainer.cpp" />
     <ClCompile Include="Lexer\Lexer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parser\Parser.cpp" />
@@ -99,6 +101,7 @@
     <ClInclude Include="AstNodes\AstBinaryOperatorExpr.h" />
     <ClInclude Include="AstNodes\AstBooleanNode.h" />
     <ClInclude Include="AstNodes\AstCallExpr.h" />
+    <ClInclude Include="AstNodes\ClassAst.h" />
     <ClInclude Include="AstNodes\AstDoubleNode.h" />
     <ClInclude Include="AstNodes\AstForExpr.h" />
     <ClInclude Include="AstNodes\AstIfElseExpr.h" />
