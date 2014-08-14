@@ -896,6 +896,7 @@ ClassAst *Parser::parseClassDefinition() {
         }
         else if (_curTokenType == tok_var) { // Member field
             AstVarExpr *varExpr = dynamic_cast<AstVarExpr*>(parseVarExpression());
+            if (_curTokenType == ';') { next(); }
             if (isPublic) {
                 classAst->pushPublicField(varExpr);
             }
@@ -908,7 +909,53 @@ ClassAst *Parser::parseClassDefinition() {
                 delete classAst;
                 return Error("Class constructor name must match the class name.");
             }
+            next(); // eat identifier
+            if (_curTokenType != '(') {
+                return Error("Expected '('.");
+            }
+            next(); // eat '('
+            std::vector<std::pair<std::string, AstTypeNode*>> args;
+            while (_curTokenType != ')') { // this while loop short circuits zero parameter functions
+                if (_curTokenType != tok_identifier) {
+                    return Error("Expected identifier in parameter list.");
+                }
+                std::string argName = _curToken->Value();
+                next(); // eat identifier
+                if (_curTokenType != ':') {
+                    return Error("Expected ':' for parameter type definition.");
+                }
+                next(); // eat ':'
+                AstTypeNode *argType = parseTypeNode();
 
+                auto pair = std::make_pair(argName, argType);
+                args.push_back(pair);
+                if (_curTokenType != ',') {
+                    break;
+                }
+                next(); // eat ','
+            }
+            if (_curTokenType != ')') {
+                return Error("Expected ')'.");
+            }
+            next(); // eat ')'
+
+            if (_curTokenType != '{') {
+                return Error("Expected '{'.");
+            }
+            next(); // eat '{'
+
+            std::vector<IAstExpression*> functionBody;
+            while (_curTokenType != '}') {
+                IAstExpression *blockExpr = parseBlockExpression();
+                if (blockExpr == nullptr) {
+                    return Error("Unexpected token.");
+                }
+                functionBody.push_back(blockExpr);
+            }
+            next(); // eat '}'
+            PrototypeAst *proto = new PrototypeAst(classAst->getName(), nullptr, args, false, _curToken->Line(), _curToken->Column());
+            FunctionAst *ctor = new FunctionAst(proto, functionBody, _curToken->Line(), _curToken->Column());
+            classAst->setConstructor(ctor);
         }
     }
 
@@ -916,5 +963,6 @@ ClassAst *Parser::parseClassDefinition() {
         delete classAst;
         return Error("Expected '}'.");
     }
+    next(); // eat '}'
     return classAst;
 }
