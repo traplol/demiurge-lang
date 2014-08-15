@@ -1,0 +1,27 @@
+extern func printf(string,...):void;
+func main(): void {
+    var x = 5;
+    x--;
+    printf("%d\n",x--);
+    printf("%d\n",--x);
+    x += 5;
+    printf("%d\n", x);
+    x -= 2;
+    printf("%d\n", x);
+    x *= 4;
+    printf("%d\n", x);
+    x /= 1;
+    printf("%d\n", x);
+    x %= 2;
+    printf("%d\n", x);
+    x ^= 1;
+    printf("%d\n", x);
+    x &= x;
+    printf("%d\n", x);
+    x |= 5;
+    printf("%d\n", x);
+    x <<= 2;
+    printf("%d\n", x);
+    x >>= 2;
+    printf("%d\n", x);
+}
