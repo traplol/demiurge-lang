@@ -57,9 +57,75 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
     return val;
 }
 
+Value *AstBinaryOperatorExpr::VariableOpAssignment(CodeGenerator *codegen) {
+    TokenType operation;
+    std::string operStr;
+    switch (this->Operator) {
+    default: return Helpers::Error(this->getPos(), "Unknown operator '%s'.", this->OperatorString.c_str());
+    case tok_plusequals:            // '+='
+        operation = (TokenType)'+';
+        operStr = "+";
+        break;
+    case tok_minusequals:           // '-='
+        operation = (TokenType)'-';
+        operStr = "-";
+        break;
+    case tok_multequals:            // '*='
+        operation = (TokenType)'*';
+        operStr = "*";
+        break;
+    case tok_divequals:             // '/='
+        operation = (TokenType)'/';
+        operStr = "/";
+        break;
+    case tok_modequals:             // '%='
+        operation = (TokenType)'%';
+        operStr = "%";
+        break;
+    case tok_andequals:             // '&='
+        operation = (TokenType)'&';
+        operStr = "&";
+        break;
+    case tok_orequals:              // '|='
+        operation = (TokenType)'|';
+        operStr = "|";
+        break;
+    case tok_xorequals:             // '^='
+        operation = (TokenType)'^';
+        operStr = "^";
+        break;
+    case tok_leftshiftequal:        // '<<='
+        operation = tok_leftshift;
+        operStr = "<<";
+        break;
+    case tok_rightshiftequal:       // '>>='
+        operation = tok_rightshift;
+        operStr = ">>";
+        break;
+    }
+    int line = this->LHS->getPos().LineNumber;
+    int column = this->LHS->getPos().ColumnNumber;
+    // Doing a trick here where we just expand the operation. e.g x += 5 -> x = (x + 5)
+    AstBinaryOperatorExpr *eval = new AstBinaryOperatorExpr(operStr, operation, this->LHS, this->RHS, line, column);
+    AstBinaryOperatorExpr *assign = new AstBinaryOperatorExpr("=", (TokenType)'=', this->LHS, eval, line, column);
+    return assign->Codegen(codegen);
+}
+
 Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
-    if (this->Operator == '=') {
+    switch (this->Operator) {
+    case '=':
         return this->VariableAssignment(codegen);
+    case tok_plusequals:            // '+='
+    case tok_minusequals:           // '-='
+    case tok_multequals:            // '*='
+    case tok_divequals:             // '/='
+    case tok_modequals:             // '%='
+    case tok_andequals:             // '&='
+    case tok_orequals:              // '|='
+    case tok_xorequals:             // '^='
+    case tok_leftshiftequal:        // '<<='
+    case tok_rightshiftequal:       // '>>='
+        return this->VariableOpAssignment(codegen);
     }
     Value *l = this->LHS->Codegen(codegen);
     Value *r = this->RHS->Codegen(codegen);
@@ -79,5 +145,6 @@ Value *AstBinaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     }
     return funcPtr(codegen, l, r);
 }
+
 
 

@@ -88,6 +88,10 @@ Token *Lexer::tryTwoCharOper(int thisChar) {
     else if (operTest == "-=") { tokType = tok_minusequals; }
     else if (operTest == "*=") { tokType = tok_multequals; }
     else if (operTest == "/=") { tokType = tok_divequals; }
+    else if (operTest == "%=") { tokType = tok_modequals; }
+    else if (operTest == "^=") { tokType = tok_xorequals; }
+    else if (operTest == "&=") { tokType = tok_andequals; }
+    else if (operTest == "|=") { tokType = tok_orequals; }
     else if (operTest == "||") { tokType = tok_booleanor; }
     else if (operTest == "&&") { tokType = tok_booleanand; }
     else if (operTest == "<=") { tokType = tok_lessequal; }

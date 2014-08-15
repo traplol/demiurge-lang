@@ -1,4 +1,6 @@
 #include "AstUnaryOperatorExpr.h"
+#include "AstIntegerNode.h"
+#include "AstBinaryOperatorExpr.h"
 
 #include "../CodeGenerator/CodeGenerator.h"
 #include "../CodeGenerator/CodeGeneratorHelpers.h"
@@ -59,8 +61,6 @@ llvm::Value *AstUnaryOperatorExpr::Codegen(CodeGenerator *codegen) {
     }
 }
 
-
-
 Value *AstUnaryOperatorExpr::positive(CodeGenerator *codegen) {
     Value *v = this->Operand->Codegen(codegen);
     if (!Helpers::IsNumberType(v)) {// cannot make a non-number positive
@@ -95,10 +95,44 @@ Value *AstUnaryOperatorExpr::onesComplement(CodeGenerator *codegen) {
     return codegen->getBuilder().CreateNot(v, "negate");
 }
 Value *AstUnaryOperatorExpr::increment(CodeGenerator *codegen) {
-    return nullptr;
+    // We'll just expand increment into what it actually is:
+    // x = x + 1; -> prefix
+    // OR
+    // x; -> postfix
+    // x = x + 1;
+    int line = this->getPos().LineNumber;
+    int column = this->getPos().ColumnNumber;
+    // The RHS of the add-by-one
+    AstIntegerNode *rhs_one = new AstIntegerNode(1, line, column);
+    
+    AstBinaryOperatorExpr *expr = new AstBinaryOperatorExpr("+=", tok_plusequals, this->Operand, rhs_one, line, column);
+    if (this->getIsPrefix()) {
+        return expr->Codegen(codegen);
+    }
+    // we'll go ahead and evaluate the operand to return and then increment it.
+    Value *val = this->Operand->Codegen(codegen);
+    expr->Codegen(codegen);
+    return val;
 }
 Value *AstUnaryOperatorExpr::decrement(CodeGenerator *codegen) {
-    return nullptr;
+    // We'll just expand decrement into what it actually is:
+    // x = x - 1; -> prefix
+    // OR
+    // x; -> postfix
+    // x = x - 1;
+    int line = this->getPos().LineNumber;
+    int column = this->getPos().ColumnNumber;
+    // The RHS of the sub-by-one
+    AstIntegerNode *rhs_one = new AstIntegerNode(1, line, column);
+
+    AstBinaryOperatorExpr *expr = new AstBinaryOperatorExpr("-=", tok_minusequals, this->Operand, rhs_one, line, column);
+    if (this->getIsPrefix()) {
+        return expr->Codegen(codegen);
+    }
+    // we'll go ahead and evaluate the operand to return and then increment it.
+    Value *val = this->Operand->Codegen(codegen);
+    expr->Codegen(codegen);
+    return val;
 }
 Value *AstUnaryOperatorExpr::accessElement(CodeGenerator *codegen) {
     Value *operand = this->Operand->Codegen(codegen);

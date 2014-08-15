@@ -14,6 +14,7 @@ public:
     ~AstBinaryOperatorExpr();
     virtual llvm::Value *Codegen(CodeGenerator *codegen);
     virtual llvm::Value *VariableAssignment(CodeGenerator *codegen);
+    virtual llvm::Value *VariableOpAssignment(CodeGenerator *codegen);
 };
 
 #endif

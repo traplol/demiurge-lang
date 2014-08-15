@@ -20,7 +20,7 @@ namespace Helpers {
     void Warning(PossiblePosition pos, const char *fmt, ...);
 
     namespace BinOperations {
-        typedef llvm::Value*(*BinOpCodeGenFuncPtr)(CodeGenerator*, llvm::Value*, llvm::Value*);
+        typedef llvm::Value*(*BinOpCodeGenFuncPtr)(CodeGenerator* codegen, llvm::Value* lhs, llvm::Value* rhs);
         typedef BinOpCodeGenFuncPtr(*GetFuncPtr)(TokenType);
 
 
