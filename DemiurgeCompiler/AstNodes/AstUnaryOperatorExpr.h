@@ -27,6 +27,7 @@ public:
     virtual llvm::Value *decrement(CodeGenerator *codegen);
     virtual llvm::Value *accessElement(CodeGenerator *codegen);
 
+    TokenType getOperator() const;
     bool getIsPostfix() const;
     bool getIsPrefix() const;
 

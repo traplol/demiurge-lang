@@ -27,8 +27,13 @@ Value *AstBinaryOperatorExpr::VariableAssignment(CodeGenerator *codegen) {
         return nullptr;
     }
 
-    if (AstUnaryOperatorExpr *arrayAss = dynamic_cast<AstUnaryOperatorExpr*>(this->LHS)) {
-        return arrayAss->ArrayAssignment(codegen, this->RHS); // Array assignment.
+    if (AstUnaryOperatorExpr *unary = dynamic_cast<AstUnaryOperatorExpr*>(this->LHS)) {
+        if (unary->getOperator() == '[') {
+            return unary->ArrayAssignment(codegen, this->RHS); // Array assignment.
+        }
+        else {
+            //return unary->Codegen(codegen);
+        }
     }
 
     AstVariableNode *lhse = dynamic_cast<AstVariableNode*>(this->LHS);

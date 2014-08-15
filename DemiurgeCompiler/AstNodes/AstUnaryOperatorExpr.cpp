@@ -175,3 +175,7 @@ Value *AstUnaryOperatorExpr::newMalloc(CodeGenerator *codegen) {
 
     return nullptr;
 }
+
+TokenType AstUnaryOperatorExpr::getOperator() const {
+    return Operator;
+}

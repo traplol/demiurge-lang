@@ -46,6 +46,9 @@ Value *AstVarExpr::Codegen(CodeGenerator *codegen) {
     }
     else {
         initialVal = expr->Codegen(codegen);
+        if (initialVal == nullptr) {
+            return nullptr;
+        }
         auto type = Helpers::GetLLVMTypeName(initialVal->getType());
         Alloca = Helpers::CreateEntryBlockAlloca(codegen, func, this->Name, initialVal->getType());
     }

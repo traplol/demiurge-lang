@@ -1,31 +1,7 @@
 extern func printf(string,...): void;
 
-class MyClass {
-    private var Field1: int;
-    private var Field2: int;
-    public MyClass() {
-        Field1 = 42;
-        Field2 = 125;
-    }
-    
-    public func getField1(): int {
-        return Field1;
-    }
-    
-    public func setField1(val: int): void {
-        Field1 = val;
-    }
-    
-    public func getField2(): int {
-        return Field1;
-    }
-    
-    public func setField2(val: int): void {
-        Field2 = val;
-    }
-}
-
 func main(): void{
-    var test = MyClass();
-    test.setField1(50);
+    var x = 5;
+    var y = ++(x++);
+    printf("%d\n", x);
 }

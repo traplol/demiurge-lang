@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     args.push_back("-stderr-dump");
     args.push_back("-jit");
     args.push_back("-c");
-    //args.push_back("examples/current-testing.demi");
+    args.push_back("examples/current-testing.demi");
 
     //args.push_back("examples/add.demi");
     //args.push_back("examples/arrays.demi");
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     //args.push_back("examples/variables.demi");
     //args.push_back("examples/void-return.demi");
     //args.push_back("examples/whileloops.demi");
-    args.push_back("examples/for-loops.demi");
+    //args.push_back("examples/for-loops.demi");
     //args.push_back("examples/dynamic-array.demi");
 
 
