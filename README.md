@@ -12,3 +12,8 @@ demiurge  (ˈdɛmɪˌɜːdʒ, ˈdiː-)
  	b. (in Gnostic and some other philosophies) the creator of the universe, 
  	    supernatural but subordinate to the Supreme Being
 ```
+
+Dependencies
+============
+- LLVM Development Toolchain
+  + LLVM v3.4 or higher
