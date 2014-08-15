@@ -16,4 +16,4 @@ demiurge  (ˈdɛmɪˌɜːdʒ, ˈdiː-)
 Dependencies
 ============
 - LLVM Development Toolchain
-  + LLVM v3.4 or higher
+  + LLVM 3.4 or higher
