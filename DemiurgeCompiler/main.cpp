@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
     //args.push_back("examples/add.demi");
     //args.push_back("examples/arrays.demi");
-    args.push_back("examples/assignment-operators.demi");
+    //args.push_back("examples/assignment-operators.demi");
     //args.push_back("examples/fibR.demi");
     //args.push_back("examples/all-number-types.demi");
     //args.push_back("examples/fizzbuzz.demi");
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     //args.push_back("examples/variables.demi");
     //args.push_back("examples/void-return.demi");
     //args.push_back("examples/whileloops.demi");
-    //args.push_back("examples/for-loops.demi");
+    args.push_back("examples/for-loops.demi");
     //args.push_back("examples/dynamic-array.demi");
 
 
