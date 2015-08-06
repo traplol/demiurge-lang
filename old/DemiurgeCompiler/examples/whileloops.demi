@@ -1,0 +1,4 @@
+extern func print(string):void;
+func main():void{
+    print("todo");
+}

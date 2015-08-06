@@ -1,0 +1,9 @@
+extern func printf(string,...):void;
+
+func main() : int {
+    if (1 != 5) printf("boop\n");
+    printf("%d %d\n", 1==1, 1==0);
+    printf("%d %d\n", true, false);
+    printf("%d %d\n", 1.0 == 1.0, 1.0 == 0.0);
+    return 0;
+}

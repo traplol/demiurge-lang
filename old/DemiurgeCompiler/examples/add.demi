@@ -1,0 +1,11 @@
+extern func printi(int):void;
+
+func add(a : int, b : int) : int {
+    return a + b;
+}
+
+
+func main() : int {
+    printi(add(6,5));
+    return 0;
+}

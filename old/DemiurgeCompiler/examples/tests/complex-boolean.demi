@@ -1,0 +1,73 @@
+extern func printf(string,...):void;
+
+func test21() : int { // expected 1
+    if (true | false) return 1;
+    return 0;
+}
+
+func test22() : int { // expected 1
+    if (true | true) return 1;
+    return 0;
+}
+
+func test23() : int { // expected 1
+    if (false | true) return 1;
+    return 0;
+}
+
+func test24() : int { // expected 1
+    if (true & true) return 1;
+    return 0;
+}
+
+func test25() : int { // expected 0
+    if (true & false) return 1;
+    return 0;
+}
+
+func test26() : int { // expected 0
+    if (false & true) return 1;
+    return 0;
+}
+
+func test27() : int { // expected 0
+    if (false & false) return 1;
+    return 0;
+}
+
+func test28() : int { // expected 1
+    if (true | false & true) return 1;
+    return 0;
+}
+
+func test29() : int { // expected 1
+    if (true & false | true) return 1;
+    return 0;
+}
+
+func test30() : int { // expected 1
+    if (false | (false | true)) return 1;
+    return 0;
+}
+
+func assert(funcName: string, expected: int, result: int) : int {
+    var passfail = "failed";
+    if (expected == result)
+        passfail = "passed";
+    printf("%s : expected: %lld result: %lld - %s\n", funcName, expected, result, passfail);
+    return 0;
+}
+
+func main() : int {
+    assert("test21", 1, test21());
+    assert("test22", 1, test22());
+    assert("test23", 1, test23());
+    assert("test24", 1, test24());
+    assert("test25", 0, test25());
+    assert("test26", 0, test26());
+    assert("test27", 0, test27());
+    assert("test28", 1, test28());
+    assert("test29", 1, test29());
+    assert("test30", 1, test30());
+    return 0;
+}

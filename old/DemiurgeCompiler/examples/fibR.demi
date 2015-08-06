@@ -1,0 +1,20 @@
+extern func clock():uint64;
+extern func printf(string,...):void;
+
+//recursive Fibonacci sequence
+
+func fib(x : int) : int {
+    if (x < 3)
+        return 1;
+    else
+        return fib(x-1) + fib(x-2);
+}
+
+
+func main() : int {
+    var start = clock();
+    var f = fib(40);
+    var stop = clock();
+    printf("%d in %fms\n", f, 1000.0 * (stop-start) / 1000);
+    return 0;
+}

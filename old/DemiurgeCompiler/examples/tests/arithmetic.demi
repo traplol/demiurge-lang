@@ -1,0 +1,42 @@
+extern func printf(string,...):void;
+
+func test3() : int { // expected 2
+    return 1 + 1;
+}
+
+func test4() : int { // expected 0
+    return 1-1;
+}
+
+func test5() : int { // expected 4
+    return 2 * 2;
+}
+
+func test6() : int { // expected 2
+    return 2 / 1;
+}
+
+func test7() : int { // expected 2
+    return 2 % 3;
+}
+func test8() : int { // expected 1
+    return 3 % 2;
+}
+
+func assert(funcName: string, expected: int, result: int) : int {
+    var passfail = "failed";
+    if (expected == result)
+        passfail = "passed";
+    printf("%s : expected: %lld result: %lld - %s\n", funcName, expected, result, passfail);
+    return 0;
+}
+
+func main() : int {
+    assert("test3", 2, test3());
+    assert("test4", 0, test4());
+    assert("test5", 4, test5());
+    assert("test6", 2, test6());
+    assert("test7", 2, test7());
+    assert("test8", 1, test8());
+    return 0;
+}

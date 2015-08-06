@@ -1,0 +1,9 @@
+func voidRet(): void {
+    return; // void return
+}
+
+func main(): void {
+    voidRet(); // call the void return func
+    // a void return will automatically be generated here
+}
+

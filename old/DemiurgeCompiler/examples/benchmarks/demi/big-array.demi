@@ -1,0 +1,18 @@
+extern func clock():uint64;
+extern func printf(string,...):void;
+
+func test(x:int):void{}
+
+func main() : int {
+    var start = clock();
+    var size = 500000;
+    var arr = new int[size];
+    
+    for (var x = 0; x < size; x = x + 1) {
+        arr[x] = x;
+    }
+    var stop = clock();
+    test(arr[55]);
+    printf("%d writes in %ldms\n", size, stop-start);
+    return 0;
+}

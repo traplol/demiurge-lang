@@ -1,0 +1,32 @@
+extern func printf(string,...):void;
+func main() : void {
+    if (true) {
+        // Demonstrates a typical for loop.
+        for (var x = 1; x <= 20; x++ ) { 
+            printf("%d\n", x);
+        }
+        printf("\n\n");
+        // Demonstrates a for loop with multiple initializers, a complex condition
+        //    and multiple afterthoughts.
+        for (var x = 20, var y = 200; x > 0 & y < 390; --x, y += x ) {
+            printf("%d - %d\n", x, y);
+        }
+        printf("\n\n");
+        // Demonstrates a multi-dimensional for loop.
+        for (var i = 0; i < 5; i++) {
+            for (var j = 0; j < 5; ++j) {
+                printf("%d - %d\n", i,j);
+            }
+        }
+        printf("\n\n");
+        
+        // Demonstrates that a for loop does not need the initializers within the constructor.
+        var num = 0;
+        for (; num < 5; num++) {
+            printf("%d\n", num);
+        }
+        // Demonstrates that for loops execute the afterthought before the evaluating the condition.
+        printf("after: %d\n", num);
+    }
+    printf("done...\n");
+}

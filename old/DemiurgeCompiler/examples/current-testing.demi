@@ -1,0 +1,7 @@
+extern func printf(string,...): void;
+
+func main(): void{
+    var x = 5;
+    var y = ++(x++);
+    printf("%d\n", x);
+}

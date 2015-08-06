@@ -1,0 +1,19 @@
+extern func printi(int):void;
+extern func print(string):void;
+
+func nested() : int {
+    if (false) {
+        if (false) {
+            return 45;
+        } else {
+        return 5;    
+        }
+    }
+    return 42;
+}
+
+func main() : int {
+    print("\nnested() returned : ");
+    printi(nested());
+    return 0;
+}

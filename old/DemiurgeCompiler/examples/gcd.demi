@@ -1,0 +1,16 @@
+extern func printi(int):void;
+
+func gcd(x : int, y : int) : int {
+    if(x == y) {
+        return x;
+    } else if(x < y) {
+        return gcd(x, y - x);
+    } 
+    return gcd(x - y, y);
+}
+
+
+func main() : int {
+    printi(gcd(54, 10));
+    return 0;
+}

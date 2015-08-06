@@ -1,0 +1,68 @@
+extern func printf(string,...):void;
+
+func shiftleft() : int {
+    return 4 << 2; // expected 16
+}
+
+func shiftright() : int {
+    return 4 >> 1; // expected 2
+}
+
+func and0() : int {
+    return 1 & 1; // expected 1
+}
+
+func and1() : int {
+    return 1 & 0; // expected 0
+}
+
+func and2() : int {
+    return 255 & 16; // expected 16
+}
+
+func and3() : int {
+    return 256 & 16; // expected 0
+}
+
+func or0() : int {
+    return 1 | 1; // expected 1
+}
+
+func or1() : int {
+    return 1 | 0; // expected 1
+}
+
+func or2() : int {
+    return 32 | 16; // expected 48
+}
+
+func xor0() : int {
+    return 255 ^ 16; // expected 239
+}
+
+func xor1() : int {
+    return 16 ^ 16; // expected 0
+}
+
+func assert(oper: string, expected: int, result: int) : int {
+    var passfail = "failed";
+    if (expected == result)
+        passfail = "passed";
+    printf("%s : expected: %lld result: %lld - %s\n", oper, expected, result, passfail);
+    return 0;
+}
+
+func main() : int {
+    assert("shiftleft", 16, shiftleft());
+    assert("shiftright", 2, shiftright());
+    assert("and0", 1, and0());
+    assert("and1", 0, and1());
+    assert("and2", 16, and2());
+    assert("and3", 0, and3());
+    assert("or0", 1, or0());
+    assert("or1", 1, or1());
+    assert("or2", 48, or2());
+    assert("xor0", 239, xor0());
+    assert("xor1", 0, xor1());
+    return 0;
+}
