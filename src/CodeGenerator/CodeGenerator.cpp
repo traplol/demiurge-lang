@@ -10,11 +10,12 @@
 #include "CodeGenerator/CodeGeneratorHelpers.h"
 #include "Compiler/TreeContainer.h"
 #include "DEFINES.h"
-#include "DemiurgeJitOutputFunctions.h"
 #include "AstNodes/ClassAst.h"
 #include "AstNodes/PrototypeAst.h"
 #include "AstNodes/FunctionAst.h"
 #include "AstNodes/IAstExpression.h"
+
+#include "DemiurgeJitOutputFunctions.h"
 
 using namespace llvm;
 CodeGenerator::CodeGenerator() 
@@ -45,19 +46,21 @@ CodeGenerator::CodeGenerator()
     // Set up the optimizer pipeline.  Start with registering info about how the
     // target lays out data structures.
     _theModule->setDataLayout(_theExecutionEngine->getDataLayout());
-    //_theFPM->add(new DataLayoutPass(_theModule));
-    //// Provide basic AliasAnalysis support for GVN.
-    //_theFPM->add(createBasicAliasAnalysisPass());
-    //// Promote allocas to registers.
-    //_theFPM->add(createPromoteMemoryToRegisterPass());
-    //// Do simple "peephole" optimizations and bit-twiddling optzns.
-    //_theFPM->add(createInstructionCombiningPass());
-    //// Reassociate expressions.
-    //_theFPM->add(createReassociatePass());
-    //// Eliminate Common SubExpressions.
-    //_theFPM->add(createGVNPass());
-    //// Simplify the control flow graph (deleting unreachable blocks, etc).
-    //_theFPM->add(createCFGSimplificationPass());
+#if 0
+    _theFPM->add(new DataLayoutPass(_theModule));
+    // Provide basic AliasAnalysis support for GVN.
+    _theFPM->add(createBasicAliasAnalysisPass());
+    // Promote allocas to registers.
+    _theFPM->add(createPromoteMemoryToRegisterPass());
+    // Do simple "peephole" optimizations and bit-twiddling optzns.
+    _theFPM->add(createInstructionCombiningPass());
+    // Reassociate expressions.
+    _theFPM->add(createReassociatePass());
+    // Eliminate Common SubExpressions.
+    _theFPM->add(createGVNPass());
+    // Simplify the control flow graph (deleting unreachable blocks, etc).
+    _theFPM->add(createCFGSimplificationPass());
+#endif
 
     _theFPM->doInitialization();
 
@@ -81,10 +84,10 @@ void CodeGenerator::initJitOutputFunctions() {
      * This is obsolete unless you don't want to export the function but still want it 
      * to be accessible within the compiler.
      */
-#define VOID_TYPE Type::getVoidTy(this->Context)
-#define STRING_TYPE Type::getInt8PtrTy(this->Context)
-#define INT_TYPE Type::getInt64Ty(this->Context)
-#define DOUBLE_TYPE Type::getDoubleTy(this->Context)
+#define VOID_TYPE Type::getVoidTy(this->_context)
+#define STRING_TYPE Type::getInt8PtrTy(this->_context)
+#define INT_TYPE Type::getInt64Ty(this->_context)
+#define DOUBLE_TYPE Type::getDoubleTy(this->_context)
 
     
     //updateGMap(this, VOID_TYPE, "print", &print, STRING_TYPE);
@@ -107,18 +110,20 @@ bool CodeGenerator::declareFunctions(TreeContainer *trees) {
             return false;
         }
     }
-    for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // declare user functions
+    for (int i = 0; i < trees->FunctionDefinitions.size(); ++i) { // declare user functions
         if (trees->FunctionDefinitions[i]->getPrototype()->Codegen(this) == nullptr) {
             return false;
         }
     }
+	return true;
 }
 
 bool CodeGenerator::GenerateCode(TreeContainer *trees, bool dumpOnFail) {
 
     this->_dumpOnFail = dumpOnFail;
 
-    if (!declareFunctions(trees)) return false; // declare functions
+    if (!declareFunctions(trees))
+		return false;
     
     for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // define the functions
         if (trees->FunctionDefinitions[i]->Codegen(this) == nullptr) {
@@ -155,6 +160,7 @@ void CodeGenerator::RunMain() {
 		DumpMainModule();
         return;
     }
+	_theExecutionEngine->finalizeObject();
     void *mainFnPtr = _theExecutionEngine->getPointerToFunction(mainFunc);
 
     int(*FP)() = (int(*)())mainFnPtr;

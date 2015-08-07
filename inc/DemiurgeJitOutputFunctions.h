@@ -39,4 +39,6 @@ extern "C" {
     }
 
 }
+
+#undef EXPORT
 #endif
