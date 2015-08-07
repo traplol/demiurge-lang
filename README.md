@@ -17,7 +17,7 @@ This project is a parser/frontend for a simple programming language with [LLVM](
 
 I started this project during the summer of 2014 and had a lot of fun designing and implementing this simple
 programming language. This is mostly an educational project that I have decided to port to *nix rather than 
-work only within my defunct visual studio workspace. There are still probably lots of bugs within this project
+work only within my defunct Visual Studio workspace. There are still probably lots of bugs within this project
 and it shouldn't be taken too seriously, but I do plan to continue playing with it and implementing features 
 in [TODO.md](TODO.md). Originally, this project used LLVM 3.4 and I have started work on bringing it up to 
 LLVM 3.6.2 and might keep it updated with future releases of LLVM.
