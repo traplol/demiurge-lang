@@ -832,7 +832,7 @@ PrototypeAst *Parser::parseExternDeclaration() {
             if (argType == nullptr) {
                 return Error("Expected type identitifer in external declaration.");
             }
-			std::string param = "param" + std::to_string(i);
+            std::string param = "param" + std::to_string(i);
             auto pair = std::make_pair(param, argType);
             args.push_back(pair);
         }

@@ -45,7 +45,7 @@ public:
     llvm::LLVMContext &getContext() const;
     
     // Returns the module 
-	llvm::Module *getTheModule() const;
+    llvm::Module *getTheModule() const;
 
     // Returns the function pass manager
     //llvm::FunctionPassManager *getTheFPM() const;
@@ -101,7 +101,7 @@ public:
 private:
     llvm::LLVMContext &_context;
     llvm::IRBuilder<> _builder;
-	llvm::Module *_theModule;
+    llvm::Module *_theModule;
     llvm::legacy::FunctionPassManager *_theFPM;
     llvm::ExecutionEngine *_theExecutionEngine;
     llvm::BasicBlock *_outsideBlock;

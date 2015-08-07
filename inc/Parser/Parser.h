@@ -58,7 +58,7 @@ private:
     AstTypeNode *parseTypeNode();
     AstTypeNode *tryInferType(IAstExpression *expr);
 
-	std::nullptr_t Error(const char *fmt, ...);
+    std::nullptr_t Error(const char *fmt, ...);
     void Warning(const char *fmt, ...);
 };
 

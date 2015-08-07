@@ -16,7 +16,7 @@ namespace llvm {
 
 namespace Helpers {
 
-	std::nullptr_t Error(PossiblePosition pos, const char *fmt, ...);
+    std::nullptr_t Error(PossiblePosition pos, const char *fmt, ...);
     void Warning(PossiblePosition pos, const char *fmt, ...);
 
     namespace BinOperations {

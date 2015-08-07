@@ -22,17 +22,17 @@ CodeGenerator::CodeGenerator()
     : _context(getGlobalContext())
     , _builder(getGlobalContext()) {
     InitializeNativeTarget();
-	InitializeNativeTargetAsmPrinter();
-	InitializeNativeTargetAsmParser();
-	std::unique_ptr<Module> owner = make_unique<Module>("Test Module", _context);
-	_theModule = owner.get();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
+    std::unique_ptr<Module> owner = make_unique<Module>("Test Module", _context);
+    _theModule = owner.get();
 
     // Create the JIT.  This takes ownership of the module.
     std::string ErrStr;
     _theExecutionEngine =
-		EngineBuilder(std::move(owner))
-		.setErrorStr(&ErrStr)
-		.create();
+        EngineBuilder(std::move(owner))
+        .setErrorStr(&ErrStr)
+        .create();
     if (!_theExecutionEngine) {
         fprintf(stderr, "Could not create ExecutionEngine: %s\n", ErrStr.c_str());
 #ifdef _WIN32
@@ -64,7 +64,7 @@ CodeGenerator::CodeGenerator()
 
     _theFPM->doInitialization();
 
-	
+    
     initJitOutputFunctions();
 }
 
@@ -115,7 +115,7 @@ bool CodeGenerator::declareFunctions(TreeContainer *trees) {
             return false;
         }
     }
-	return true;
+    return true;
 }
 
 bool CodeGenerator::GenerateCode(TreeContainer *trees, bool dumpOnFail) {
@@ -123,7 +123,7 @@ bool CodeGenerator::GenerateCode(TreeContainer *trees, bool dumpOnFail) {
     this->_dumpOnFail = dumpOnFail;
 
     if (!declareFunctions(trees))
-		return false;
+        return false;
     
     for (int i = 0, e = trees->FunctionDefinitions.size(); i < e; ++i) { // define the functions
         if (trees->FunctionDefinitions[i]->Codegen(this) == nullptr) {
@@ -157,10 +157,10 @@ void CodeGenerator::RunMain() {
     Function *mainFunc = _theModule->getFunction("main");
     if (mainFunc == nullptr) {
         Helpers::Error(PossiblePosition{ -1, -1 }, "No main function found!");
-		DumpMainModule();
+        DumpMainModule();
         return;
     }
-	_theExecutionEngine->finalizeObject();
+    _theExecutionEngine->finalizeObject();
     void *mainFnPtr = _theExecutionEngine->getPointerToFunction(mainFunc);
 
     int(*FP)() = (int(*)())mainFnPtr;
