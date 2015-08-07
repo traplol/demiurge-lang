@@ -1,5 +1,4 @@
-#CC:=clang++
-CC:=g++
+CC:=clang++
 SRC_DIR:= src
 INC_DIR:= inc
 OBJ_DIR:= obj
@@ -8,12 +7,9 @@ LIB_DIR:= lib
 MAINS:= main.o
 TEST_DIR:= tests
 INCLUDES:= -Iinc
-#INCLUDES+= $(addprefix -I,$(wildcard $(dir $(INC_DIR)/*/*.h)))
-#CFLAGS:= -Werror -Wall -pedantic -pedantic-errors -Wextra -g -std=c++11 $(INCLUDES)
 CPPFLAGS_DEBUG:= -O0 -g -D_DEBUG
 CPPFLAGS:= -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -std=c++11 $(INCLUDES)
 LDFLAGS:= `llvm-config --ldflags`
-LDFLAGS+= -v -g -O0
 SOURCES:= $(wildcard $(SRC_DIR)/*/*.cpp)
 SOURCES+= src/main.cpp
 OBJECTS:= $(addprefix $(OBJ_DIR)/,$(notdir $(SOURCES:.cpp=.o)))
@@ -24,9 +20,9 @@ LIBS+= -lpthread -lffi -ldl -lm -lz -ltinfo
 
 EXECUTABLE:= $(BIN_DIR)/demi
 
-.PHONY: test all debug
+.PHONY: test all debug no-debug
 
-all: debug
+all: no-debug
 
 debug: CPPFLAGS+=$(CPPFLAGS_DEBUG)
 debug: $(EXECUTABLE)
