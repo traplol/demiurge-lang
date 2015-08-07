@@ -5,7 +5,7 @@ demiurge-lang
 The Demiurge Programming Language Compiler
   
 ``` 
-demiurge  (ˈdɛmɪˌɜːdʒ, ˈdiː-) 
+demiurge  (ˈdemēˌərj) 
 
 — n
 1.	a. (in the philosophy of Plato) the creator of the universe
