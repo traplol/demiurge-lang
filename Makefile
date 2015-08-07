@@ -16,7 +16,7 @@ OBJECTS:= $(addprefix $(OBJ_DIR)/,$(notdir $(SOURCES:.cpp=.o)))
 
 LLVM_MODULES:= core mcjit native
 LIBS:= `llvm-config --libs $(LLVM_MODULES)`
-LIBS+= -lpthread -lffi -ldl -lm -lz -ltinfo
+LIBS+= -lpthread -lffi -ldl -lm -lz -ltinfo -rdynamic
 
 EXECUTABLE:= $(BIN_DIR)/demi
 
