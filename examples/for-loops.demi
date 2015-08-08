@@ -25,7 +25,7 @@ func main() : void {
         for (; num < 5; num++) {
             printf("%d\n", num);
         }
-        // Demonstrates that for loops execute the afterthought before the evaluating the condition.
+        // Demonstrates that for loops execute the last afterthought.
         printf("after: %d\n", num);
     }
     printf("done...\n");
